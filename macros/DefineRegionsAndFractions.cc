@@ -257,6 +257,7 @@ void DefineRegionsAndFractions(const std::string &infilename, int rapBin, int pt
 	//TH1F* hist = (TH1F*)hist2D->ProjectionX();
 	TH1F* hist1D = (TH1F*)PromptPseudoData->createHistogram("hist1D",*ct,Binning(nbinsSigmaDef));
 
+	//sumW2
 	//hist->Scale(1./hist->Integral());
 	//hist->SetLineColor(kRed);
 	//hist->SetMarkerColor(kRed);
