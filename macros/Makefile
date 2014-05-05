@@ -4,12 +4,18 @@ LIBS=$(shell root-config --libs)
 %.o : %.cc
 	$(CXX) -c $<
 
-all: runData runChiData runWorkspace runMassFit runLifetimeFit runPlotMassLifetime runBkgHistos PlotFitPar PlotCosThetaPhiBG PlotCosThetaPhiDistribution runChiMassLifetimeFit runDefineRegionsAndFractions runPlotDataDistributions
+all: runData runChiData runWorkspace runMassFit runLifetimeFit runPlotMassLifetime runBkgHistos PlotFitPar PlotCosThetaPhiBG PlotCosThetaPhiDistribution runChiMassLifetimeFit runDefineRegionsAndFractions runPlotDataDistributions runPlotJpsiMassLifetime PlotJpsiFitPar
+
+PlotJpsiFitPar: PlotJpsiFitPar.cc
+	$(CXX) $^ -o $@ $(LIBS) `root-config --cflags` -lFoam -lMinuit -lRooFit -lRooFitCore
 
 runPlotDataDistributions: runPlotDataDistributions.cc
 	$(CXX) $^ -o $@ $(LIBS) `root-config --cflags` -lFoam -lMinuit -lRooFit -lRooFitCore
 
 runPlotMassLifetime: runPlotMassLifetime.cc
+	$(CXX) $^ -o $@ $(LIBS) `root-config --cflags` -lFoam -lMinuit -lRooFit -lRooFitCore
+
+runPlotJpsiMassLifetime: runPlotJpsiMassLifetime.cc
 	$(CXX) $^ -o $@ $(LIBS) `root-config --cflags` -lFoam -lMinuit -lRooFit -lRooFitCore
 
 runData: runData.cc 
@@ -49,5 +55,5 @@ runDefineRegionsAndFractions: runDefineRegionsAndFractions.cc
 
 
 clean: 
-	runData runChiData runWorkspace runMassFit runLifetimeFit runPlotMassLifetime runBkgHistos PlotFitPar PlotCosThetaPhiBG PlotCosThetaPhiDistribution runChiMassLifetimeFit runDefineRegionsAndFractions runPlotDataDistributions
+	runData runChiData runWorkspace runMassFit runLifetimeFit runPlotMassLifetime runBkgHistos PlotFitPar PlotCosThetaPhiBG PlotCosThetaPhiDistribution runChiMassLifetimeFit runDefineRegionsAndFractions runPlotDataDistributions runPlotJpsiMassLifetime PlotJpsiFitPar
 

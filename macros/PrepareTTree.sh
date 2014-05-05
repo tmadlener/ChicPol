@@ -18,27 +18,30 @@ cd $Cdir
 
 COPY_AND_COMPILE=1
 
-rapMin=0     #takes bins, not actual values
-rapMax=0     #if you only want to process 1 y bin, rapMax = rapMin
-ptMin=1      #takes bins, not acutal values
-ptMax=3    #if you only want to process 1 pt bin, ptMax = ptMin
+rapMin=1     #takes bins, not actual values
+rapMax=1     #if you only want to process 1 y bin, rapMax = rapMin
+ptMin=2      #takes bins, not acutal values
+ptMax=2     #if you only want to process 1 pt bin, ptMax = ptMin
 
 Plotting=1   #plotting macro: 1 = plot all, 2 = plot mass, 3 = plot lifetime
-			 #plotting macro: 4 = plot lifetimeSR1, 5 = plot lifetimeSR2, 6 = plot lifetimeLSB, 7 = plot lifetimeRSB, 8 = plot lifetimeAll
+			 #plotting macro: 4 = plot lifetimeSR1, 5 = plot lifetimeSR2, 6 = plot lifetimeLSB, 7 = plot lifetimeRSB, 8 = plot lifetimeFullRegion
+
+PlottingJpsi=4   #plotting macro: 1 = plot all, 2 = plot mass, 3 = plot lifetimeSBs, 4= lifetimeSR, 5= PlotMassRap, 6= plot lifetime
+
 
 runChiMassFitOnly=false
-correctCtau=true   #correct pseudo-proper lifetime
+correctCtau=false   #correct pseudo-proper lifetime
 rejectCowboys=false
 RequestTrigger=true
 MC=false
 drawRapPt2D=false  #draw Rap-Pt 2D map of Psi
 PlottingDataDists=1 #int index -> which variables to plot, 1...all
 FixRegionsToInclusiveFit=false
-rapFixTo=0
+rapFixTo=1
 ptFixTo=0
 
 #PlotFitPar:::
-AddInclusiveResult=true #Inclusive defined by rapFixTo, ptFixTo
+AddInclusiveResult=false #Inclusive defined by rapFixTo, ptFixTo
 
 
 doCtauUncer=true
@@ -60,9 +63,17 @@ polDataPath=${basedir}/Psi/Data/${DataID}
 
 #Define JobID
 #JobID=April15_FullData_PtBinning_BkgLTaddDS
-JobID=MC_April9
+#JobID=MC_April9
 #JobID=MC_March25
 #JobID=March18_FullData_PtBinning
+
+#JobID=April23_WorkshopFollowUp
+#JobID=April23_WorkshopFollowUp_ScaledJpsictErr
+#JobID=April23_WorkshopFollowUp_2rapBins
+#JobID=April24_JpsiMassRap
+#JobID=MC_plusArtificialBG_April25
+JobID=May2_WorkshopFollowUp #_CtauTest
+JobID=May5_WorkshopFollowUp_PlotsOldSolution
 
 ################ EXECUTABLES #################
 
@@ -70,11 +81,16 @@ JobID=MC_April9
 #IMPORTANT: for MC set execute_runWorkspace, execute_MassFit and execute_runLifetimeFit to 0
 execute_runChiData=0			           		#independent of rapMin, rapMax, ptMin, ptMax
 execute_runWorkspace=0	    					#independent of rapMin, rapMax, ptMin, ptMax
+execute_runMassFit=0				    	    #can be executed for different pt and y bins
+execute_runLifetimeFit=0    				    #can be executed for different pt and y bins
+execute_runPlotJpsiMassLifetime=1    			#can be executed for different pt and y bins
+execut_PlotJpsiFitPar=0              			#can be executed for different pt and y bins
 execute_runChiMassLifetimeFit=0		  	    	#can be executed for different pt and y bins
 execute_runDefineRegionsAndFractions=0			#can be executed for different pt and y bins
 execute_runPlotDataDistributions=0 		 		#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
 execute_runPlotMassLifetime=0    				#can be executed for different pt and y bins
-execut_PlotFitPar=1              				#can be executed for different pt and y bins
+execut_PlotFitPar=0              				#can be executed for different pt and y bins
+
 execute_runBkgHistos=0           				#can be executed for different pt and y bins
 execute_PlotCosThetaPhiBG=0 		 			#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
 execute_PlotCosThetaPhiDistribution=0 			#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
@@ -82,8 +98,6 @@ execute_PlotCosThetaPhiDistribution=0 			#This step only has to be executed once
 #################################
 #PsiRelics:::
 execute_runData=0			           #independent of rapMin, rapMax, ptMin, ptMax
-execute_runMassFit=0			       #can be executed for different pt and y bins
-execute_runLifetimeFit=0         #can be executed for different pt and y bins
 
 
 # input files
@@ -170,10 +184,14 @@ cp ../interface/RooUtils.h ${WorkDir}/RooUtils.h
 cp runPlotMassLifetime.cc ${WorkDir}/runPlotMassLifetime.cc
 cp PlotMassLifetime.cc ${WorkDir}/PlotMassLifetime.cc
 
+cp runPlotJpsiMassLifetime.cc ${WorkDir}/runPlotJpsiMassLifetime.cc
+cp PlotJpsiMassLifetime.cc ${WorkDir}/PlotJpsiMassLifetime.cc
+
 cp runPlotDataDistributions.cc ${WorkDir}/runPlotDataDistributions.cc
 cp PlotDataDistributions.cc ${WorkDir}/PlotDataDistributions.cc
 
 cp PlotFitPar.cc ${WorkDir}/PlotFitPar.cc
+cp PlotJpsiFitPar.cc ${WorkDir}/PlotJpsiFitPar.cc
 
 cp runBkgHistos.cc ${WorkDir}/runBkgHistos.cc
 cp bkgHistos.C ${WorkDir}/bkgHistos.C
@@ -221,23 +239,32 @@ fi
 
 if [ ${execute_runMassFit} -eq 1 ]
 then
-rootfile=fit_Psi$[nState-3]S_rap${rapMin}_pt${ptMin}.root
-cp tmpFiles/backupWorkSpace/${rootfile} tmpFiles/${rootfile}
-cp runMassFit runMassFit_$[nState-3]S_rap${rapMin}_pt${ptMin}
-./runMassFit_$[nState-3]S_rap${rapMin}_pt${ptMin} rapMin=${rapMin} rapMax=${rapMax} ptMin=${ptMin} ptMax=${ptMax} nState=${nState} fitMassPR=${fitMassPR} fitMassNP=${fitMassNP}
-rm runMassFit_$[nState-3]S_rap${rapMin}_pt${ptMin}
+cp runMassFit runMassFit_rap${rapMin}_pt${ptMin}
+./runMassFit_rap${rapMin}_pt${ptMin} rapMin=${rapMin} rapMax=${rapMax} ptMin=${ptMin} ptMax=${ptMax} nState=${nState} fitMassPR=${fitMassPR} fitMassNP=${fitMassNP} MC=${MC}
+rm runMassFit_rap${rapMin}_pt${ptMin}
 fi
 
 if [ ${execute_runLifetimeFit} -eq 1 ]
 then
-cp runLifetimeFit runLifetimeFit_$[nState-3]S_rap${rapMin}_pt${ptMin}
-./runLifetimeFit_$[nState-3]S_rap${rapMin}_pt${ptMin} rapMin=${rapMin} rapMax=${rapMax} ptMin=${ptMin} ptMax=${ptMax} nState=${nState}
-rm runLifetimeFit_$[nState-3]S_rap${rapMin}_pt${ptMin}
+cp runLifetimeFit runLifetimeFit_rap${rapMin}_pt${ptMin}
+./runLifetimeFit_rap${rapMin}_pt${ptMin} rapMin=${rapMin} rapMax=${rapMax} ptMin=${ptMin} ptMax=${ptMax} nState=${nState} MC=${MC}
+rm runLifetimeFit_rap${rapMin}_pt${ptMin}
+fi
+
+if [ ${execute_runPlotJpsiMassLifetime} -eq 1 ]
+then
+cp runPlotJpsiMassLifetime runPlotJpsiMassLifetime_$[nState-3]S_rap${rapMin}_pt${ptMin}
+./runPlotJpsiMassLifetime_$[nState-3]S_rap${rapMin}_pt${ptMin} rapMin=${rapMin} rapMax=${rapMax} ptMin=${ptMin} ptMax=${ptMax} nState=${nState} PlottingJpsi=${PlottingJpsi}
+rm runPlotJpsiMassLifetime_$[nState-3]S_rap${rapMin}_pt${ptMin}
+fi
+
+if [ ${execut_PlotJpsiFitPar} -eq 1 ]
+then
+./PlotJpsiFitPar nState=${nState} doCtauUncer=${doCtauUncer} rapMin=${rapMin} rapMax=${rapMax} ptMin=${ptMin} ptMax=${ptMax} rapFixTo=${rapFixTo} ptFixTo=${ptFixTo} AddInclusiveResult=${AddInclusiveResult}
 fi
 
 if [ ${execute_runChiMassLifetimeFit} -eq 1 ]
 then
-#cp tmpFiles/backupWorkSpace/ws_createWorkspace_Chi_rap${rapMin}_pt${ptMin}.root tmpFiles/backupWorkSpace/ws_MassLifetimeFit_Chi_rap${rapMin}_pt${ptMin}.root
 cp runChiMassLifetimeFit runChiMassLifetimeFit_rap${rapMin}_pt${ptMin}
 ./runChiMassLifetimeFit_rap${rapMin}_pt${ptMin} runChiMassFitOnly=${runChiMassFitOnly} rapMin=${rapMin} rapMax=${rapMax} ptMin=${ptMin} ptMax=${ptMax} nState=${nState} MC=${MC}
 rm runChiMassLifetimeFit_rap${rapMin}_pt${ptMin}
@@ -265,8 +292,6 @@ then
 cp runPlotMassLifetime runPlotMassLifetime_$[nState-3]S_rap${rapMin}_pt${ptMin}
 ./runPlotMassLifetime_$[nState-3]S_rap${rapMin}_pt${ptMin} rapMin=${rapMin} rapMax=${rapMax} ptMin=${ptMin} ptMax=${ptMax} nState=${nState} Plotting=${Plotting}
 rm runPlotMassLifetime_$[nState-3]S_rap${rapMin}_pt${ptMin}
-#pdflatex MassLifetime_Psi$[nState-3]S.tex
-#mv MassLifetime_Psi$[nState-3]S.pdf PDF/MassLifetime_Psi$[nState-3]S.pdf
 fi
 
 if [ ${execut_PlotFitPar} -eq 1 ]

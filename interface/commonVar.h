@@ -28,6 +28,7 @@ namespace onia{
   //Measure polarization as function of which particle-kinemarics
   bool KinParticleChi = true;
   const char *KinParticleChar = "^{#chi}";
+  bool KinParticleChiButJpsiRap = false;
 
   //chi mass ranges
   const double chimassMin = 3.325;
@@ -63,16 +64,45 @@ namespace onia{
   // Binning
   const int kNbRapForPTBins = 2;
   double rapForPTRange[kNbRapForPTBins+1] = {0., 1.2, 1.5};
-  //study the negative and positive rapidity sides separately
   double rapRange[2*kNbRapForPTBins+1] = {-1.5, -1.2, 0., 1.2, 1.5};
+  //double rapForPTRange[kNbRapForPTBins+1] = {0., 0.6, 1.2};
+  //double rapRange[2*kNbRapForPTBins+1] = {-1.2, -0.6, 0., 0.6, 1.2};
 
   //Jpsi
   const int kNbPTMaxBins = 6;
-  const int kNbPTBins[kNbRapForPTBins+1] = {kNbPTMaxBins, kNbPTMaxBins, kNbPTMaxBins};//all y, y1 
+  const int kNbPTBins[kNbRapForPTBins+1] = {kNbPTMaxBins, kNbPTMaxBins, kNbPTMaxBins};//all y, y1
   double pTRange[kNbRapForPTBins+1][kNbPTMaxBins+1] = {
     {10., 15., 20., 25., 30., 50., 100.},//all rapidities
     {10., 15., 20., 25., 30., 50., 100.},//mid-rapidity
     {10., 15., 20., 25., 30., 50., 100.}};//forward rapidity
+
+
+
+  //// Binning
+  //const int kNbRapForPTBins = 15;
+  //Double_t rapForPTRange[kNbRapForPTBins+1] = {0., 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5}; //2 September 2011
+  ////study the negative and positive rapidity sides separately
+  //Double_t rapRange[2*kNbRapForPTBins+1] = {-1.5, -1.4, -1.3, -1.2, -1.1, -1.0, -0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, -0.2, -0.1, 0., 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5};
+  //
+  ////Jpsi
+  //const int kNbPTMaxBins = 6;
+  //const int kNbPTBins[kNbRapForPTBins+1] = {kNbPTMaxBins, kNbPTMaxBins, kNbPTMaxBins, kNbPTMaxBins, kNbPTMaxBins, kNbPTMaxBins, kNbPTMaxBins, kNbPTMaxBins, kNbPTMaxBins, kNbPTMaxBins, kNbPTMaxBins, kNbPTMaxBins, kNbPTMaxBins, kNbPTMaxBins, kNbPTMaxBins};//all y, y1
+  //double pTRange[kNbRapForPTBins+1][kNbPTMaxBins+1] = {
+  //  {10., 15., 20., 25., 30., 50., 100.},//all rapidities
+  //  {10., 15., 20., 25., 30., 50., 100.},//mid-rapidity
+  //  {10., 15., 20., 25., 30., 50., 100.},//mid-rapidity
+  //  {10., 15., 20., 25., 30., 50., 100.},//mid-rapidity
+  //  {10., 15., 20., 25., 30., 50., 100.},//mid-rapidity
+  //  {10., 15., 20., 25., 30., 50., 100.},//mid-rapidity
+  //  {10., 15., 20., 25., 30., 50., 100.},//mid-rapidity
+  //  {10., 15., 20., 25., 30., 50., 100.},//mid-rapidity
+  //  {10., 15., 20., 25., 30., 50., 100.},//mid-rapidity
+  //  {10., 15., 20., 25., 30., 50., 100.},//mid-rapidity
+  //  {10., 15., 20., 25., 30., 50., 100.},//mid-rapidity
+  //  {10., 15., 20., 25., 30., 50., 100.},//mid-rapidity
+  //  {10., 15., 20., 25., 30., 50., 100.},//mid-rapidity
+  //  {10., 15., 20., 25., 30., 50., 100.},//mid-rapidity
+  //  {10., 15., 20., 25., 30., 50., 100.}};//forward rapidity
 
   //number of reference frames
   const int kNbFrames = 6;
@@ -105,6 +135,7 @@ namespace onia{
 	int colorChic2=632;
 	int colorPR=616;
 	int colorNP=600;
+	int colorJpsi=633;
 
 	double lineWidth_ML=2.;
 	double markerSize_ML=0.8;
@@ -128,14 +159,14 @@ namespace onia{
   // Gamma cuts
 
       double cut_gammapt = 0.;
-      double cut_gammaeta=1.5;
+      double cut_gammaeta=15.;
       double cut_RconvMin = 1.5;
       double cut_RconvMax = 200;
 
   // Chi cuts
 
       double cut_dz=1.35;//1.
-      double cut_probFit = 0.01;
+      double cut_probFit = 0.; //0.01;
       double chirap = rapForPTRange[kNbRapForPTBins]; //chi rap
 
 

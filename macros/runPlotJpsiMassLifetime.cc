@@ -1,9 +1,12 @@
 /*
- * runChiMassLifetimeFit.cc
+ * runPlotJpsiMassLifetime.cc
  *
- *  Created on: Jan 23, 2014
+ *  Created on: Apr 23, 2014
  *      Author: valentinknuenz
  */
+
+
+
 
 #ifndef __CINT__
 #endif
@@ -14,8 +17,7 @@
 #include <sstream>
 using namespace std;
 
-#include "chiMassLifetimeFit.cc"
-#include "TROOT.h"
+#include "PlotJpsiMassLifetime.cc"
 
 //========================================================
 // code to read input arguments
@@ -59,32 +61,29 @@ void fromSplit(const std::string& key, const std::string &arg, std::string &out)
 
 //===================================================
 int main(int argc, char* argv[]){
-
-  // Set defaults
-    int rapMin = 999,
-			 	rapMax = 999,
-			 	ptMin = 999,
-			 	ptMax = 999,
-			 	nState = 999;
-
-	 bool runChiMassFitOnly = false;
- 	 bool MC = false;
+    // Set defaults
+    int
+      rapMin = 999,
+      rapMax = 999,
+      ptMin = 999,
+      ptMax = 999,
+      nState = 999,
+      PlottingJpsi = 999;
 
     // Loop over argument list
     for (int i=1; i < argc; i++)
       {
 	std::string arg = argv[i];
-    	fromSplit("runChiMassFitOnly", arg, runChiMassFitOnly);
         fromSplit("rapMin", arg, rapMin);
         fromSplit("rapMax", arg, rapMax);
         fromSplit("ptMin", arg, ptMin);
         fromSplit("ptMax", arg, ptMax);
         fromSplit("nState", arg, nState);
-        fromSplit("MC", arg, MC);
+	fromSplit("PlottingJpsi", arg, PlottingJpsi);
       }
 
     std::cout << "-----------------------\n"
-	      << "Fitting mass/lifetime for \n"
+	      << "Plot \n"
 	      << "y bins " << rapMin << " - " << rapMax << "\n"
 	      << "and pT bins "  << ptMin << " - " << ptMax << "\n"
 	      << "-----------------------" << std::endl;
@@ -92,25 +91,26 @@ int main(int argc, char* argv[]){
     for(int iRap = rapMin; iRap <= rapMax; iRap++){
       for(int iPT = ptMin; iPT <= ptMax; iPT++){
 
-    		std::stringstream tempFrom;
-    		tempFrom << "tmpFiles/backupWorkSpace/ws_MassLifetimeFit_Jpsi_rap" << iRap << "_pt" << iPT << ".root";
-    		const std::string infilenameFrom = tempFrom.str().c_str();
+			std::stringstream temp;
+			std::stringstream temp2;
+    		temp << "tmpFiles/backupWorkSpace/ws_MassLifetimeFit_Jpsi_rap" << iRap << "_pt" << iPT << ".root";
 
-    		std::stringstream tempTo;
-    		tempTo << "tmpFiles/backupWorkSpace/ws_MassLifetimeFit_Chi_rap" << iRap << "_pt" << iPT << ".root";
-    		const std::string infilenameTo = tempTo.str().c_str();
+    		bool MassLifetimeFile=true;
+    	    TFile *infileTest = new TFile(temp.str().c_str(), "UPDATE");
+    	    if(!infileTest){
+    	        std::cout << "Error: failed to open file with dataset" << std::endl;
+        		temp2 << "tmpFiles/backupWorkSpace/ws_MassFit_Jpsi_rap" << iRap << "_pt" << iPT << ".root";
+        		MassLifetimeFile=false;
+    	    }
+    	    else infileTest->Close();
 
-    		cout<<"copy file "<<infilenameFrom.c_str()<<"to "<<infilenameTo.c_str()<<endl;
-    		gSystem->CopyFile(infilenameFrom.c_str(),infilenameTo.c_str(),kTRUE);
-    		cout<<"copy file finished"<<endl;
+    		const std::string infilename = temp.str().c_str();
+    		const std::string infilename2 = temp2.str().c_str();
 
-      	  	chiMassLifetimeFit(infilenameTo.c_str(), iRap, iPT, nState, runChiMassFitOnly, MC);
+    	    if(MassLifetimeFile) PlotMassLifetime(infilename.c_str(), iRap, iPT, nState, PlottingJpsi);
+    	    else PlotMassLifetime(infilename2.c_str(), iRap, iPT, nState, PlottingJpsi);
 
       }
     }
-
     return 0;
 }
-
-
-

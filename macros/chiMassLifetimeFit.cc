@@ -20,6 +20,7 @@
 using namespace RooFit;
 
 void chiMassLifetimeFit(const std::string &infilename, int rapBin, int ptBin, int nState, bool runChiMassFitOnly, bool MC){
+	cout<<"chiMassLifetimeFit"<<endl;
 
     TFile *infile = new TFile(infilename.c_str(), "UPDATE");
     if(!infile){
@@ -31,7 +32,7 @@ void chiMassLifetimeFit(const std::string &infilename, int rapBin, int ptBin, in
     }
 
     std::stringstream binName;
-    binName << "data_rap" << rapBin << "_pt" << ptBin;
+    binName << "data_rap" << rapBin << "_pt" << ptBin<< "_SR";
     RooDataSet *data = (RooDataSet*)ws->data(binName.str().c_str());
     double ev = data->numEntries();
     std::cout<<"Number of Events in dataset: "<<ev<<endl;
@@ -137,7 +138,7 @@ void chiMassLifetimeFit(const std::string &infilename, int rapBin, int ptBin, in
     //resolution function
     ws->factory("RooGaussModel::promptLifetime(Jpsict,promptMean[0,-.01,.01],ctResolution[0.8,.5,1.], 1, JpsictErr)");
     ((RooGaussModel*)ws->pdf("promptLifetime"))->advertiseFlatScaleFactorIntegral(true);
-    ws->factory("RooGaussModel::promptLifetime2(Jpsict,promptMean, ctResolution2[1.5,1.,3.0], 1, JpsictErr)");
+    ws->factory("RooGaussModel::promptLifetime2(Jpsict,promptMean, ctResolution2[1.5,1.,2.5], 1, JpsictErr)");
     ((RooGaussModel*)ws->pdf("promptLifetime2"))->advertiseFlatScaleFactorIntegral(true);
     RooGaussModel* promptLifetime = (RooGaussModel*)ws->pdf("promptLifetime");
     RooGaussModel* promptLifetime2 = (RooGaussModel*)ws->pdf("promptLifetime2");
@@ -148,16 +149,23 @@ void chiMassLifetimeFit(const std::string &infilename, int rapBin, int ptBin, in
     ws->import(L_TotalPromptLifetime);
     L_TotalPromptLifetime.Print();
 
-    //noprompt
+    //nonprompt signal
     ws->factory("RooDecay::L_chic1_NP(Jpsict,NP_TauChic[.3,.1,1.],L_TotalPromptLifetime,RooDecay::SingleSided)");
     ws->factory("RooDecay::L_chic2_NP(Jpsict,NP_TauChic,L_TotalPromptLifetime,RooDecay::SingleSided)");
     ws->factory("RooDecay::L_chic0_NP(Jpsict,NP_TauChic,L_TotalPromptLifetime,RooDecay::SingleSided)");
-    //background
+    //Jpsi background
+    ws->factory("RooDecay::L_background_NP(Jpsict,NP_TauBkg[.3,.1,1.],L_TotalPromptLifetime,RooDecay::SingleSided)");
+    ws->factory("SUM::L_background(fBkgNP[.5,0,1.]*L_background_NP, L_TotalPromptLifetime)");
+    //Combinatorial mumugamma background
     ws->factory("RooDecay::L_backgroundFD(Jpsict,FD_TauBkg[.075,.025,0.125],L_TotalPromptLifetime,RooDecay::Flipped)");
     ws->factory("RooDecay::L_backgroundDSD(Jpsict,DSD_TauBkg[.01,0,0.1],L_TotalPromptLifetime,RooDecay::DoubleSided)");
-    ws->factory("RooDecay::L_background_NP(Jpsict,NP_TauBkg[.3,.1,1.],L_TotalPromptLifetime,RooDecay::SingleSided)");
-    //ws->factory("SUM::L_background(fBkgNP[.5,0,1.]*L_background_NP,fBkgFD[.01,0.001,0.04]*L_backgroundFD, L_TotalPromptLifetime)");
-    ws->factory("SUM::L_background(fBkgNP[.5,0,1.]*L_background_NP,fBkgFD[.01,0.001,0.04]*L_backgroundFD, L_backgroundDSD)");
+    //ws->factory("SUM::L_background(fBkgNP[.5,0,1.]*L_background_NP,fBkgFD[.01,0.001,0.04]*L_backgroundFD, L_backgroundDSD)");
+
+	ws->factory("RooDecay::L_comb_backgroundSSD(Jpsict,jpsi_bkgTauSSD,L_TotalPromptLifetime,RooDecay::SingleSided)");
+	ws->factory("RooDecay::L_comb_backgroundFD(Jpsict,jpsi_bkgTauFD,L_TotalPromptLifetime,RooDecay::Flipped)");
+	ws->factory("RooDecay::L_comb_backgroundDSD(Jpsict,jpsi_bkgTauDSD,L_TotalPromptLifetime,RooDecay::DoubleSided)");
+	ws->factory("SUM::L_comb_background(jpsi_fBkgSSDR*L_comb_backgroundSSD,jpsi_fBkgDSD*L_comb_backgroundDSD,L_comb_backgroundFD)");
+
 
     //combine mass and lifetime
     ws->factory("PROD::ML_chic1_PR(M_chic1,L_TotalPromptLifetime|JpsictErr)");
@@ -173,15 +181,16 @@ void chiMassLifetimeFit(const std::string &infilename, int rapBin, int ptBin, in
     ws->factory("SUM::ML_chic0(fracNP_chic0[0.3,0.,1.]*ML_chic0_NP, ML_chic0_PR)");
 
     ws->factory("PROD::ML_background(M_background,L_background|JpsictErr)");
+    ws->factory("PROD::ML_comb_background(M_background,L_comb_background|JpsictErr)");
     ws->factory("SUM::ML_signal(fracSignal_chic1[0.8,0.,1.]*ML_chic1, fracSignal_chic0[0.02,0.,0.06]*ML_chic0, ML_chic2)");
 
     //full mass lifetime shape
-    ws->factory("SUM::ML_fullModelNonE(fracBackground[0.6,0.,1.]*ML_background, ML_signal)");
+    ws->factory("SUM::ML_fullModelNonE(fracBackground[0.6,0.,1.]*ML_background, jpsi_fBkg*ML_comb_background, ML_signal)");
     ws->factory(Form("ExtendPdf::ML_fullModel(ML_fullModelNonE, NumEvE[%f,%f,%f])",ev, ev/ExtensionFactor, ev*ExtensionFactor));
 
     //full mass shape
     ws->factory("SUM::M_signal(fracSignal_chic1*M_chic1, fracSignal_chic0*M_chic0, M_chic2)");
-    ws->factory("SUM::M_fullModelNonE(fracBackground*M_background, M_signal)");
+    ws->factory("SUM::M_fullModelNonE(fracBackground*M_background, jpsi_fBkg*M_background, M_signal)");
     ws->factory("ExtendPdf::M_fullModel(M_fullModelNonE, NumEvE)");
 
 
@@ -201,6 +210,9 @@ void chiMassLifetimeFit(const std::string &infilename, int rapBin, int ptBin, in
 
     ws->var("promptMean")->setVal(0.);
     ws->var("promptMean")->setConstant(kTRUE);
+
+    ws->var("BK_p2")->setVal(1.e-10);
+    ws->var("BK_p2")->setConstant(kTRUE);
 
     if(MC){
         ws->var("fracBackground")->setVal(1.e-10);
@@ -242,7 +254,26 @@ void chiMassLifetimeFit(const std::string &infilename, int rapBin, int ptBin, in
     //else if(rapBin == 2){
     //    ws->var("ctResolution2")->setVal(1.5);
     //}
-    //ws->var("ctResolution2")->setConstant(kTRUE);
+
+
+    //Fix comb background from jpsi fit
+
+    ws->var("ctResolution2")->setVal(ws->var("jpsi_ctResolution2")->getVal());
+    ws->var("ctResolution2")->setConstant(kTRUE);
+    ws->var("ctResolution")->setVal(ws->var("jpsi_ctResolution")->getVal());
+    ws->var("ctResolution")->setConstant(kTRUE);
+    ws->var("fracGauss2")->setVal(ws->var("jpsi_fracGauss2")->getVal());
+    ws->var("fracGauss2")->setConstant(kTRUE);
+
+    //Fix comb background from jpsi fit
+
+	ws->var("jpsi_fBkg")->setConstant(kTRUE);
+	ws->var("jpsi_fBkgSSDR")->setConstant(kTRUE);
+	ws->var("jpsi_fBkgDSD")->setConstant(kTRUE);
+	ws->var("jpsi_bkgTauSSD")->setConstant(kTRUE);
+	ws->var("jpsi_bkgTauFD")->setConstant(kTRUE);
+	ws->var("jpsi_bkgTauDSD")->setConstant(kTRUE);
+
 
     //ws->var("fracGauss2")->setVal(0.);
     //ws->var("fracGauss2")->setConstant(kTRUE);

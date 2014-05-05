@@ -37,7 +37,7 @@ void DefineRegionsAndFractions(const std::string &infilename, int rapBin, int pt
 
 
     std::stringstream binName;
-    binName << "data_rap" << rapBin << "_pt" << ptBin;
+    binName << "data_rap" << rapBin << "_pt" << ptBin<< "_SR";
     RooDataSet *data = (RooDataSet*)ws->data(binName.str().c_str());
     double data_ev = data->numEntries();
     std::cout<<"Number of Events in dataset: "<<data_ev<<endl;
@@ -487,8 +487,13 @@ void DefineRegionsAndFractions(const std::string &infilename, int rapBin, int pt
     RooAbsData* dataRSB = data->reduce(Cut(cutRSB.str().c_str()));
 
 
+    double fJpsiBackground=ws->var("fracBackground")->getVal();
+    double fCombBackground=ws->var("jpsi_fBkg")->getVal();
+    double fTotBackground = fCombBackground + fJpsiBackground;
+    double fractionCombBGofTotalBackground = fCombBackground / fTotBackground;
+    double fractionJpsiBGofTotalBackground = fJpsiBackground / fTotBackground;
 
-    double nBackground=ev*ws->var("fracBackground")->getVal();
+    double nBackground=ev*(ws->var("fracBackground")->getVal()+ws->var("jpsi_fBkg")->getVal());
     double nChic=ev-nBackground;
     double nChic0=nChic*ws->var("fracSignal_chic0")->getVal();
     double nChic1=nChic*ws->var("fracSignal_chic1")->getVal();
@@ -937,6 +942,16 @@ void DefineRegionsAndFractions(const std::string &infilename, int rapBin, int pt
     RooRealVar var_fracBackgroundInSR1("var_fracBackgroundInSR1","var_fracBackgroundInSR1",fracBackgroundInSR1); if(!ws->var("var_fracBackgroundInSR1")) ws->import(var_fracBackgroundInSR1); else ws->var("var_fracBackgroundInSR1")->setVal(fracBackgroundInSR1);
     RooRealVar var_fracBackgroundInSR2("var_fracBackgroundInSR2","var_fracBackgroundInSR2",fracBackgroundInSR2); if(!ws->var("var_fracBackgroundInSR2")) ws->import(var_fracBackgroundInSR2); else ws->var("var_fracBackgroundInSR2")->setVal(fracBackgroundInSR2);
 
+    RooRealVar var_fracJpsiBackgroundInLSB("var_fracJpsiBackgroundInLSB","var_fracJpsiBackgroundInLSB",fracBackgroundInLSB*fractionJpsiBGofTotalBackground); if(!ws->var("var_fracJpsiBackgroundInLSB")) ws->import(var_fracJpsiBackgroundInLSB); else ws->var("var_fracJpsiBackgroundInLSB")->setVal(fracBackgroundInLSB*fractionJpsiBGofTotalBackground);
+    RooRealVar var_fracJpsiBackgroundInRSB("var_fracJpsiBackgroundInRSB","var_fracJpsiBackgroundInRSB",fracBackgroundInRSB*fractionJpsiBGofTotalBackground); if(!ws->var("var_fracJpsiBackgroundInRSB")) ws->import(var_fracJpsiBackgroundInRSB); else ws->var("var_fracJpsiBackgroundInRSB")->setVal(fracBackgroundInRSB*fractionJpsiBGofTotalBackground);
+    RooRealVar var_fracJpsiBackgroundInSR1("var_fracJpsiBackgroundInSR1","var_fracJpsiBackgroundInSR1",fracBackgroundInSR1*fractionJpsiBGofTotalBackground); if(!ws->var("var_fracJpsiBackgroundInSR1")) ws->import(var_fracJpsiBackgroundInSR1); else ws->var("var_fracJpsiBackgroundInSR1")->setVal(fracBackgroundInSR1*fractionJpsiBGofTotalBackground);
+    RooRealVar var_fracJpsiBackgroundInSR2("var_fracJpsiBackgroundInSR2","var_fracJpsiBackgroundInSR2",fracBackgroundInSR2*fractionJpsiBGofTotalBackground); if(!ws->var("var_fracJpsiBackgroundInSR2")) ws->import(var_fracJpsiBackgroundInSR2); else ws->var("var_fracJpsiBackgroundInSR2")->setVal(fracBackgroundInSR2*fractionJpsiBGofTotalBackground);
+
+    RooRealVar var_fracCombBackgroundInLSB("var_fracCombBackgroundInLSB","var_fracCombBackgroundInLSB",fracBackgroundInLSB*fractionCombBGofTotalBackground); if(!ws->var("var_fracCombBackgroundInLSB")) ws->import(var_fracCombBackgroundInLSB); else ws->var("var_fracCombBackgroundInLSB")->setVal(fracBackgroundInLSB*fractionCombBGofTotalBackground);
+    RooRealVar var_fracCombBackgroundInRSB("var_fracCombBackgroundInRSB","var_fracCombBackgroundInRSB",fracBackgroundInRSB*fractionCombBGofTotalBackground); if(!ws->var("var_fracCombBackgroundInRSB")) ws->import(var_fracCombBackgroundInRSB); else ws->var("var_fracCombBackgroundInRSB")->setVal(fracBackgroundInRSB*fractionCombBGofTotalBackground);
+    RooRealVar var_fracCombBackgroundInSR1("var_fracCombBackgroundInSR1","var_fracCombBackgroundInSR1",fracBackgroundInSR1*fractionCombBGofTotalBackground); if(!ws->var("var_fracCombBackgroundInSR1")) ws->import(var_fracCombBackgroundInSR1); else ws->var("var_fracCombBackgroundInSR1")->setVal(fracBackgroundInSR1*fractionCombBGofTotalBackground);
+    RooRealVar var_fracCombBackgroundInSR2("var_fracCombBackgroundInSR2","var_fracCombBackgroundInSR2",fracBackgroundInSR2*fractionCombBGofTotalBackground); if(!ws->var("var_fracCombBackgroundInSR2")) ws->import(var_fracCombBackgroundInSR2); else ws->var("var_fracCombBackgroundInSR2")->setVal(fracBackgroundInSR2*fractionCombBGofTotalBackground);
+
     RooRealVar var_fracChic0InLSB("var_fracChic0InLSB","var_fracChic0InLSB",fracChic0InLSB); if(!ws->var("var_fracChic0InLSB")) ws->import(var_fracChic0InLSB); else ws->var("var_fracChic0InLSB")->setVal(fracChic0InLSB);
     RooRealVar var_fracChic0InRSB("var_fracChic0InRSB","var_fracChic0InRSB",fracChic0InRSB); if(!ws->var("var_fracChic0InRSB")) ws->import(var_fracChic0InRSB); else ws->var("var_fracChic0InRSB")->setVal(fracChic0InRSB);
     RooRealVar var_fracChic0InSR1("var_fracChic0InSR1","var_fracChic0InSR1",fracChic0InSR1); if(!ws->var("var_fracChic0InSR1")) ws->import(var_fracChic0InSR1); else ws->var("var_fracChic0InSR1")->setVal(fracChic0InSR1);
@@ -1029,14 +1044,25 @@ void DefineRegionsAndFractions(const std::string &infilename, int rapBin, int pt
     RooRealVar var_fracNPChic2InNPSR2("var_fracNPChic2InNPSR2","var_fracNPChic2InNPSR2",fracNPChic2InNPSR2); if(!ws->var("var_fracNPChic2InNPSR2")) ws->import(var_fracNPChic2InNPSR2); else ws->var("var_fracNPChic2InNPSR2")->setVal(fracNPChic2InNPSR2);
     RooRealVar var_fracBackgroundInNPSR2("var_fracBackgroundInNPSR2","var_fracBackgroundInNPSR2",fracBackgroundInNPSR2); if(!ws->var("var_fracBackgroundInNPSR2")) ws->import(var_fracBackgroundInNPSR2); else ws->var("var_fracBackgroundInNPSR2")->setVal(fracBackgroundInNPSR2);
 
+    RooRealVar var_fTotBackground("var_fTotBackground","var_fTotBackground",fTotBackground); if(!ws->var("var_fTotBackground")) ws->import(var_fTotBackground); else ws->var("var_fTotBackground")->setVal(fTotBackground);
 
 //Define fullPdf with correct fractions in each mass region
 
-    RooAddPdf ML_fullModel_SR1= RooAddPdf("ML_fullModel_SR1","ML_fullModel_SR1",RooArgList(*ws->pdf("ML_background"),*ws->pdf("ML_chic0"),*ws->pdf("ML_chic1"),*ws->pdf("ML_chic2")),RooArgList(var_fracBackgroundInSR1, var_fracChic0InSR1, var_fracChic1InSR1, var_fracChic2InSR1)); ws->import(ML_fullModel_SR1);
-    RooAddPdf ML_fullModel_SR2= RooAddPdf("ML_fullModel_SR2","ML_fullModel_SR2",RooArgList(*ws->pdf("ML_background"),*ws->pdf("ML_chic0"),*ws->pdf("ML_chic1"),*ws->pdf("ML_chic2")),RooArgList(var_fracBackgroundInSR2, var_fracChic0InSR2, var_fracChic1InSR2, var_fracChic2InSR2)); ws->import(ML_fullModel_SR2);
-    RooAddPdf ML_fullModel_LSB= RooAddPdf("ML_fullModel_LSB","ML_fullModel_LSB",RooArgList(*ws->pdf("ML_background"),*ws->pdf("ML_chic0"),*ws->pdf("ML_chic1"),*ws->pdf("ML_chic2")),RooArgList(var_fracBackgroundInLSB, var_fracChic0InLSB, var_fracChic1InLSB, var_fracChic2InLSB)); ws->import(ML_fullModel_LSB);
-    RooAddPdf ML_fullModel_RSB= RooAddPdf("ML_fullModel_RSB","ML_fullModel_RSB",RooArgList(*ws->pdf("ML_background"),*ws->pdf("ML_chic0"),*ws->pdf("ML_chic1"),*ws->pdf("ML_chic2")),RooArgList(var_fracBackgroundInRSB, var_fracChic0InRSB, var_fracChic1InRSB, var_fracChic2InRSB)); ws->import(ML_fullModel_RSB);
+    RooAddPdf ML_fullModel_SR1= RooAddPdf("ML_fullModel_SR1","ML_fullModel_SR1",RooArgList(*ws->pdf("ML_background"),*ws->pdf("ML_comb_background"),*ws->pdf("ML_chic0"),*ws->pdf("ML_chic1"),*ws->pdf("ML_chic2")),RooArgList(var_fracJpsiBackgroundInSR1, var_fracCombBackgroundInSR1, var_fracChic0InSR1, var_fracChic1InSR1, var_fracChic2InSR1)); ws->import(ML_fullModel_SR1);
+    RooAddPdf ML_fullModel_SR2= RooAddPdf("ML_fullModel_SR2","ML_fullModel_SR2",RooArgList(*ws->pdf("ML_background"),*ws->pdf("ML_comb_background"),*ws->pdf("ML_chic0"),*ws->pdf("ML_chic1"),*ws->pdf("ML_chic2")),RooArgList(var_fracJpsiBackgroundInSR2, var_fracCombBackgroundInSR2, var_fracChic0InSR2, var_fracChic1InSR2, var_fracChic2InSR2)); ws->import(ML_fullModel_SR2);
+    RooAddPdf ML_fullModel_LSB= RooAddPdf("ML_fullModel_LSB","ML_fullModel_LSB",RooArgList(*ws->pdf("ML_background"),*ws->pdf("ML_comb_background"),*ws->pdf("ML_chic0"),*ws->pdf("ML_chic1"),*ws->pdf("ML_chic2")),RooArgList(var_fracJpsiBackgroundInLSB, var_fracCombBackgroundInLSB, var_fracChic0InLSB, var_fracChic1InLSB, var_fracChic2InLSB)); ws->import(ML_fullModel_LSB);
+    RooAddPdf ML_fullModel_RSB= RooAddPdf("ML_fullModel_RSB","ML_fullModel_RSB",RooArgList(*ws->pdf("ML_background"),*ws->pdf("ML_comb_background"),*ws->pdf("ML_chic0"),*ws->pdf("ML_chic1"),*ws->pdf("ML_chic2")),RooArgList(var_fracJpsiBackgroundInRSB, var_fracCombBackgroundInRSB, var_fracChic0InRSB, var_fracChic1InRSB, var_fracChic2InRSB)); ws->import(ML_fullModel_RSB);
 
+    /*
+    RooRealVar var_fracPRChic0InSR1("var_fracPRChic0InSR1","var_fracPRChic0InSR1",ws->var("var_fracChic0InSR1")->getVal()*(1-ws->var("fracNP_chic0")->getVal())); if(!ws->var("var_fracPRChic0InSR1")) ws->import(var_fracPRChic0InSR1); else ws->var("var_fracPRChic0InSR1")->setVal(ws->var("var_fracChic0InSR1")->getVal()*(1-ws->var("fracNP_chic0")->getVal()));
+    RooRealVar var_fracNPChic0InSR1("var_fracNPChic0InSR1","var_fracNPChic0InSR1",ws->var("var_fracChic0InSR1")->getVal()*ws->var("fracNP_chic0")->getVal()); if(!ws->var("var_fracNPChic0InSR1")) ws->import(var_fracNPChic0InSR1); else ws->var("var_fracNPChic0InSR1")->setVal(ws->var("var_fracChic0InSR1")->getVal()*ws->var("fracNP_chic0")->getVal());
+    RooRealVar var_fracPRChic1InSR1("var_fracPRChic1InSR1","var_fracPRChic1InSR1",ws->var("var_fracChic1InSR1")->getVal()*(1-ws->var("fracNP_chic0")->getVal())); if(!ws->var("var_fracPRChic1InSR1")) ws->import(var_fracPRChic1InSR1); else ws->var("var_fracPRChic1InSR1")->setVal(ws->var("var_fracChic1InSR1")->getVal()*(1-ws->var("fracNP_chic0")->getVal()));
+    RooRealVar var_fracNPChic1InSR1("var_fracNPChic1InSR1","var_fracNPChic1InSR1",ws->var("var_fracChic1InSR1")->getVal()*ws->var("fracNP_chic0")->getVal()); if(!ws->var("var_fracNPChic1InSR1")) ws->import(var_fracNPChic1InSR1); else ws->var("var_fracNPChic1InSR1")->setVal(ws->var("var_fracChic1InSR1")->getVal()*ws->var("fracNP_chic0")->getVal());
+    RooRealVar var_fracPRChic2InSR1("var_fracPRChic2InSR1","var_fracPRChic2InSR1",ws->var("var_fracChic2InSR1")->getVal()*(1-ws->var("fracNP_chic0")->getVal())); if(!ws->var("var_fracPRChic2InSR1")) ws->import(var_fracPRChic2InSR1); else ws->var("var_fracPRChic2InSR1")->setVal(ws->var("var_fracChic2InSR1")->getVal()*(1-ws->var("fracNP_chic0")->getVal()));
+    RooRealVar var_fracNPChic2InSR1("var_fracNPChic2InSR1","var_fracNPChic2InSR1",ws->var("var_fracChic2InSR1")->getVal()*ws->var("fracNP_chic0")->getVal()); if(!ws->var("var_fracNPChic2InSR1")) ws->import(var_fracNPChic2InSR1); else ws->var("var_fracNPChic2InSR1")->setVal(ws->var("var_fracChic2InSR1")->getVal()*ws->var("fracNP_chic0")->getVal());
+
+    RooAddPdf L_fullModel_SR1= RooAddPdf("L_fullModel_SR1","L_fullModel_SR1",RooArgList(*ws->pdf("L_background"),*ws->pdf("L_comb_background"),*ws->pdf("L_TotalPromptLifetime"),*ws->pdf("L_chic0_NP"),*ws->pdf("L_TotalPromptLifetime"),*ws->pdf("L_chic1_NP"),*ws->pdf("L_TotalPromptLifetime"),*ws->pdf("L_chic2_NP")),RooArgList(var_fracJpsiBackgroundInSR1, var_fracCombBackgroundInSR1, var_fracPRChic0InSR1, var_fracNPChic0InSR1, var_fracPRChic1InSR1, var_fracNPChic1InSR1, var_fracPRChic2InSR1, var_fracNPChic2InSR1)); ws->import(L_fullModel_SR1);
+    */
 
     RooAbsReal* real_fPRLSBInLSB = ML_fullModel_LSB.createIntegral(RooArgSet(*ct), NormSet(RooArgSet(*ct)), Range("PR"));
     double fPRLSBInLSB=real_fPRLSBInLSB->getVal();

@@ -30,7 +30,7 @@ void PlotMassLifetime(const std::string &infilename, int rapBin, int ptBin, int 
 
 
 	bool SpeedPlotting=true;
-	int nSpeedPlotting=400;
+	int nSpeedPlotting=250;
 	bool plotZoom=true;
 
 	double chi2ndfMass=0.;
@@ -46,7 +46,7 @@ void PlotMassLifetime(const std::string &infilename, int rapBin, int ptBin, int 
 			//std::cout << ">>>>Plotting 2D mass-lifetime all data" << std::endl;
 			//plot2DMassLifetime(ws, rapBin, ptBin, nState);
 			std::cout << ">>>>Plotting 2D mass-lifetime pedagogical" << std::endl;
-			plot2DMassLifetimePedagogical(ws, rapBin, ptBin, nState);
+			if(ptBin==0) plot2DMassLifetimePedagogical(ws, rapBin, ptBin, nState);
 			std::cout << ">>>>Plotting mass all data" << std::endl;
 			chi2ndfMass = plotMass(ws, rapBin, ptBin, nState);
 			std::cout << ">>>>chi2ndfMass = " << chi2ndfMass << std::endl;
@@ -76,10 +76,8 @@ void PlotMassLifetime(const std::string &infilename, int rapBin, int ptBin, int 
 			}
 			break;
 		case 2:
-			//std::cout << ">>>>Plotting 2D mass-lifetime all data" << std::endl;
-			//plot2DMassLifetime(ws, rapBin, ptBin, nState);
 			std::cout << ">>>>Plotting 2D mass-lifetime pedagogical" << std::endl;
-			plot2DMassLifetimePedagogical(ws, rapBin, ptBin, nState);
+			if(ptBin==0) plot2DMassLifetimePedagogical(ws, rapBin, ptBin, nState);
 			std::cout << ">>>>Plotting mass all data" << std::endl;
 			chi2ndfMass = plotMass(ws, rapBin, ptBin, nState);
 			break;
@@ -172,18 +170,12 @@ void PlotMassLifetime(const std::string &infilename, int rapBin, int ptBin, int 
         std::cout << "Error: failed to open workspace " << std::endl;
     }
 
-	RooRealVar var_chi2ndf_Mass("var_chi2ndf_Mass","var_chi2ndf_Mass",chi2ndfMass);
-	var_chi2ndf_Mass.setVal(chi2ndfMass); if(!wsOut->var("var_chi2ndf_Mass")) wsOut->import(var_chi2ndf_Mass); else wsOut->var("var_chi2ndf_Mass")->setVal(chi2ndfMass);
-	RooRealVar var_chi2ndf_Lifetime("var_chi2ndf_Lifetime","var_chi2ndf_Lifetime",chi2ndfLifetime);
-	var_chi2ndf_Lifetime.setVal(chi2ndfLifetime); if(!wsOut->var("var_chi2ndf_Lifetime")) wsOut->import(var_chi2ndf_Lifetime); else wsOut->var("var_chi2ndf_Lifetime")->setVal(chi2ndfLifetime);
-	RooRealVar var_chi2ndf_Lifetime_SR1("var_chi2ndf_Lifetime_SR1","var_chi2ndf_Lifetime_SR1",chi2ndfLifetimeSR1);
-	var_chi2ndf_Lifetime_SR1.setVal(chi2ndfLifetimeSR1); if(!wsOut->var("var_chi2ndf_Lifetime_SR1")) wsOut->import(var_chi2ndf_Lifetime_SR1); else wsOut->var("var_chi2ndf_Lifetime_SR1")->setVal(chi2ndfLifetimeSR1);
-	RooRealVar var_chi2ndf_Lifetime_SR2("var_chi2ndf_Lifetime_SR2","var_chi2ndf_Lifetime_SR2",chi2ndfLifetimeSR2);
-	var_chi2ndf_Lifetime_SR2.setVal(chi2ndfLifetimeSR2); if(!wsOut->var("var_chi2ndf_Lifetime_SR2")) wsOut->import(var_chi2ndf_Lifetime_SR2); else wsOut->var("var_chi2ndf_Lifetime_SR2")->setVal(chi2ndfLifetimeSR2);
-	RooRealVar var_chi2ndf_Lifetime_LSB("var_chi2ndf_Lifetime_LSB","var_chi2ndf_Lifetime_LSB",chi2ndfLifetimeLSB);
-	var_chi2ndf_Lifetime_LSB.setVal(chi2ndfLifetimeLSB); if(!wsOut->var("var_chi2ndf_Lifetime_LSB")) wsOut->import(var_chi2ndf_Lifetime_LSB); else wsOut->var("var_chi2ndf_Lifetime_LSB")->setVal(chi2ndfLifetimeLSB);
-	RooRealVar var_chi2ndf_Lifetime_RSB("var_chi2ndf_Lifetime_RSB","var_chi2ndf_Lifetime_RSB",chi2ndfLifetimeRSB);
-	var_chi2ndf_Lifetime_RSB.setVal(chi2ndfLifetimeRSB); if(!wsOut->var("var_chi2ndf_Lifetime_RSB")) wsOut->import(var_chi2ndf_Lifetime_RSB); else wsOut->var("var_chi2ndf_Lifetime_RSB")->setVal(chi2ndfLifetimeRSB);
+	RooRealVar var_chi2ndf_Mass("var_chi2ndf_Mass","var_chi2ndf_Mass",chi2ndfMass); var_chi2ndf_Mass.setVal(chi2ndfMass); if(!wsOut->var("var_chi2ndf_Mass")) wsOut->import(var_chi2ndf_Mass); else wsOut->var("var_chi2ndf_Mass")->setVal(chi2ndfMass);
+	if(Plotting==1 || Plotting==3 || Plotting==4){ RooRealVar var_chi2ndf_Lifetime_SR1("var_chi2ndf_Lifetime_SR1","var_chi2ndf_Lifetime_SR1",chi2ndfLifetimeSR1); var_chi2ndf_Lifetime_SR1.setVal(chi2ndfLifetimeSR1); if(!wsOut->var("var_chi2ndf_Lifetime_SR1")) wsOut->import(var_chi2ndf_Lifetime_SR1); else wsOut->var("var_chi2ndf_Lifetime_SR1")->setVal(chi2ndfLifetimeSR1);}
+	if(Plotting==1 || Plotting==3 || Plotting==5){ RooRealVar var_chi2ndf_Lifetime_SR2("var_chi2ndf_Lifetime_SR2","var_chi2ndf_Lifetime_SR2",chi2ndfLifetimeSR2); var_chi2ndf_Lifetime_SR2.setVal(chi2ndfLifetimeSR2); if(!wsOut->var("var_chi2ndf_Lifetime_SR2")) wsOut->import(var_chi2ndf_Lifetime_SR2); else wsOut->var("var_chi2ndf_Lifetime_SR2")->setVal(chi2ndfLifetimeSR2);}
+	if(Plotting==1 || Plotting==3 || Plotting==6){ RooRealVar var_chi2ndf_Lifetime_LSB("var_chi2ndf_Lifetime_LSB","var_chi2ndf_Lifetime_LSB",chi2ndfLifetimeLSB); var_chi2ndf_Lifetime_LSB.setVal(chi2ndfLifetimeLSB); if(!wsOut->var("var_chi2ndf_Lifetime_LSB")) wsOut->import(var_chi2ndf_Lifetime_LSB); else wsOut->var("var_chi2ndf_Lifetime_LSB")->setVal(chi2ndfLifetimeLSB);}
+	if(Plotting==1 || Plotting==3 || Plotting==7){ RooRealVar var_chi2ndf_Lifetime_RSB("var_chi2ndf_Lifetime_RSB","var_chi2ndf_Lifetime_RSB",chi2ndfLifetimeRSB); var_chi2ndf_Lifetime_RSB.setVal(chi2ndfLifetimeRSB); if(!wsOut->var("var_chi2ndf_Lifetime_RSB")) wsOut->import(var_chi2ndf_Lifetime_RSB); else wsOut->var("var_chi2ndf_Lifetime_RSB")->setVal(chi2ndfLifetimeRSB);}
+	if(Plotting==1 || Plotting==3 || Plotting==8){ RooRealVar var_chi2ndf_Lifetime("var_chi2ndf_Lifetime","var_chi2ndf_Lifetime",chi2ndfLifetime); var_chi2ndf_Lifetime.setVal(chi2ndfLifetime); if(!wsOut->var("var_chi2ndf_Lifetime")) wsOut->import(var_chi2ndf_Lifetime); else wsOut->var("var_chi2ndf_Lifetime")->setVal(chi2ndfLifetime);}
 
     std::cout<< "write wsOut" <<std::endl;
     wsOut->Write();
@@ -204,7 +196,7 @@ void plot2DMassLifetime(RooWorkspace *ws, int rapBin, int ptBin, int nState){
 	RooRealVar *chicMass = ws->var("chicMass");
 	assert( 0 != chicMass );
 
-	RooAbsData *data= ws->data(Form("data_rap%d_pt%d",rapBin,ptBin));
+	RooAbsData *data= ws->data(Form("data_rap%d_pt%d_SR",rapBin,ptBin));
 	assert ( 0 != data );
 	RooFitResult* fitRlt = dynamic_cast<RooFitResult*>(ws->obj(Form("fitresult_rap%d_pt%d",rapBin,ptBin)));
 	assert ( 0 != fitRlt);
@@ -230,17 +222,17 @@ void plot2DMassLifetime(RooWorkspace *ws, int rapBin, int ptBin, int nState){
 
 	scaleFactor=ws->var("var_ev")->getVal();
 	TH2* model2Dhist = chicMass->createHistogram("mass vs ct pdf",*ct);
-	model2Dhist->SetBins(n2DbinsX, onia::chimassMin+0.001, onia::chimassMax-0.001, n2DbinsY, onia::ctPlotMin+0.001, onia::ctPlotMax-0.001);
+	model2Dhist->SetBins(n2DbinsX, onia::chimassMin, onia::chimassMax, n2DbinsY, onia::ctPlotMin, onia::ctPlotMax);
 	fullPdf->fillHistogram(model2Dhist, RooArgList(*chicMass, *ct), scaleFactor);//, &RooArgSet(*ctErr));
 
-	//model1Dhist = new TH1(n2DbinsX, onia::chimassMin+0.001, onia::chimassMax-0.001, n2DbinsY, -0.02, 0.18);
+	//model1Dhist = new TH1(n2DbinsX, onia::chimassMin, onia::chimassMax, n2DbinsY, -0.02, 0.18);
 	//int genNevents=100000;
 	//RooDataSet *genDataFromModel = fullPdf->generate(RooArgSet(*chicMass, *ct), genNevents);
-	//TH2* model2Dhist = (TH2*)genDataFromModel->createHistogram(*chicMass, *ct, n2DbinsX, n2DbinsY,Form("chicMass>%f&&chicMass<%f&&Jpsict>%f&&Jpsict<%f",onia::chimassMin+0.001, onia::chimassMax-0.001, n2DbinsY, -0.02, 0.18));
+	//TH2* model2Dhist = (TH2*)genDataFromModel->createHistogram(*chicMass, *ct, n2DbinsX, n2DbinsY,Form("chicMass>%f&&chicMass<%f&&Jpsict>%f&&Jpsict<%f",onia::chimassMin, onia::chimassMax, n2DbinsY, -0.02, 0.18));
 	//model2Dhist->Scale(scaleFactor/double(genNevents));
 
 	TH2* data2Dhist = chicMass->createHistogram("mass vs ct pdf",*ct);
-	data2Dhist->SetBins(n2DbinsX, onia::chimassMin+0.001, onia::chimassMax-0.001, n2DbinsY, onia::ctPlotMin+0.001, onia::ctPlotMax-0.001);
+	data2Dhist->SetBins(n2DbinsX, onia::chimassMin, onia::chimassMax, n2DbinsY, onia::ctPlotMin, onia::ctPlotMax);
 	data->fillHistogram(data2Dhist, RooArgList(*chicMass, *ct));
 	data2Dhist->SetMarkerStyle(20);
 	//data2Dhist->Print("all");
@@ -292,24 +284,24 @@ void plot2DMassLifetime(RooWorkspace *ws, int rapBin, int ptBin, int nState){
 			c2->SetTheta(25.);
 			c2->SetPhi(130.);
 
-			double left=0.7, top=0.9, textSize=0.025;
+			double left=0.7, top=0.885, textSize=0.03;
 			TLatex *latex=new TLatex();
 			latex->SetTextFont(42);
 			latex->SetNDC(kTRUE);
 			latex->SetTextSize(textSize);
-			double step=textSize*1.3;
+			double step=textSize*1.6;
 
 
 			//gStyle->SetPadBottomMargin(0.08); //0.12
 			//gStyle->SetPadLeftMargin(0.09); //0.12
-			//gStyle->SetPadRightMargin(0.02); //0.05
+			//gStyle->SetPadRightMargin(0.035); //0.05
 			//gStyle->SetPadTopMargin(0.05); //0.05
 
 
-			textSize=0.04; latex->SetTextSize(textSize);
+			textSize=0.03; latex->SetTextSize(textSize);
 			if(rapBin<1) left=0.1125;
 			else left=0.100;
-			top=0.95;
+			top=0.885;
 			if(rapBin==0) latex->DrawLatex(left,top,Form("|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[onia::kNbRapForPTBins]));
 			else if(rapBin==1) latex->DrawLatex(left,top,Form("|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[rapBin]));
 			else latex->DrawLatex(left,top,Form("%.1f < |y%s| < %.1f",onia::rapForPTRange[rapBin-1],onia::KinParticleChar,onia::rapForPTRange[rapBin]));
@@ -322,8 +314,8 @@ void plot2DMassLifetime(RooWorkspace *ws, int rapBin, int ptBin, int nState){
 
 			top+=textSize*1.7/2.;
 			left=0.65;
-			textSize=0.0310; latex->SetTextSize(textSize);
-			latex->DrawLatex(left,top,Form("#chi^{2}/ndf = %1.1f / %1.0f = %1.1f", chi2Full, ndfFull, double(chi2Full/ndfFull)));
+			textSize=0.03; latex->SetTextSize(textSize);
+			latex->DrawLatex(left,top,Form("#chi^{2}/ndf = %.1f / %d", chi2Full, ndfFull));
 
 
 
@@ -334,12 +326,12 @@ void plot2DMassLifetime(RooWorkspace *ws, int rapBin, int ptBin, int nState){
 			std::stringstream saveMassLifetime;
 			std::stringstream saveMassLifetimeRoot;
 			if(LinLog==0){
-				saveMassLifetime << "Fit/2D_mass_ctau_lin_rap" << rapBin << "_pt" << ptBin << ".pdf";
-				//saveMassLifetimeRoot << "Fit/root/2D_mass_ctau_lin_rap" << rapBin << "_pt" << ptBin << ".root";
+				saveMassLifetime << "Fit/chicFit/2D_mass_ctau_lin_rap" << rapBin << "_pt" << ptBin << ".pdf";
+				//saveMassLifetimeRoot << "Fit/root/chic_2D_mass_ctau_lin_rap" << rapBin << "_pt" << ptBin << ".root";
 			}
 			if(LinLog==1){
-				saveMassLifetime << "Fit/2D_mass_ctau_log_rap" << rapBin << "_pt" << ptBin << ".pdf";
-				saveMassLifetimeRoot << "Fit/root/2D_mass_ctau_log_rap" << rapBin << "_pt" << ptBin << ".root";
+				saveMassLifetime << "Fit/chicFit/2D_mass_ctau_log_rap" << rapBin << "_pt" << ptBin << ".pdf";
+				saveMassLifetimeRoot << "Fit/root/chic_2D_mass_ctau_log_rap" << rapBin << "_pt" << ptBin << ".root";
 			}
 			c2->SaveAs(saveMassLifetime.str().c_str());
 			c2->SaveAs(saveMassLifetimeRoot.str().c_str());
@@ -362,7 +354,7 @@ void plot2DMassLifetimePedagogical(RooWorkspace *ws, int rapBin, int ptBin, int 
 	RooRealVar *chicMass = ws->var("chicMass");
 	assert( 0 != chicMass );
 
-	RooAbsData *data= ws->data(Form("data_rap%d_pt%d",rapBin,ptBin));
+	RooAbsData *data= ws->data(Form("data_rap%d_pt%d_SR",rapBin,ptBin));
 	assert ( 0 != data );
 	RooFitResult* fitRlt = dynamic_cast<RooFitResult*>(ws->obj(Form("fitresult_rap%d_pt%d",rapBin,ptBin)));
 	assert ( 0 != fitRlt);
@@ -388,8 +380,8 @@ void plot2DMassLifetimePedagogical(RooWorkspace *ws, int rapBin, int ptBin, int 
 
 	double ctauMinPedag=-0.1999;
 	double ctauMaxPedag=0.4999;
-	double massMinPedag=onia::chimassMin+0.001;
-	double massMaxPedag=onia::chimassMax-0.001;
+	double massMinPedag=onia::chimassMin;
+	double massMaxPedag=onia::chimassMax;
 
     double sig1MaxMass = ws->var("var_sig1MaxMass")->getVal();
     double sig1MinMass = ws->var("var_sig1MinMass")->getVal();
@@ -592,38 +584,13 @@ void plot2DMassLifetimePedagogical(RooWorkspace *ws, int rapBin, int ptBin, int 
 			//c2->SetPhi(130.);
 			c2->SetPhi(200.);
 
-			double left=0.7, top=0.9, textSize=0.025;
+			double left=0.7, top=0.885, textSize=0.03;
 			TLatex *latex=new TLatex();
 			latex->SetTextFont(42);
 			latex->SetNDC(kTRUE);
 			latex->SetTextSize(textSize);
-			double step=textSize*1.3;
+			double step=textSize*1.6;
 
-
-			//gStyle->SetPadBottomMargin(0.08); //0.12
-			//gStyle->SetPadLeftMargin(0.09); //0.12
-			//gStyle->SetPadRightMargin(0.02); //0.05
-			//gStyle->SetPadTopMargin(0.05); //0.05
-
-
-			//textSize=0.04; latex->SetTextSize(textSize);
-			//if(rapBin<1) left=0.1125;
-			//else left=0.100;
-			//top=0.95;
-			//if(rapBin==0) latex->DrawLatex(left,top,Form("|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[onia::kNbRapForPTBins]));
-			//else if(rapBin==1) latex->DrawLatex(left,top,Form("|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[rapBin]));
-			//else latex->DrawLatex(left,top,Form("%.1f < |y%s| < %.1f",onia::rapForPTRange[rapBin-1],onia::KinParticleChar,onia::rapForPTRange[rapBin]));
-            //
-			//left=0.0755; top-=textSize*1.7;
-			//if(ptBin==0)
-			//	latex->DrawLatex(left,top,Form("%.0f < p%s_{T} < %.0f GeV",onia::pTRange[rapBin][ptBin],onia::KinParticleChar,onia::pTRange[rapBin][onia::kNbPTMaxBins]));
-			//else
-			//	latex->DrawLatex(left,top,Form("%.0f < p%s_{T} < %.0f GeV",onia::pTRange[rapBin][ptBin-1],onia::KinParticleChar,onia::pTRange[rapBin][ptBin]));
-            //
-			//top+=textSize*1.7/2.;
-			//left=0.65;
-			//textSize=0.0310; latex->SetTextSize(textSize);
-			//latex->DrawLatex(left,top,Form("#chi^{2}/ndf = %1.1f / %1.0f = %1.1f", chi2Full, ndfFull, double(chi2Full/ndfFull)));
 
 
 
@@ -635,13 +602,13 @@ void plot2DMassLifetimePedagogical(RooWorkspace *ws, int rapBin, int ptBin, int 
 			std::stringstream saveMassLifetimePng;
 			std::stringstream saveMassLifetimeRoot;
 			if(LinLog==0){
-				saveMassLifetime << "Fit/2D_mass_ctau_pedagogical_lin_rap" << rapBin << "_pt" << ptBin << ".pdf";
-				saveMassLifetimePng << "Fit/2D_mass_ctau_pedagogical_lin_rap" << rapBin << "_pt" << ptBin << ".gif";
+				saveMassLifetime << "Fit/chicFit/2D_mass_ctau_pedagogical_lin_rap" << rapBin << "_pt" << ptBin << ".pdf";
+				saveMassLifetimePng << "Fit/chicFit/2D_mass_ctau_pedagogical_lin_rap" << rapBin << "_pt" << ptBin << ".gif";
 			}
 			if(LinLog==1){
-				saveMassLifetime << "Fit/2D_mass_ctau_pedagogical_log_rap" << rapBin << "_pt" << ptBin << ".pdf";
-				saveMassLifetimePng << "Fit/2D_mass_ctau_pedagogical_log_rap" << rapBin << "_pt" << ptBin << ".gif";
-				saveMassLifetimeRoot << "Fit/root/2D_mass_ctau_pedagogical_log_rap" << rapBin << "_pt" << ptBin << ".root";
+				saveMassLifetime << "Fit/chicFit/2D_mass_ctau_pedagogical_log_rap" << rapBin << "_pt" << ptBin << ".pdf";
+				saveMassLifetimePng << "Fit/chicFit/2D_mass_ctau_pedagogical_log_rap" << rapBin << "_pt" << ptBin << ".gif";
+				saveMassLifetimeRoot << "Fit/root/chic_2D_mass_ctau_pedagogical_log_rap" << rapBin << "_pt" << ptBin << ".root";
 				//c2->SaveAs(saveMassLifetimeRoot.str().c_str());
 			}
 			c2->SaveAs(saveMassLifetimePng.str().c_str());
@@ -668,14 +635,14 @@ double plotMass(RooWorkspace *ws, int rapBin, int ptBin, int nState){
 	RooRealVar *chicMass = ws->var("chicMass");
 	assert( 0 != chicMass );
 
-	RooPlot *massFrame = chicMass->frame(Range(onia::chimassMin+0.001, onia::chimassMax-0.001),Bins(nbins));
+	RooPlot *massFrame = chicMass->frame(Range(onia::chimassMin, onia::chimassMax),Bins(nbins));
 	assert ( 0 != massFrame );
 	massFrame->SetName(Form("mass_plot_rap%d_pt%d",rapBin,ptBin));
 	massFrame->SetTitle("");
 	massFrame->GetYaxis()->SetTitle(Form("Events / %1.0f MeV",binWidth));
 	massFrame->GetYaxis()->SetTitleOffset(1.3);
 
-	RooPlot *massFramePull = chicMass->frame(Range(onia::chimassMin+0.001, onia::chimassMax-0.001),Bins(nbins));
+	RooPlot *massFramePull = chicMass->frame(Range(onia::chimassMin, onia::chimassMax),Bins(nbins));
 	assert ( 0 != massFramePull );
 	massFramePull->SetName(Form("pullmass_plot_rap%d_pt%d",rapBin,ptBin));
 	massFramePull->SetTitle("");
@@ -688,7 +655,7 @@ double plotMass(RooWorkspace *ws, int rapBin, int ptBin, int nState){
 	massFramePull->GetYaxis()->SetRangeUser(-5.99,5.99);
 
 
-	RooAbsData *data= ws->data(Form("data_rap%d_pt%d",rapBin,ptBin));
+	RooAbsData *data= ws->data(Form("data_rap%d_pt%d_SR",rapBin,ptBin));
 	assert ( 0 != data );
 	RooFitResult* fitRlt = dynamic_cast<RooFitResult*>(ws->obj(Form("fitresult_rap%d_pt%d",rapBin,ptBin)));
 	assert ( 0 != fitRlt);
@@ -739,7 +706,7 @@ double plotMass(RooWorkspace *ws, int rapBin, int ptBin, int nState){
 	double chi2_Mass=chi2Pre_Mass*ndof_Mass;
 
 	TH1F* pull = new TH1F("pull","pull distribution", 100,-10.,10.);
-	gSystem->mkdir("Fit/root",kTRUE);
+	gSystem->mkdir("Fit/root",kTRUE);gSystem->mkdir("Fit/chicFit",kTRUE);
 	TFile *pullFile = new TFile(Form("Fit/root/pull_mass_rap%d_pt%d.root",rapBin,ptBin),"RECREATE");
 
 	RooHist* hpull_mass = massFrame->pullHist() ;
@@ -840,18 +807,18 @@ double plotMass(RooWorkspace *ws, int rapBin, int ptBin, int nState){
 	MassLegend->SetTextSize(0.035);
 	MassLegend->SetBorderSize(0.);
 	MassLegend->AddEntry(legend_Tot,"sum","l");
-	MassLegend->AddEntry(legend_Background,"bkg","l");
+	MassLegend->AddEntry(legend_Background,"BG","l");
 	MassLegend->AddEntry(legend_Chic0,"#chi_{c0}","l");
 	MassLegend->AddEntry(legend_Chic1,"#chi_{c1}","l");
 	MassLegend->AddEntry(legend_Chic2,"#chi_{c2}","l");
 
 
-	double left=0.7, top=0.9, textSize=0.025;
+	double left=0.7, top=0.885, textSize=0.03;
 	TLatex *latex=new TLatex();
 	latex->SetTextFont(42);
 	latex->SetNDC(kTRUE);
 	latex->SetTextSize(textSize);
-	double step=textSize*1.3;
+	double step=textSize*1.6;
 
 
 	double leftmargin=0.09;
@@ -861,7 +828,7 @@ double plotMass(RooWorkspace *ws, int rapBin, int ptBin, int nState){
 
 	gStyle->SetPadBottomMargin(0.08); //0.12
 	gStyle->SetPadLeftMargin(0.09); //0.12
-	gStyle->SetPadRightMargin(0.02); //0.05
+	gStyle->SetPadRightMargin(0.035); //0.05
 	gStyle->SetPadTopMargin(0.05); //0.05
 	
 	TCanvas *c1;
@@ -901,42 +868,42 @@ double plotMass(RooWorkspace *ws, int rapBin, int ptBin, int nState){
 		lineSig2High->Draw("same");
 
 
-		textSize=0.04; latex->SetTextSize(textSize);
-		if(rapBin<1) left=0.175;
-		else left=0.16;
-		top=0.90;
-		if(rapBin==0) latex->DrawLatex(left,top,Form("|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[onia::kNbRapForPTBins]));
+		left=0.15; top=0.885; textSize=0.030; latex->SetTextSize(textSize);
+		if(rapBin==0) latex->DrawLatex(left,top,Form("|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[2]));
 		else if(rapBin==1) latex->DrawLatex(left,top,Form("|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[rapBin]));
 		else latex->DrawLatex(left,top,Form("%.1f < |y%s| < %.1f",onia::rapForPTRange[rapBin-1],onia::KinParticleChar,onia::rapForPTRange[rapBin]));
-
-		left=0.135; top-=textSize*1.7;
+		top-=step;
 		if(ptBin==0)
-			latex->DrawLatex(left,top,Form("%.0f < p%s_{T} < %.0f GeV",onia::pTRange[rapBin][ptBin],onia::KinParticleChar,onia::pTRange[rapBin][onia::kNbPTMaxBins]));
+			latex->DrawLatex(left,top,Form("%.0f < p%s_{T} < %.0f GeV",onia::pTRange[rapBin][ptBin],onia::KinParticleChar,onia::pTRange[rapBin][onia::kNbPTBins[rapBin]]));
 		else
 			latex->DrawLatex(left,top,Form("%.0f < p%s_{T} < %.0f GeV",onia::pTRange[rapBin][ptBin-1],onia::KinParticleChar,onia::pTRange[rapBin][ptBin]));
 
-		top-=textSize*1.7;
-		textSize=0.0310; latex->SetTextSize(textSize);
-		latex->DrawLatex(left,top,Form("#chi^{2}/ndf = %.1f / %d = %.1f", chi2_Mass, ndof_Mass, double(chi2_Mass/ndof_Mass)));
+		top-=step;
+		latex->SetTextColor(kRed);
+		latex->DrawLatex(left,top,Form("J/#psi SR, #chi all"));
+		latex->SetTextColor(kBlack);
+		top-=step;
+		latex->DrawLatex(left,top,Form("#chi^{2}/ndf = %.1f / %d", chi2_Mass, ndof_Mass));
+		top-=step;
 
 
 		double fullMass=(onia::chimassMax-onia::chimassMin)/(1-(rightmargin+leftmargin));
 		double fullMassMin=onia::chimassMin-fullMass*leftmargin;
 
 		textSize=0.02875; latex->SetTextSize(textSize);
-		left=(sig1MinMass-fullMassMin)/fullMass+0.0125; top=0.9;
+		left=(sig1MinMass-fullMassMin)/fullMass+0.0125; top=0.885;
 		latex->DrawLatex(left,top,Form("N^{SR1}_{#chi_{c1}} = %1.0f", ws->var("var_nChic1")->getVal()*ws->var("var_fChic1InSR1")->getVal()));
 		top-=textSize*2.25;
 		latex->DrawLatex(left,top,Form("f^{SR1}_{Bkg} = %1.2f", ws->var("var_fracBackgroundInSR1")->getVal()));
 
-		left=(sig2MinMass-fullMassMin)/fullMass+0.0125; top=0.9;
+		left=(sig2MinMass-fullMassMin)/fullMass+0.0125; top=0.885;
 		latex->DrawLatex(left,top,Form("N^{SR2}_{#chi_{c2}} = %1.0f", ws->var("var_nChic2")->getVal()*ws->var("var_fChic2InSR2")->getVal()));
 		top-=textSize*2.25;
 		latex->DrawLatex(left,top,Form("f^{SR2}_{Bkg} = %1.2f", ws->var("var_fracBackgroundInSR2")->getVal()));
 
 
 		textSize=0.03; latex->SetTextSize(textSize);
-		left=0.7575; top=0.9;
+		left=0.7575; top=0.885;
 		double stepsizeTimes=1.9;
 		latex->SetTextSize(textSize);
 
@@ -1017,7 +984,7 @@ double plotMass(RooWorkspace *ws, int rapBin, int ptBin, int nState){
 
 
 		textSize=0.015; latex->SetTextSize(textSize);
-		left=0.94; top=0.925;
+		left=0.925; top=0.925;
 		latex->SetTextSize(textSize);
 		latex->DrawLatex(left,top,Form("M%1.0fH%1.0f",ws->var("var_covQualMigrad")->getVal(), ws->var("var_covQualHesse")->getVal()));
 
@@ -1027,13 +994,13 @@ double plotMass(RooWorkspace *ws, int rapBin, int ptBin, int nState){
 		textSize=0.06; latex->SetTextSize(textSize);
 		left=0.385; top=0.875;
 		latex->SetTextSize(textSize);
-		latex->DrawLatex(left,top,Form("#mu_{pull}  =  %.3f #pm %.3f,  #sigma_{pull}  =  %.3f #pm %.3f",pullMean, err_pullMean, pullRMS, err_pullRMS));
+		//latex->DrawLatex(left,top,Form("#mu_{pull}  =  %.3f #pm %.3f,  #sigma_{pull}  =  %.3f #pm %.3f",pullMean, err_pullMean, pullRMS, err_pullRMS));
 
 		c1->cd();
 
 		std::stringstream saveMass;
-		if(LinLog==0) saveMass << "Fit/mass_lin_rap" << rapBin << "_pt" << ptBin << ".pdf";
-		if(LinLog==1) saveMass << "Fit/mass_log_rap" << rapBin << "_pt" << ptBin << ".pdf";
+		if(LinLog==0) saveMass << "Fit/chicFit/mass_lin_rap" << rapBin << "_pt" << ptBin << ".pdf";
+		if(LinLog==1) saveMass << "Fit/chicFit/mass_log_rap" << rapBin << "_pt" << ptBin << ".pdf";
 		c1->SaveAs(saveMass.str().c_str());
 
 
@@ -1074,21 +1041,29 @@ double plotLifetime(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool Sp
 	double binWidth=(PlotMax-PlotMin)/double(nbins)*1000;
 
 
+	bool correctResolutionForPlotting=false;
+	double resCorrFactor=1.0525;
+	if(ptBin==0) resCorrFactor=1.0825;
+	if(ptBin==1) resCorrFactor=1.0725;
+	if(correctResolutionForPlotting){
+		ws->var("ctResolution")->setVal(ws->var("ctResolution")->getVal()*resCorrFactor);
+		ws->var("ctResolution2")->setVal(ws->var("ctResolution2")->getVal()*resCorrFactor);
+	}
 
 	RooRealVar *chicMass = ws->var("chicMass");
 	RooRealVar *Jpsict = ws->var("Jpsict");
 	RooRealVar *JpsictErr = ws->var("JpsictErr");
 	assert( 0 != Jpsict );
 
-	RooPlot *ctauFrame = Jpsict->frame(Range(PlotMin+0.001, PlotMax-0.001),Bins(nbins));
+	RooPlot *ctauFrame = ((RooRealVar*)ws->var("Jpsict"))->frame(Bins(nbins),Range(PlotMin, PlotMax));
 	assert ( 0 != ctauFrame );
 	ctauFrame->SetName(Form("ctau_plot_rap%d_pt%d",rapBin,ptBin));
 	ctauFrame->SetTitle("");
 	ctauFrame->GetYaxis()->SetTitle(Form("Events / %1.0f micron",binWidth));
 	ctauFrame->GetYaxis()->SetTitleOffset(1.3);
-	ctauFrame->GetXaxis()->SetRangeUser(PlotMin+0.001, PlotMax-0.001);
+	ctauFrame->GetXaxis()->SetRangeUser(PlotMin, PlotMax);
 
-	RooPlot *ctauFramePull = Jpsict->frame(Range(PlotMin+0.001, PlotMax-0.001),Bins(nbins));
+	RooPlot *ctauFramePull = ((RooRealVar*)ws->var("Jpsict"))->frame(Bins(nbins),Range(PlotMin, PlotMax));
 	assert ( 0 != ctauFramePull );
 	ctauFramePull->SetName(Form("pullctau_plot_rap%d_pt%d",rapBin,ptBin));
 	ctauFramePull->SetTitle("");
@@ -1099,10 +1074,10 @@ double plotLifetime(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool Sp
 	ctauFramePull->GetYaxis()->SetLabelSize(0.08);
 	ctauFramePull->GetYaxis()->SetTitleOffset(0.4);
 	ctauFramePull->GetYaxis()->SetRangeUser(-5.99,5.99);
-	ctauFramePull->GetXaxis()->SetRangeUser(PlotMin+0.001, PlotMax-0.001);
+	ctauFramePull->GetXaxis()->SetRangeUser(PlotMin, PlotMax);
 
 
-	RooAbsData *data= ws->data(Form("data_rap%d_pt%d",rapBin,ptBin));
+	RooAbsData *data= ws->data(Form("data_rap%d_pt%d_SR",rapBin,ptBin));
 	assert ( 0 != data );
 	RooFitResult* fitRlt = dynamic_cast<RooFitResult*>(ws->obj(Form("fitresult_rap%d_pt%d",rapBin,ptBin)));
 	assert ( 0 != fitRlt);
@@ -1136,10 +1111,10 @@ double plotLifetime(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool Sp
 
 	cout<<"Plotting sum"<<endl;
 	fullPdf->plotOn(ctauFrame,
-			Normalization(ws->var("var_ev")->getVal(),2),
+			//Normalization(ws->var("var_ev")->getVal(),2),
 			LineWidth(onia::lineWidth_ML),
 			ProjWData(*JpsictErr, *dataFullRegionProj),
-			NumCPU(16),
+			NumCPU(1),
 			Name("myCurve"));
 	cout<<"Plotting sum finished"<<endl;
 
@@ -1151,7 +1126,7 @@ double plotLifetime(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool Sp
 	double chi2_Ctau=chi2Pre_Ctau*ndof_Ctau;
 
 	TH1F* pull = new TH1F("pull","pull distribution", 100,-10.,10.);
-	gSystem->mkdir("Fit/root",kTRUE);
+	gSystem->mkdir("Fit/root",kTRUE);gSystem->mkdir("Fit/chicFit",kTRUE);
 	TFile *pullFile = new TFile(Form("Fit/root/pull_ctau_all_rap%d_pt%d.root",rapBin,ptBin),"RECREATE");
 
 	RooHist* hpull_ctau = ctauFrame->pullHist() ;
@@ -1183,12 +1158,12 @@ double plotLifetime(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool Sp
 	if(plotBackground){
 		cout<<"Plotting background"<<endl;
 		fullPdf->plotOn(ctauFrame,
-				Components("ML_background"),
-				Normalization(ws->var("var_ev")->getVal(),2),
+				Components("ML_background,ML_comb_background"),
+				//Normalization(ws->var("var_ev")->getVal(),2),
 				LineStyle(onia::lineStyle_subComps_ML),
 				LineColor(onia::colorBackground),
 				LineWidth(onia::lineWidth_ML),
-				ProjWData(*JpsictErr, *dataFullRegionProj), NumCPU(16));
+				ProjWData(*JpsictErr, *dataFullRegionProj), NumCPU(1));
 		cout<<"Plotting background finished"<<endl;
 	}
 
@@ -1196,11 +1171,11 @@ double plotLifetime(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool Sp
 		cout<<"Plotting Chic0"<<endl;
 		fullPdf->plotOn(ctauFrame,
 				Components("ML_chic0"),
-				Normalization(ws->var("var_ev")->getVal(),2),
+				//Normalization(ws->var("var_ev")->getVal(),2),
 				LineStyle(onia::lineStyle_subComps_ML),
 				LineColor(onia::colorChic0),
 				LineWidth(onia::lineWidth_ML),
-				ProjWData(*JpsictErr, *dataFullRegionProj), NumCPU(16));
+				ProjWData(*JpsictErr, *dataFullRegionProj), NumCPU(1));
 		cout<<"Plotting Chic0 finished"<<endl;
 	}
 
@@ -1208,11 +1183,11 @@ double plotLifetime(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool Sp
 		cout<<"Plotting Chic1"<<endl;
 		fullPdf->plotOn(ctauFrame,
 				Components("ML_chic1"),
-				Normalization(ws->var("var_ev")->getVal(),2),
+				//Normalization(ws->var("var_ev")->getVal(),2),
 				LineStyle(onia::lineStyle_subComps_ML),
 				LineColor(onia::colorChic1),
 				LineWidth(onia::lineWidth_ML),
-				ProjWData(*JpsictErr, *dataFullRegionProj), NumCPU(16));
+				ProjWData(*JpsictErr, *dataFullRegionProj), NumCPU(1));
 		cout<<"Plotting Chic1 finished"<<endl;
 	}
 
@@ -1220,15 +1195,19 @@ double plotLifetime(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool Sp
 		cout<<"Plotting Chic2"<<endl;
 		fullPdf->plotOn(ctauFrame,
 				Components("ML_chic2"),
-				Normalization(ws->var("var_ev")->getVal(),2),
+				//Normalization(ws->var("var_ev")->getVal(),2),
 				LineStyle(onia::lineStyle_subComps_ML),
 				LineColor(onia::colorChic2),
 				LineWidth(onia::lineWidth_ML),
-				ProjWData(*JpsictErr, *dataFullRegionProj), NumCPU(16));
+				ProjWData(*JpsictErr, *dataFullRegionProj), NumCPU(1));
 		cout<<"Plotting Chic2 finished"<<endl;
 	}
 
 
+	if(correctResolutionForPlotting){
+		ws->var("ctResolution")->setVal(ws->var("ctResolution")->getVal()/resCorrFactor);
+		ws->var("ctResolution2")->setVal(ws->var("ctResolution2")->getVal()/resCorrFactor);
+	}
 
 	double lineWidthRegions = 1.5;
 
@@ -1264,30 +1243,30 @@ double plotLifetime(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool Sp
 	TH1* legend_Chic1 = data->createHistogram("legend_Chic1",*Jpsict,Binning(50)) ; legend_Chic1->SetLineColor(onia::colorChic1) ; legend_Chic1->SetLineStyle(onia::lineStyle_subComps_ML) ; legend_Chic1->SetLineWidth(onia::lineWidth_ML) ;
 	TH1* legend_Chic2 = data->createHistogram("legend_Chic2",*Jpsict,Binning(50)) ; legend_Chic2->SetLineColor(onia::colorChic2) ; legend_Chic2->SetLineStyle(onia::lineStyle_subComps_ML) ; legend_Chic2->SetLineWidth(onia::lineWidth_ML) ;
 
-	TLegend* CtauLegend=new TLegend(0.61,0.53,0.76,0.73);
+	TLegend* CtauLegend=new TLegend(0.13,0.71,0.23,0.91);
 	CtauLegend->SetFillColor(kWhite);
 	CtauLegend->SetFillStyle(0);
 	CtauLegend->SetTextFont(42);
 	CtauLegend->SetTextSize(0.035);
 	CtauLegend->SetBorderSize(0.);
 	CtauLegend->AddEntry(legend_Tot,"sum","l");
-	if(plotBackground) CtauLegend->AddEntry(legend_Background,"bkg","l");
+	if(plotBackground) CtauLegend->AddEntry(legend_Background,"BG","l");
 	if(plotChic0) CtauLegend->AddEntry(legend_Chic0,"#chi_{c0}","l");
 	if(plotChic1) CtauLegend->AddEntry(legend_Chic1,"#chi_{c1}","l");
 	if(plotChic2) CtauLegend->AddEntry(legend_Chic2,"#chi_{c2}","l");
 
 
-	double left=0.7, top=0.9, textSize=0.025;
+	double left=0.7, top=0.885, textSize=0.03;
 	TLatex *latex=new TLatex();
 	latex->SetTextFont(42);
 	latex->SetNDC(kTRUE);
 	latex->SetTextSize(textSize);
-	double step=textSize*1.3;
+	double step=textSize*1.6;
 
 
 	gStyle->SetPadBottomMargin(0.08); //0.12
 	gStyle->SetPadLeftMargin(0.09); //0.12
-	gStyle->SetPadRightMargin(0.02); //0.05
+	gStyle->SetPadRightMargin(0.035); //0.05
 	gStyle->SetPadTopMargin(0.05); //0.05
 
 	TCanvas *c1;
@@ -1324,23 +1303,30 @@ double plotLifetime(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool Sp
 		linePRHigh->Draw("same");
 
 
-		textSize=0.04; latex->SetTextSize(textSize);
-		if(rapBin<1) left=0.60;
-		else left=0.585;
-		top=0.90;
-		if(rapBin==0) latex->DrawLatex(left,top,Form("|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[onia::kNbRapForPTBins]));
+
+		left=0.54; top=0.885; textSize=0.030; latex->SetTextSize(textSize);
+		if(rapBin==0) latex->DrawLatex(left,top,Form("|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[2]));
 		else if(rapBin==1) latex->DrawLatex(left,top,Form("|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[rapBin]));
 		else latex->DrawLatex(left,top,Form("%.1f < |y%s| < %.1f",onia::rapForPTRange[rapBin-1],onia::KinParticleChar,onia::rapForPTRange[rapBin]));
-
-		left=0.56; top-=textSize*1.7;
+		top-=step;
 		if(ptBin==0)
-			latex->DrawLatex(left,top,Form("%.0f < p%s_{T} < %.0f GeV",onia::pTRange[rapBin][ptBin],onia::KinParticleChar,onia::pTRange[rapBin][onia::kNbPTMaxBins]));
+			latex->DrawLatex(left,top,Form("%.0f < p%s_{T} < %.0f GeV",onia::pTRange[rapBin][ptBin],onia::KinParticleChar,onia::pTRange[rapBin][onia::kNbPTBins[rapBin]]));
 		else
 			latex->DrawLatex(left,top,Form("%.0f < p%s_{T} < %.0f GeV",onia::pTRange[rapBin][ptBin-1],onia::KinParticleChar,onia::pTRange[rapBin][ptBin]));
 
-		top-=textSize*1.7;
-		textSize=0.0310; latex->SetTextSize(textSize);
-		latex->DrawLatex(left,top,Form("#chi^{2}/ndf = %.1f / %d = %.1f", chi2_Ctau, ndof_Ctau, double(chi2_Ctau/ndof_Ctau)));
+		top-=step;
+		latex->SetTextColor(kRed);
+		latex->DrawLatex(left,top,Form("J/#psi SR, #chi all"));
+		latex->SetTextColor(kBlack);
+		top-=step;
+		latex->DrawLatex(left,top,Form("#chi^{2}/ndf = %.1f / %d", chi2_Ctau, ndof_Ctau));
+		top-=step;
+
+
+
+
+
+
 
 	    RooRealVar var_chi2ndf_Lifetime("var_chi2ndf_Lifetime","var_chi2ndf_Lifetime",double(chi2_Ctau/ndof_Ctau)); if(!ws->var("var_chi2ndf_Lifetime")) ws->import(var_chi2ndf_Lifetime); else ws->var("var_chi2ndf_Lifetime")->setVal(double(chi2_Ctau/ndof_Ctau));
 
@@ -1353,18 +1339,18 @@ double plotLifetime(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool Sp
 		textSize=0.06; latex->SetTextSize(textSize);
 		left=0.385; top=0.875;
 		latex->SetTextSize(textSize);
-		latex->DrawLatex(left,top,Form("#mu_{pull}  =  %.3f #pm %.3f,  #sigma_{pull}  =  %.3f #pm %.3f",pullMean, err_pullMean, pullRMS, err_pullRMS));
+		//latex->DrawLatex(left,top,Form("#mu_{pull}  =  %.3f #pm %.3f,  #sigma_{pull}  =  %.3f #pm %.3f",pullMean, err_pullMean, pullRMS, err_pullRMS));
 
 		c1->cd();
 
 		std::stringstream saveCtau;
 		if(!zoom){
-			if(LinLog==0) saveCtau << "Fit/ctau_all_lin_rap" << rapBin << "_pt" << ptBin << ".pdf";
-			if(LinLog==1) saveCtau << "Fit/ctau_all_log_rap" << rapBin << "_pt" << ptBin << ".pdf";
+			if(LinLog==0) saveCtau << "Fit/chicFit/ctau_all_lin_rap" << rapBin << "_pt" << ptBin << ".pdf";
+			if(LinLog==1) saveCtau << "Fit/chicFit/ctau_all_log_rap" << rapBin << "_pt" << ptBin << ".pdf";
 		}
 		else{
-			if(LinLog==0) saveCtau << "Fit/ctau_all_zoom_lin_rap" << rapBin << "_pt" << ptBin << ".pdf";
-			if(LinLog==1) saveCtau << "Fit/ctau_all_zoom_log_rap" << rapBin << "_pt" << ptBin << ".pdf";
+			if(LinLog==0) saveCtau << "Fit/chicFit/ctau_all_zoom_lin_rap" << rapBin << "_pt" << ptBin << ".pdf";
+			if(LinLog==1) saveCtau << "Fit/chicFit/ctau_all_zoom_log_rap" << rapBin << "_pt" << ptBin << ".pdf";
 		}
 		c1->SaveAs(saveCtau.str().c_str());
 
@@ -1410,6 +1396,14 @@ double plotLifetimeSR1(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 
 	double binWidth=(PlotMax-PlotMin)/double(nbins)*1000;
 
+	bool correctResolutionForPlotting=false;
+	double resCorrFactor=1.0525;
+	if(ptBin==0) resCorrFactor=1.0825;
+	if(ptBin==1) resCorrFactor=1.0725;
+	if(correctResolutionForPlotting){
+		ws->var("ctResolution")->setVal(ws->var("ctResolution")->getVal()*resCorrFactor);
+		ws->var("ctResolution2")->setVal(ws->var("ctResolution2")->getVal()*resCorrFactor);
+	}
 
 
 	RooRealVar *chicMass = ws->var("chicMass");
@@ -1417,15 +1411,15 @@ double plotLifetimeSR1(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 	RooRealVar *JpsictErr = ws->var("JpsictErr");
 	assert( 0 != Jpsict );
 
-	RooPlot *ctauFrame = Jpsict->frame(Range(PlotMin+0.001, PlotMax-0.001),Bins(nbins));
+	RooPlot *ctauFrame = ((RooRealVar*)ws->var("Jpsict"))->frame(Bins(nbins),Range(PlotMin, PlotMax));
 	assert ( 0 != ctauFrame );
 	ctauFrame->SetName(Form("ctau_plot_rap%d_pt%d",rapBin,ptBin));
 	ctauFrame->SetTitle("");
 	ctauFrame->GetYaxis()->SetTitle(Form("Events / %1.0f micron",binWidth));
 	ctauFrame->GetYaxis()->SetTitleOffset(1.3);
-	ctauFrame->GetXaxis()->SetRangeUser(PlotMin+0.001, PlotMax-0.001);
+	ctauFrame->GetXaxis()->SetRangeUser(PlotMin, PlotMax);
 
-	RooPlot *ctauFramePull = Jpsict->frame(Range(PlotMin+0.001, PlotMax-0.001),Bins(nbins));
+	RooPlot *ctauFramePull = ((RooRealVar*)ws->var("Jpsict"))->frame(Bins(nbins),Range(PlotMin, PlotMax));
 	assert ( 0 != ctauFramePull );
 	ctauFramePull->SetName(Form("pullctau_plot_rap%d_pt%d",rapBin,ptBin));
 	ctauFramePull->SetTitle("");
@@ -1436,10 +1430,10 @@ double plotLifetimeSR1(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 	ctauFramePull->GetYaxis()->SetLabelSize(0.08);
 	ctauFramePull->GetYaxis()->SetTitleOffset(0.4);
 	ctauFramePull->GetYaxis()->SetRangeUser(-5.99,5.99);
-	ctauFramePull->GetXaxis()->SetRangeUser(PlotMin+0.001, PlotMax-0.001);
+	ctauFramePull->GetXaxis()->SetRangeUser(PlotMin, PlotMax);
 
 
-	RooAbsData *data= ws->data(Form("data_rap%d_pt%d",rapBin,ptBin));
+	RooAbsData *data= ws->data(Form("data_rap%d_pt%d_SR",rapBin,ptBin));
 	assert ( 0 != data );
 	RooFitResult* fitRlt = dynamic_cast<RooFitResult*>(ws->obj(Form("fitresult_rap%d_pt%d",rapBin,ptBin)));
 	assert ( 0 != fitRlt);
@@ -1498,7 +1492,7 @@ double plotLifetimeSR1(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 			Normalization(ws->var("var_ev")->getVal()*ws->var("var_fTotInSR1")->getVal(),2),
 			LineWidth(onia::lineWidth_ML),
 			ProjWData(*JpsictErr, *dataSR1Proj),
-			NumCPU(16),
+			NumCPU(1),
 			Name("myCurve"));
 	cout<<"Plotting sum finished"<<endl;
 
@@ -1510,7 +1504,7 @@ double plotLifetimeSR1(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 	double chi2_Ctau=chi2Pre_Ctau*ndof_Ctau;
 
 	TH1F* pull = new TH1F("pull","pull distribution", 100,-10.,10.);
-	gSystem->mkdir("Fit/root",kTRUE);
+	gSystem->mkdir("Fit/root",kTRUE);gSystem->mkdir("Fit/chicFit",kTRUE);
 	TFile *pullFile = new TFile(Form("Fit/root/pull_ctau_SR1_rap%d_pt%d.root",rapBin,ptBin),"RECREATE");
 
 	RooHist* hpull_ctau = ctauFrame->pullHist() ;
@@ -1553,12 +1547,12 @@ double plotLifetimeSR1(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 	if(plotBackground){
 		cout<<"Plotting background"<<endl;
 		fullPdf->plotOn(ctauFrame,
-				Components("ML_background"),
-				Normalization(ws->var("var_ev")->getVal()*ws->var("var_fTotInSR1")->getVal(),2),
+				Components("ML_background,ML_comb_background"),
+				//Normalization(ws->var("var_ev")->getVal()*ws->var("var_fTotInSR1")->getVal(),2),
 				LineStyle(onia::lineStyle_subComps_ML),
 				LineColor(onia::colorBackground),
 				LineWidth(onia::lineWidth_ML),
-				ProjWData(*JpsictErr, *dataSR1Proj), NumCPU(16));
+				ProjWData(*JpsictErr, *dataSR1Proj), NumCPU(1));
 		cout<<"Plotting background finished"<<endl;
 	}
 
@@ -1566,11 +1560,11 @@ double plotLifetimeSR1(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 		cout<<"Plotting Chic0"<<endl;
 		fullPdf->plotOn(ctauFrame,
 				Components("ML_chic0"),
-				Normalization(ws->var("var_ev")->getVal()*ws->var("var_fTotInSR1")->getVal(),2),
+				//Normalization(ws->var("var_ev")->getVal()*ws->var("var_fTotInSR1")->getVal(),2),
 				LineStyle(onia::lineStyle_subComps_ML),
 				LineColor(onia::colorChic0),
 				LineWidth(onia::lineWidth_ML),
-				ProjWData(*JpsictErr, *dataSR1Proj), NumCPU(16));
+				ProjWData(*JpsictErr, *dataSR1Proj), NumCPU(1));
 		cout<<"Plotting Chic0 finished"<<endl;
 	}
 
@@ -1578,27 +1572,27 @@ double plotLifetimeSR1(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 		cout<<"Plotting Chic1"<<endl;
 		fullPdf->plotOn(ctauFrame,
 				Components("ML_chic1"),
-				Normalization(ws->var("var_ev")->getVal()*ws->var("var_fTotInSR1")->getVal(),2),
+				//Normalization(ws->var("var_ev")->getVal()*ws->var("var_fTotInSR1")->getVal(),2),
 				LineStyle(onia::lineStyle_subComps_ML),
 				LineColor(onia::colorChic1),
 				LineWidth(onia::lineWidth_ML),
-				ProjWData(*JpsictErr, *dataSR1Proj), NumCPU(16));
+				ProjWData(*JpsictErr, *dataSR1Proj), NumCPU(1));
 		cout<<"Plotting PR Chic1"<<endl;
 		fullPdf->plotOn(ctauFrame,
 				Components("ML_chic1_PR"),
-				Normalization(ws->var("var_ev")->getVal()*ws->var("var_fTotInSR1")->getVal(),2),
+				//Normalization(ws->var("var_ev")->getVal()*ws->var("var_fTotInSR1")->getVal(),2),
 				LineStyle(onia::lineStyle_subCompPRsignal_ML),
 				LineColor(onia::colorChic1),
 				LineWidth(onia::lineWidth_PRsignal_ML),
-				ProjWData(*JpsictErr, *dataSR1Proj), NumCPU(16));
+				ProjWData(*JpsictErr, *dataSR1Proj), NumCPU(1));
 		cout<<"Plotting NP Chic1"<<endl;
 		fullPdf->plotOn(ctauFrame,
 				Components("ML_chic1_NP"),
-				Normalization(ws->var("var_ev")->getVal()*ws->var("var_fTotInSR1")->getVal(),2),
+				//Normalization(ws->var("var_ev")->getVal()*ws->var("var_fTotInSR1")->getVal(),2),
 				LineStyle(onia::lineStyle_subCompPRsignal_ML),
 				LineColor(onia::colorChic1),
 				LineWidth(onia::lineWidth_PRsignal_ML),
-				ProjWData(*JpsictErr, *dataSR1Proj), NumCPU(16));
+				ProjWData(*JpsictErr, *dataSR1Proj), NumCPU(1));
 		cout<<"Plotting Chic1 finished"<<endl;
 	}
 
@@ -1606,14 +1600,18 @@ double plotLifetimeSR1(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 		cout<<"Plotting Chic2"<<endl;
 		fullPdf->plotOn(ctauFrame,
 				Components("ML_chic2"),
-				Normalization(ws->var("var_ev")->getVal()*ws->var("var_fTotInSR1")->getVal(),2),
+				//Normalization(ws->var("var_ev")->getVal()*ws->var("var_fTotInSR1")->getVal(),2),
 				LineStyle(onia::lineStyle_subComps_ML),
 				LineColor(onia::colorChic2),
 				LineWidth(onia::lineWidth_ML),
-				ProjWData(*JpsictErr, *dataSR1Proj), NumCPU(16));
+				ProjWData(*JpsictErr, *dataSR1Proj), NumCPU(1));
 		cout<<"Plotting Chic2 finished"<<endl;
 	}
 
+	if(correctResolutionForPlotting){
+		ws->var("ctResolution")->setVal(ws->var("ctResolution")->getVal()/resCorrFactor);
+		ws->var("ctResolution2")->setVal(ws->var("ctResolution2")->getVal()/resCorrFactor);
+	}
 
 
 	double lineWidthRegions = 1.5;
@@ -1652,14 +1650,14 @@ double plotLifetimeSR1(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 
 	TH1* legend_ChicPR = data->createHistogram("legend_ChicPR",*Jpsict,Binning(50)) ; legend_ChicPR->SetLineColor(onia::colorChic1) ; legend_ChicPR->SetLineStyle(onia::lineStyle_subCompPRsignal_ML) ; legend_ChicPR->SetLineWidth(onia::lineWidth_PRsignal_ML) ;
 
-	TLegend* CtauLegend=new TLegend(0.61,0.53,0.76,0.73);
+	TLegend* CtauLegend=new TLegend(0.13,0.71,0.23,0.91);
 	CtauLegend->SetFillColor(kWhite);
 	CtauLegend->SetFillStyle(0);
 	CtauLegend->SetTextFont(42);
 	CtauLegend->SetTextSize(0.035);
 	CtauLegend->SetBorderSize(0.);
 	CtauLegend->AddEntry(legend_Tot,"sum","l");
-	if(plotBackground) CtauLegend->AddEntry(legend_Background,"bkg","l");
+	if(plotBackground) CtauLegend->AddEntry(legend_Background,"BG","l");
 	if(plotChic0) CtauLegend->AddEntry(legend_Chic0,"#chi_{c0}","l");
 	if(plotChic1){
 		CtauLegend->AddEntry(legend_Chic1,"#chi_{c1}","l");
@@ -1668,17 +1666,17 @@ double plotLifetimeSR1(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 	if(plotChic2) CtauLegend->AddEntry(legend_Chic2,"#chi_{c2}","l");
 
 
-	double left=0.7, top=0.9, textSize=0.025;
+	double left=0.7, top=0.885, textSize=0.03;
 	TLatex *latex=new TLatex();
 	latex->SetTextFont(42);
 	latex->SetNDC(kTRUE);
 	latex->SetTextSize(textSize);
-	double step=textSize*1.3;
+	double step=textSize*1.6;
 
 
 	gStyle->SetPadBottomMargin(0.08); //0.12
 	gStyle->SetPadLeftMargin(0.09); //0.12
-	gStyle->SetPadRightMargin(0.02); //0.05
+	gStyle->SetPadRightMargin(0.035); //0.05
 	gStyle->SetPadTopMargin(0.05); //0.05
 
 	TCanvas *c1;
@@ -1715,29 +1713,30 @@ double plotLifetimeSR1(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 		linePRHigh->Draw("same");
 
 
-		textSize=0.04; latex->SetTextSize(textSize);
-		if(rapBin<1) left=0.60;
-		else left=0.585;
-		top=0.90;
-		if(rapBin==0) latex->DrawLatex(left,top,Form("|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[onia::kNbRapForPTBins]));
+		left=0.54; top=0.885; textSize=0.030; latex->SetTextSize(textSize);
+		if(rapBin==0) latex->DrawLatex(left,top,Form("|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[2]));
 		else if(rapBin==1) latex->DrawLatex(left,top,Form("|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[rapBin]));
 		else latex->DrawLatex(left,top,Form("%.1f < |y%s| < %.1f",onia::rapForPTRange[rapBin-1],onia::KinParticleChar,onia::rapForPTRange[rapBin]));
-
-		left=0.56; top-=textSize*1.7;
+		top-=step;
 		if(ptBin==0)
-			latex->DrawLatex(left,top,Form("%.0f < p%s_{T} < %.0f GeV",onia::pTRange[rapBin][ptBin],onia::KinParticleChar,onia::pTRange[rapBin][onia::kNbPTMaxBins]));
+			latex->DrawLatex(left,top,Form("%.0f < p%s_{T} < %.0f GeV",onia::pTRange[rapBin][ptBin],onia::KinParticleChar,onia::pTRange[rapBin][onia::kNbPTBins[rapBin]]));
 		else
 			latex->DrawLatex(left,top,Form("%.0f < p%s_{T} < %.0f GeV",onia::pTRange[rapBin][ptBin-1],onia::KinParticleChar,onia::pTRange[rapBin][ptBin]));
 
-		top-=textSize*1.7;
-		textSize=0.0310; latex->SetTextSize(textSize);
-		latex->DrawLatex(left,top,Form("#chi^{2}/ndf = %.1f / %d = %.1f", chi2_Ctau, ndof_Ctau, double(chi2_Ctau/ndof_Ctau)));
+		top-=step;
+		latex->SetTextColor(kRed);
+		latex->DrawLatex(left,top,Form("J/#psi SR, #chi SR1"));
+		latex->SetTextColor(kBlack);
+		top-=step;
+		latex->DrawLatex(left,top,Form("#chi^{2}/ndf = %.1f / %d", chi2_Ctau, ndof_Ctau));
+		top-=step;
+
 
 	    RooRealVar var_chi2ndf_Lifetime_SR1("var_chi2ndf_Lifetime_SR1","var_chi2ndf_Lifetime_SR1",double(chi2_Ctau/ndof_Ctau)); if(!ws->var("var_chi2ndf_Lifetime_SR1")) ws->import(var_chi2ndf_Lifetime_SR1); else ws->var("var_chi2ndf_Lifetime_SR1")->setVal(double(chi2_Ctau/ndof_Ctau));
 
 
 		textSize=0.03; latex->SetTextSize(textSize);
-		left=0.805; top=0.9;
+		left=0.805; top=0.885;
 		double stepsizeTimes=1.9;
 		//latex->DrawLatex(left,top,Form("n^{SR1}_{tot} = %.0f", ws->var("var_ev")->getVal()*ws->var("var_fTotInSR1")->getVal()));
 		//top-=textSize*stepsizeTimes;
@@ -1782,18 +1781,18 @@ double plotLifetimeSR1(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 		textSize=0.06; latex->SetTextSize(textSize);
 		left=0.385; top=0.875;
 		latex->SetTextSize(textSize);
-		latex->DrawLatex(left,top,Form("#mu_{pull}  =  %.3f #pm %.3f,  #sigma_{pull}  =  %.3f #pm %.3f",pullMean, err_pullMean, pullRMS, err_pullRMS));
+		//latex->DrawLatex(left,top,Form("#mu_{pull}  =  %.3f #pm %.3f,  #sigma_{pull}  =  %.3f #pm %.3f",pullMean, err_pullMean, pullRMS, err_pullRMS));
 
 		c1->cd();
 
 		std::stringstream saveCtau;
 		if(!zoom){
-			if(LinLog==0) saveCtau << "Fit/ctau_SR1_lin_rap" << rapBin << "_pt" << ptBin << ".pdf";
-			if(LinLog==1) saveCtau << "Fit/ctau_SR1_log_rap" << rapBin << "_pt" << ptBin << ".pdf";
+			if(LinLog==0) saveCtau << "Fit/chicFit/ctau_SR1_lin_rap" << rapBin << "_pt" << ptBin << ".pdf";
+			if(LinLog==1) saveCtau << "Fit/chicFit/ctau_SR1_log_rap" << rapBin << "_pt" << ptBin << ".pdf";
 		}
 		else{
-			if(LinLog==0) saveCtau << "Fit/ctau_SR1_zoom_lin_rap" << rapBin << "_pt" << ptBin << ".pdf";
-			if(LinLog==1) saveCtau << "Fit/ctau_SR1_zoom_log_rap" << rapBin << "_pt" << ptBin << ".pdf";
+			if(LinLog==0) saveCtau << "Fit/chicFit/ctau_SR1_zoom_lin_rap" << rapBin << "_pt" << ptBin << ".pdf";
+			if(LinLog==1) saveCtau << "Fit/chicFit/ctau_SR1_zoom_log_rap" << rapBin << "_pt" << ptBin << ".pdf";
 		}
 		c1->SaveAs(saveCtau.str().c_str());
 
@@ -1833,6 +1832,14 @@ double plotLifetimeSR2(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 
 	double binWidth=(PlotMax-PlotMin)/double(nbins)*1000;
 
+	bool correctResolutionForPlotting=false;
+	double resCorrFactor=1.0525;
+	if(ptBin==0) resCorrFactor=1.0825;
+	if(ptBin==1) resCorrFactor=1.0725;
+	if(correctResolutionForPlotting){
+		ws->var("ctResolution")->setVal(ws->var("ctResolution")->getVal()*resCorrFactor);
+		ws->var("ctResolution2")->setVal(ws->var("ctResolution2")->getVal()*resCorrFactor);
+	}
 
 
 	RooRealVar *chicMass = ws->var("chicMass");
@@ -1840,15 +1847,15 @@ double plotLifetimeSR2(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 	RooRealVar *JpsictErr = ws->var("JpsictErr");
 	assert( 0 != Jpsict );
 
-	RooPlot *ctauFrame = Jpsict->frame(Range(PlotMin+0.001, PlotMax-0.001),Bins(nbins));
+	RooPlot *ctauFrame = ((RooRealVar*)ws->var("Jpsict"))->frame(Bins(nbins),Range(PlotMin, PlotMax));
 	assert ( 0 != ctauFrame );
 	ctauFrame->SetName(Form("ctau_plot_rap%d_pt%d",rapBin,ptBin));
 	ctauFrame->SetTitle("");
 	ctauFrame->GetYaxis()->SetTitle(Form("Events / %1.0f micron",binWidth));
 	ctauFrame->GetYaxis()->SetTitleOffset(1.3);
-	ctauFrame->GetXaxis()->SetRangeUser(PlotMin+0.001, PlotMax-0.001);
+	ctauFrame->GetXaxis()->SetRangeUser(PlotMin, PlotMax);
 
-	RooPlot *ctauFramePull = Jpsict->frame(Range(PlotMin+0.001, PlotMax-0.001),Bins(nbins));
+	RooPlot *ctauFramePull = ((RooRealVar*)ws->var("Jpsict"))->frame(Bins(nbins),Range(PlotMin, PlotMax));
 	assert ( 0 != ctauFramePull );
 	ctauFramePull->SetName(Form("pullctau_plot_rap%d_pt%d",rapBin,ptBin));
 	ctauFramePull->SetTitle("");
@@ -1859,10 +1866,10 @@ double plotLifetimeSR2(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 	ctauFramePull->GetYaxis()->SetLabelSize(0.08);
 	ctauFramePull->GetYaxis()->SetTitleOffset(0.4);
 	ctauFramePull->GetYaxis()->SetRangeUser(-5.99,5.99);
-	ctauFramePull->GetXaxis()->SetRangeUser(PlotMin+0.001, PlotMax-0.001);
+	ctauFramePull->GetXaxis()->SetRangeUser(PlotMin, PlotMax);
 
 
-	RooAbsData *data= ws->data(Form("data_rap%d_pt%d",rapBin,ptBin));
+	RooAbsData *data= ws->data(Form("data_rap%d_pt%d_SR",rapBin,ptBin));
 	assert ( 0 != data );
 	RooFitResult* fitRlt = dynamic_cast<RooFitResult*>(ws->obj(Form("fitresult_rap%d_pt%d",rapBin,ptBin)));
 	assert ( 0 != fitRlt);
@@ -1918,10 +1925,10 @@ double plotLifetimeSR2(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 
 	cout<<"Plotting sum"<<endl;
 	fullPdf->plotOn(ctauFrame,
-			Normalization(ws->var("var_ev")->getVal()*ws->var("var_fTotInSR2")->getVal(),2),
+			//Normalization(ws->var("var_ev")->getVal()*ws->var("var_fTotInSR2")->getVal(),2),
 			LineWidth(onia::lineWidth_ML),
 			ProjWData(*JpsictErr, *dataSR2Proj),
-			NumCPU(16),
+			NumCPU(1),
 			Name("myCurve"));
 	cout<<"Plotting sum finished"<<endl;
 
@@ -1933,7 +1940,7 @@ double plotLifetimeSR2(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 	double chi2_Ctau=chi2Pre_Ctau*ndof_Ctau;
 
 	TH1F* pull = new TH1F("pull","pull distribution", 100,-10.,10.);
-	gSystem->mkdir("Fit/root",kTRUE);
+	gSystem->mkdir("Fit/root",kTRUE);gSystem->mkdir("Fit/chicFit",kTRUE);
 	TFile *pullFile = new TFile(Form("Fit/root/pull_ctau_SR2_rap%d_pt%d.root",rapBin,ptBin),"RECREATE");
 
 	RooHist* hpull_ctau = ctauFrame->pullHist() ;
@@ -1976,12 +1983,12 @@ double plotLifetimeSR2(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 	if(plotBackground){
 		cout<<"Plotting background"<<endl;
 		fullPdf->plotOn(ctauFrame,
-				Components("ML_background"),
-				Normalization(ws->var("var_ev")->getVal()*ws->var("var_fTotInSR2")->getVal(),2),
+				Components("ML_background,ML_comb_background"),
+				//Normalization(ws->var("var_ev")->getVal()*ws->var("var_fTotInSR2")->getVal(),2),
 				LineStyle(onia::lineStyle_subComps_ML),
 				LineColor(onia::colorBackground),
 				LineWidth(onia::lineWidth_ML),
-				ProjWData(*JpsictErr, *dataSR2Proj), NumCPU(16));
+				ProjWData(*JpsictErr, *dataSR2Proj), NumCPU(1));
 		cout<<"Plotting background finished"<<endl;
 	}
 
@@ -1989,11 +1996,11 @@ double plotLifetimeSR2(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 		cout<<"Plotting Chic0"<<endl;
 		fullPdf->plotOn(ctauFrame,
 				Components("ML_chic0"),
-				Normalization(ws->var("var_ev")->getVal()*ws->var("var_fTotInSR2")->getVal(),2),
+				//Normalization(ws->var("var_ev")->getVal()*ws->var("var_fTotInSR2")->getVal(),2),
 				LineStyle(onia::lineStyle_subComps_ML),
 				LineColor(onia::colorChic0),
 				LineWidth(onia::lineWidth_ML),
-				ProjWData(*JpsictErr, *dataSR2Proj), NumCPU(16));
+				ProjWData(*JpsictErr, *dataSR2Proj), NumCPU(1));
 		cout<<"Plotting Chic0 finished"<<endl;
 	}
 
@@ -2001,11 +2008,11 @@ double plotLifetimeSR2(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 		cout<<"Plotting Chic1"<<endl;
 		fullPdf->plotOn(ctauFrame,
 				Components("ML_chic1"),
-				Normalization(ws->var("var_ev")->getVal()*ws->var("var_fTotInSR2")->getVal(),2),
+				//Normalization(ws->var("var_ev")->getVal()*ws->var("var_fTotInSR2")->getVal(),2),
 				LineStyle(onia::lineStyle_subComps_ML),
 				LineColor(onia::colorChic1),
 				LineWidth(onia::lineWidth_ML),
-				ProjWData(*JpsictErr, *dataSR2Proj), NumCPU(16));
+				ProjWData(*JpsictErr, *dataSR2Proj), NumCPU(1));
 		cout<<"Plotting Chic1 finished"<<endl;
 	}
 
@@ -2013,30 +2020,34 @@ double plotLifetimeSR2(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 		cout<<"Plotting Chic2"<<endl;
 		fullPdf->plotOn(ctauFrame,
 				Components("ML_chic2"),
-				Normalization(ws->var("var_ev")->getVal()*ws->var("var_fTotInSR2")->getVal(),2),
+				//Normalization(ws->var("var_ev")->getVal()*ws->var("var_fTotInSR2")->getVal(),2),
 				LineStyle(onia::lineStyle_subComps_ML),
 				LineColor(onia::colorChic2),
 				LineWidth(onia::lineWidth_ML),
-				ProjWData(*JpsictErr, *dataSR2Proj), NumCPU(16));
+				ProjWData(*JpsictErr, *dataSR2Proj), NumCPU(1));
 		cout<<"Plotting PR Chic2"<<endl;
 		fullPdf->plotOn(ctauFrame,
 				Components("ML_chic2_PR"),
-				Normalization(ws->var("var_ev")->getVal()*ws->var("var_fTotInSR2")->getVal(),2),
+				//Normalization(ws->var("var_ev")->getVal()*ws->var("var_fTotInSR2")->getVal(),2),
 				LineStyle(onia::lineStyle_subCompPRsignal_ML),
 				LineColor(onia::colorChic2),
 				LineWidth(onia::lineWidth_PRsignal_ML),
-				ProjWData(*JpsictErr, *dataSR2Proj), NumCPU(16));
+				ProjWData(*JpsictErr, *dataSR2Proj), NumCPU(1));
 		cout<<"Plotting NP Chic2"<<endl;
 		fullPdf->plotOn(ctauFrame,
 				Components("ML_chic2_NP"),
-				Normalization(ws->var("var_ev")->getVal()*ws->var("var_fTotInSR2")->getVal(),2),
+				//Normalization(ws->var("var_ev")->getVal()*ws->var("var_fTotInSR2")->getVal(),2),
 				LineStyle(onia::lineStyle_subCompPRsignal_ML),
 				LineColor(onia::colorChic2),
 				LineWidth(onia::lineWidth_PRsignal_ML),
-				ProjWData(*JpsictErr, *dataSR2Proj), NumCPU(16));
+				ProjWData(*JpsictErr, *dataSR2Proj), NumCPU(1));
 		cout<<"Plotting Chic2 finished"<<endl;
 	}
 
+	if(correctResolutionForPlotting){
+		ws->var("ctResolution")->setVal(ws->var("ctResolution")->getVal()/resCorrFactor);
+		ws->var("ctResolution2")->setVal(ws->var("ctResolution2")->getVal()/resCorrFactor);
+	}
 
 
 	double lineWidthRegions = 1.5;
@@ -2075,14 +2086,14 @@ double plotLifetimeSR2(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 
 	TH1* legend_ChicPR = data->createHistogram("legend_ChicPR",*Jpsict,Binning(50)) ; legend_ChicPR->SetLineColor(onia::colorChic2) ; legend_ChicPR->SetLineStyle(onia::lineStyle_subCompPRsignal_ML) ; legend_ChicPR->SetLineWidth(onia::lineWidth_PRsignal_ML) ;
 
-	TLegend* CtauLegend=new TLegend(0.61,0.53,0.76,0.73);
+	TLegend* CtauLegend=new TLegend(0.13,0.71,0.23,0.91);
 	CtauLegend->SetFillColor(kWhite);
 	CtauLegend->SetFillStyle(0);
 	CtauLegend->SetTextFont(42);
 	CtauLegend->SetTextSize(0.035);
 	CtauLegend->SetBorderSize(0.);
 	CtauLegend->AddEntry(legend_Tot,"sum","l");
-	if(plotBackground) CtauLegend->AddEntry(legend_Background,"bkg","l");
+	if(plotBackground) CtauLegend->AddEntry(legend_Background,"BG","l");
 	if(plotChic0) CtauLegend->AddEntry(legend_Chic0,"#chi_{c0}","l");
 	if(plotChic1) CtauLegend->AddEntry(legend_Chic1,"#chi_{c1}","l");
 	if(plotChic2){
@@ -2091,17 +2102,17 @@ double plotLifetimeSR2(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 	}
 
 
-	double left=0.7, top=0.9, textSize=0.025;
+	double left=0.7, top=0.885, textSize=0.03;
 	TLatex *latex=new TLatex();
 	latex->SetTextFont(42);
 	latex->SetNDC(kTRUE);
 	latex->SetTextSize(textSize);
-	double step=textSize*1.3;
+	double step=textSize*1.6;
 
 
 	gStyle->SetPadBottomMargin(0.08); //0.12
 	gStyle->SetPadLeftMargin(0.09); //0.12
-	gStyle->SetPadRightMargin(0.02); //0.05
+	gStyle->SetPadRightMargin(0.035); //0.05
 	gStyle->SetPadTopMargin(0.05); //0.05
 
 	TCanvas *c1;
@@ -2138,29 +2149,29 @@ double plotLifetimeSR2(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 		linePRHigh->Draw("same");
 
 
-		textSize=0.04; latex->SetTextSize(textSize);
-		if(rapBin<1) left=0.60;
-		else left=0.585;
-		top=0.90;
-		if(rapBin==0) latex->DrawLatex(left,top,Form("|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[onia::kNbRapForPTBins]));
+		left=0.54; top=0.885; textSize=0.030; latex->SetTextSize(textSize);
+		if(rapBin==0) latex->DrawLatex(left,top,Form("|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[2]));
 		else if(rapBin==1) latex->DrawLatex(left,top,Form("|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[rapBin]));
 		else latex->DrawLatex(left,top,Form("%.1f < |y%s| < %.1f",onia::rapForPTRange[rapBin-1],onia::KinParticleChar,onia::rapForPTRange[rapBin]));
-
-		left=0.56; top-=textSize*1.7;
+		top-=step;
 		if(ptBin==0)
-			latex->DrawLatex(left,top,Form("%.0f < p%s_{T} < %.0f GeV",onia::pTRange[rapBin][ptBin],onia::KinParticleChar,onia::pTRange[rapBin][onia::kNbPTMaxBins]));
+			latex->DrawLatex(left,top,Form("%.0f < p%s_{T} < %.0f GeV",onia::pTRange[rapBin][ptBin],onia::KinParticleChar,onia::pTRange[rapBin][onia::kNbPTBins[rapBin]]));
 		else
 			latex->DrawLatex(left,top,Form("%.0f < p%s_{T} < %.0f GeV",onia::pTRange[rapBin][ptBin-1],onia::KinParticleChar,onia::pTRange[rapBin][ptBin]));
 
-		top-=textSize*1.7;
-		textSize=0.0310; latex->SetTextSize(textSize);
-		latex->DrawLatex(left,top,Form("#chi^{2}/ndf = %.1f / %d = %.1f", chi2_Ctau, ndof_Ctau, double(chi2_Ctau/ndof_Ctau)));
+		top-=step;
+		latex->SetTextColor(kRed);
+		latex->DrawLatex(left,top,Form("J/#psi SR, #chi SR2"));
+		latex->SetTextColor(kBlack);
+		top-=step;
+		latex->DrawLatex(left,top,Form("#chi^{2}/ndf = %.1f / %d", chi2_Ctau, ndof_Ctau));
+		top-=step;
 
 	    RooRealVar var_chi2ndf_Lifetime_SR2("var_chi2ndf_Lifetime_SR2","var_chi2ndf_Lifetime_SR2",double(chi2_Ctau/ndof_Ctau)); if(!ws->var("var_chi2ndf_Lifetime_SR2")) ws->import(var_chi2ndf_Lifetime_SR2); else ws->var("var_chi2ndf_Lifetime_SR2")->setVal(double(chi2_Ctau/ndof_Ctau));
 
 
 		textSize=0.03; latex->SetTextSize(textSize);
-		left=0.805; top=0.9;
+		left=0.805; top=0.885;
 		double stepsizeTimes=1.9;
 		latex->SetTextColor(onia::colorPR);
 		latex->SetTextSize(textSize);
@@ -2199,18 +2210,18 @@ double plotLifetimeSR2(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 		textSize=0.06; latex->SetTextSize(textSize);
 		left=0.385; top=0.875;
 		latex->SetTextSize(textSize);
-		latex->DrawLatex(left,top,Form("#mu_{pull}  =  %.3f #pm %.3f,  #sigma_{pull}  =  %.3f #pm %.3f",pullMean, err_pullMean, pullRMS, err_pullRMS));
+		//latex->DrawLatex(left,top,Form("#mu_{pull}  =  %.3f #pm %.3f,  #sigma_{pull}  =  %.3f #pm %.3f",pullMean, err_pullMean, pullRMS, err_pullRMS));
 
 		c1->cd();
 
 		std::stringstream saveCtau;
 		if(!zoom){
-			if(LinLog==0) saveCtau << "Fit/ctau_SR2_lin_rap" << rapBin << "_pt" << ptBin << ".pdf";
-			if(LinLog==1) saveCtau << "Fit/ctau_SR2_log_rap" << rapBin << "_pt" << ptBin << ".pdf";
+			if(LinLog==0) saveCtau << "Fit/chicFit/ctau_SR2_lin_rap" << rapBin << "_pt" << ptBin << ".pdf";
+			if(LinLog==1) saveCtau << "Fit/chicFit/ctau_SR2_log_rap" << rapBin << "_pt" << ptBin << ".pdf";
 		}
 		else{
-			if(LinLog==0) saveCtau << "Fit/ctau_SR2_zoom_lin_rap" << rapBin << "_pt" << ptBin << ".pdf";
-			if(LinLog==1) saveCtau << "Fit/ctau_SR2_zoom_log_rap" << rapBin << "_pt" << ptBin << ".pdf";
+			if(LinLog==0) saveCtau << "Fit/chicFit/ctau_SR2_zoom_lin_rap" << rapBin << "_pt" << ptBin << ".pdf";
+			if(LinLog==1) saveCtau << "Fit/chicFit/ctau_SR2_zoom_log_rap" << rapBin << "_pt" << ptBin << ".pdf";
 		}
 		c1->SaveAs(saveCtau.str().c_str());
 
@@ -2249,6 +2260,14 @@ double plotLifetimeLSB(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 
 	double binWidth=(PlotMax-PlotMin)/double(nbins)*1000;
 
+	bool correctResolutionForPlotting=false;
+	double resCorrFactor=1.0525;
+	if(ptBin==0) resCorrFactor=1.0825;
+	if(ptBin==1) resCorrFactor=1.0725;
+	if(correctResolutionForPlotting){
+		ws->var("ctResolution")->setVal(ws->var("ctResolution")->getVal()*resCorrFactor);
+		ws->var("ctResolution2")->setVal(ws->var("ctResolution2")->getVal()*resCorrFactor);
+	}
 
 
 	RooRealVar *chicMass = ws->var("chicMass");
@@ -2256,15 +2275,15 @@ double plotLifetimeLSB(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 	RooRealVar *JpsictErr = ws->var("JpsictErr");
 	assert( 0 != Jpsict );
 
-	RooPlot *ctauFrame = Jpsict->frame(Range(PlotMin+0.001, PlotMax-0.001),Bins(nbins));
+	RooPlot *ctauFrame = ((RooRealVar*)ws->var("Jpsict"))->frame(Bins(nbins),Range(PlotMin, PlotMax));
 	assert ( 0 != ctauFrame );
 	ctauFrame->SetName(Form("ctau_plot_rap%d_pt%d",rapBin,ptBin));
 	ctauFrame->SetTitle("");
 	ctauFrame->GetYaxis()->SetTitle(Form("Events / %1.0f micron",binWidth));
 	ctauFrame->GetYaxis()->SetTitleOffset(1.3);
-	ctauFrame->GetXaxis()->SetRangeUser(PlotMin+0.001, PlotMax-0.001);
+	ctauFrame->GetXaxis()->SetRangeUser(PlotMin, PlotMax);
 
-	RooPlot *ctauFramePull = Jpsict->frame(Range(PlotMin+0.001, PlotMax-0.001),Bins(nbins));
+	RooPlot *ctauFramePull = ((RooRealVar*)ws->var("Jpsict"))->frame(Bins(nbins),Range(PlotMin, PlotMax));
 	assert ( 0 != ctauFramePull );
 	ctauFramePull->SetName(Form("pullctau_plot_rap%d_pt%d",rapBin,ptBin));
 	ctauFramePull->SetTitle("");
@@ -2275,10 +2294,10 @@ double plotLifetimeLSB(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 	ctauFramePull->GetYaxis()->SetLabelSize(0.08);
 	ctauFramePull->GetYaxis()->SetTitleOffset(0.4);
 	ctauFramePull->GetYaxis()->SetRangeUser(-5.99,5.99);
-	ctauFramePull->GetXaxis()->SetRangeUser(PlotMin+0.001, PlotMax-0.001);
+	ctauFramePull->GetXaxis()->SetRangeUser(PlotMin, PlotMax);
 
 
-	RooAbsData *data= ws->data(Form("data_rap%d_pt%d",rapBin,ptBin));
+	RooAbsData *data= ws->data(Form("data_rap%d_pt%d_SR",rapBin,ptBin));
 	assert ( 0 != data );
 	RooFitResult* fitRlt = dynamic_cast<RooFitResult*>(ws->obj(Form("fitresult_rap%d_pt%d",rapBin,ptBin)));
 	assert ( 0 != fitRlt);
@@ -2334,10 +2353,10 @@ double plotLifetimeLSB(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 
 	cout<<"Plotting sum"<<endl;
 	fullPdf->plotOn(ctauFrame,
-			Normalization(ws->var("var_ev")->getVal()*ws->var("var_fTotInLSB")->getVal(),2),
+			//Normalization(ws->var("var_ev")->getVal()*ws->var("var_fTotInLSB")->getVal(),2),
 			LineWidth(onia::lineWidth_ML),
 			ProjWData(*JpsictErr, *dataLSBProj),
-			NumCPU(16),
+			NumCPU(1),
 			Name("myCurve"));
 	cout<<"Plotting sum finished"<<endl;
 
@@ -2349,7 +2368,7 @@ double plotLifetimeLSB(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 	double chi2_Ctau=chi2Pre_Ctau*ndof_Ctau;
 
 	TH1F* pull = new TH1F("pull","pull distribution", 100,-10.,10.);
-	gSystem->mkdir("Fit/root",kTRUE);
+	gSystem->mkdir("Fit/root",kTRUE);gSystem->mkdir("Fit/chicFit",kTRUE);
 	TFile *pullFile = new TFile(Form("Fit/root/pull_ctau_LSB_rap%d_pt%d.root",rapBin,ptBin),"RECREATE");
 
 	RooHist* hpull_ctau = ctauFrame->pullHist() ;
@@ -2393,14 +2412,23 @@ double plotLifetimeLSB(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 
 
 	if(plotBackground){
+		cout<<"Plotting comb background"<<endl;
+		fullPdf->plotOn(ctauFrame,
+				Components("ML_comb_background"),
+				//Normalization(ws->var("var_ev")->getVal()*ws->var("var_fTotInLSB")->getVal(),2),
+				LineStyle(onia::lineStyle_subCompPRsignal_ML),
+				LineColor(onia::colorBackground),
+				LineWidth(onia::lineWidth_ML),
+				ProjWData(*JpsictErr, *dataLSBProj), NumCPU(1));
+		cout<<"Plotting comb background finished"<<endl;
 		cout<<"Plotting background"<<endl;
 		fullPdf->plotOn(ctauFrame,
 				Components("ML_background"),
-				Normalization(ws->var("var_ev")->getVal()*ws->var("var_fTotInLSB")->getVal(),2),
+				//Normalization(ws->var("var_ev")->getVal()*ws->var("var_fTotInLSB")->getVal(),2),
 				LineStyle(onia::lineStyle_subComps_ML),
 				LineColor(onia::colorBackground),
 				LineWidth(onia::lineWidth_ML),
-				ProjWData(*JpsictErr, *dataLSBProj), NumCPU(16));
+				ProjWData(*JpsictErr, *dataLSBProj), NumCPU(1));
 		cout<<"Plotting background finished"<<endl;
 	}
 
@@ -2408,11 +2436,11 @@ double plotLifetimeLSB(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 		cout<<"Plotting Chic0"<<endl;
 		fullPdf->plotOn(ctauFrame,
 				Components("ML_chic0"),
-				Normalization(ws->var("var_ev")->getVal()*ws->var("var_fTotInLSB")->getVal(),2),
+				//Normalization(ws->var("var_ev")->getVal()*ws->var("var_fTotInLSB")->getVal(),2),
 				LineStyle(onia::lineStyle_subComps_ML),
 				LineColor(onia::colorChic0),
 				LineWidth(onia::lineWidth_ML),
-				ProjWData(*JpsictErr, *dataLSBProj), NumCPU(16));
+				ProjWData(*JpsictErr, *dataLSBProj), NumCPU(1));
 		cout<<"Plotting Chic0 finished"<<endl;
 	}
 
@@ -2420,11 +2448,11 @@ double plotLifetimeLSB(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 		cout<<"Plotting Chic1"<<endl;
 		fullPdf->plotOn(ctauFrame,
 				Components("ML_chic1"),
-				Normalization(ws->var("var_ev")->getVal()*ws->var("var_fTotInLSB")->getVal(),2),
+				//Normalization(ws->var("var_ev")->getVal()*ws->var("var_fTotInLSB")->getVal(),2),
 				LineStyle(onia::lineStyle_subComps_ML),
 				LineColor(onia::colorChic1),
 				LineWidth(onia::lineWidth_ML),
-				ProjWData(*JpsictErr, *dataLSBProj), NumCPU(16));
+				ProjWData(*JpsictErr, *dataLSBProj), NumCPU(1));
 		cout<<"Plotting Chic1 finished"<<endl;
 	}
 
@@ -2432,14 +2460,18 @@ double plotLifetimeLSB(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 		cout<<"Plotting Chic2"<<endl;
 		fullPdf->plotOn(ctauFrame,
 				Components("ML_chic2"),
-				Normalization(ws->var("var_ev")->getVal()*ws->var("var_fTotInLSB")->getVal(),2),
+				//Normalization(ws->var("var_ev")->getVal()*ws->var("var_fTotInLSB")->getVal(),2),
 				LineStyle(onia::lineStyle_subComps_ML),
 				LineColor(onia::colorChic2),
 				LineWidth(onia::lineWidth_ML),
-				ProjWData(*JpsictErr, *dataLSBProj), NumCPU(16));
+				ProjWData(*JpsictErr, *dataLSBProj), NumCPU(1));
 		cout<<"Plotting Chic2 finished"<<endl;
 	}
 
+	if(correctResolutionForPlotting){
+		ws->var("ctResolution")->setVal(ws->var("ctResolution")->getVal()/resCorrFactor);
+		ws->var("ctResolution2")->setVal(ws->var("ctResolution2")->getVal()/resCorrFactor);
+	}
 
 
 	double lineWidthRegions = 1.5;
@@ -2472,34 +2504,38 @@ double plotLifetimeLSB(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 
 	TH1* legend_Tot = data->createHistogram("legend_Tot",*Jpsict,Binning(50)) ; legend_Tot->SetLineColor(kBlue) ; legend_Tot->SetLineStyle(1) ; legend_Tot->SetLineWidth(2.) ;
 	TH1* legend_Background = data->createHistogram("legend_Background",*Jpsict,Binning(50)) ; legend_Background->SetLineColor(onia::colorBackground) ; legend_Background->SetLineStyle(onia::lineStyle_subComps_ML) ; legend_Background->SetLineWidth(onia::lineWidth_ML) ;
+	TH1* legend_Comb_Background = data->createHistogram("legend_Comb_Background",*Jpsict,Binning(50)) ; legend_Comb_Background->SetLineColor(onia::colorBackground) ; legend_Comb_Background->SetLineStyle(onia::lineStyle_subCompPRsignal_ML) ; legend_Comb_Background->SetLineWidth(onia::lineWidth_ML) ;
 	TH1* legend_Chic0 = data->createHistogram("legend_Chic0",*Jpsict,Binning(50)) ; legend_Chic0->SetLineColor(onia::colorChic0) ; legend_Chic0->SetLineStyle(onia::lineStyle_subComps_ML) ; legend_Chic0->SetLineWidth(onia::lineWidth_ML) ;
 	TH1* legend_Chic1 = data->createHistogram("legend_Chic1",*Jpsict,Binning(50)) ; legend_Chic1->SetLineColor(onia::colorChic1) ; legend_Chic1->SetLineStyle(onia::lineStyle_subComps_ML) ; legend_Chic1->SetLineWidth(onia::lineWidth_ML) ;
 	TH1* legend_Chic2 = data->createHistogram("legend_Chic2",*Jpsict,Binning(50)) ; legend_Chic2->SetLineColor(onia::colorChic2) ; legend_Chic2->SetLineStyle(onia::lineStyle_subComps_ML) ; legend_Chic2->SetLineWidth(onia::lineWidth_ML) ;
 
-	TLegend* CtauLegend=new TLegend(0.61,0.53,0.76,0.73);
+	TLegend* CtauLegend=new TLegend(0.13,0.71,0.23,0.91);
 	CtauLegend->SetFillColor(kWhite);
 	CtauLegend->SetFillStyle(0);
 	CtauLegend->SetTextFont(42);
 	CtauLegend->SetTextSize(0.035);
 	CtauLegend->SetBorderSize(0.);
 	CtauLegend->AddEntry(legend_Tot,"sum","l");
-	if(plotBackground) CtauLegend->AddEntry(legend_Background,"bkg","l");
+	if(plotBackground){
+		CtauLegend->AddEntry(legend_Background,"J/#psi BG","l");
+		CtauLegend->AddEntry(legend_Comb_Background,"#mu#mu#gamma BG","l");
+	}
 	if(plotChic0) CtauLegend->AddEntry(legend_Chic0,"#chi_{c0}","l");
 	if(plotChic1) CtauLegend->AddEntry(legend_Chic1,"#chi_{c1}","l");
 	if(plotChic2) CtauLegend->AddEntry(legend_Chic2,"#chi_{c2}","l");
 
 
-	double left=0.7, top=0.9, textSize=0.025;
+	double left=0.7, top=0.885, textSize=0.03;
 	TLatex *latex=new TLatex();
 	latex->SetTextFont(42);
 	latex->SetNDC(kTRUE);
 	latex->SetTextSize(textSize);
-	double step=textSize*1.3;
+	double step=textSize*1.6;
 
 
 	gStyle->SetPadBottomMargin(0.08); //0.12
 	gStyle->SetPadLeftMargin(0.09); //0.12
-	gStyle->SetPadRightMargin(0.02); //0.05
+	gStyle->SetPadRightMargin(0.035); //0.05
 	gStyle->SetPadTopMargin(0.05); //0.05
 
 	TCanvas *c1;
@@ -2536,29 +2572,28 @@ double plotLifetimeLSB(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 		linePRHigh->Draw("same");
 
 
-		textSize=0.04; latex->SetTextSize(textSize);
-		if(rapBin<1) left=0.60;
-		else left=0.585;
-		top=0.90;
-		if(rapBin==0) latex->DrawLatex(left,top,Form("|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[onia::kNbRapForPTBins]));
+		left=0.54; top=0.885; textSize=0.030; latex->SetTextSize(textSize);
+		if(rapBin==0) latex->DrawLatex(left,top,Form("|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[2]));
 		else if(rapBin==1) latex->DrawLatex(left,top,Form("|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[rapBin]));
 		else latex->DrawLatex(left,top,Form("%.1f < |y%s| < %.1f",onia::rapForPTRange[rapBin-1],onia::KinParticleChar,onia::rapForPTRange[rapBin]));
-
-		left=0.56; top-=textSize*1.7;
+		top-=step;
 		if(ptBin==0)
-			latex->DrawLatex(left,top,Form("%.0f < p%s_{T} < %.0f GeV",onia::pTRange[rapBin][ptBin],onia::KinParticleChar,onia::pTRange[rapBin][onia::kNbPTMaxBins]));
+			latex->DrawLatex(left,top,Form("%.0f < p%s_{T} < %.0f GeV",onia::pTRange[rapBin][ptBin],onia::KinParticleChar,onia::pTRange[rapBin][onia::kNbPTBins[rapBin]]));
 		else
 			latex->DrawLatex(left,top,Form("%.0f < p%s_{T} < %.0f GeV",onia::pTRange[rapBin][ptBin-1],onia::KinParticleChar,onia::pTRange[rapBin][ptBin]));
 
-		top-=textSize*1.7;
-		textSize=0.0310; latex->SetTextSize(textSize);
-		latex->DrawLatex(left,top,Form("#chi^{2}/ndf = %.1f / %d = %.1f", chi2_Ctau, ndof_Ctau, double(chi2_Ctau/ndof_Ctau)));
+		top-=step;
+		latex->SetTextColor(kRed);
+		latex->DrawLatex(left,top,Form("J/#psi SR, #chi LSB"));
+		latex->SetTextColor(kBlack);
+		top-=step;
+		latex->DrawLatex(left,top,Form("#chi^{2}/ndf = %.1f / %d", chi2_Ctau, ndof_Ctau));
 
 	    RooRealVar var_chi2ndf_Lifetime_LSB("var_chi2ndf_Lifetime_LSB","var_chi2ndf_Lifetime_LSB",double(chi2_Ctau/ndof_Ctau)); if(!ws->var("var_chi2ndf_Lifetime_LSB")) ws->import(var_chi2ndf_Lifetime_LSB); else ws->var("var_chi2ndf_Lifetime_LSB")->setVal(double(chi2_Ctau/ndof_Ctau));
 
 
 		textSize=0.03; latex->SetTextSize(textSize);
-		left=0.805; top=0.9;
+		left=0.775; top=0.885;
 		double stepsizeTimes=1.9;
 		latex->SetTextColor(onia::colorPR);
 		latex->SetTextSize(textSize);
@@ -2613,18 +2648,18 @@ double plotLifetimeLSB(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 		textSize=0.06; latex->SetTextSize(textSize);
 		left=0.385; top=0.875;
 		latex->SetTextSize(textSize);
-		latex->DrawLatex(left,top,Form("#mu_{pull}  =  %.3f #pm %.3f,  #sigma_{pull}  =  %.3f #pm %.3f",pullMean, err_pullMean, pullRMS, err_pullRMS));
+		//latex->DrawLatex(left,top,Form("#mu_{pull}  =  %.3f #pm %.3f,  #sigma_{pull}  =  %.3f #pm %.3f",pullMean, err_pullMean, pullRMS, err_pullRMS));
 
 		c1->cd();
 
 		std::stringstream saveCtau;
 		if(!zoom){
-			if(LinLog==0) saveCtau << "Fit/ctau_LSB_lin_rap" << rapBin << "_pt" << ptBin << ".pdf";
-			if(LinLog==1) saveCtau << "Fit/ctau_LSB_log_rap" << rapBin << "_pt" << ptBin << ".pdf";
+			if(LinLog==0) saveCtau << "Fit/chicFit/ctau_LSB_lin_rap" << rapBin << "_pt" << ptBin << ".pdf";
+			if(LinLog==1) saveCtau << "Fit/chicFit/ctau_LSB_log_rap" << rapBin << "_pt" << ptBin << ".pdf";
 		}
 		else{
-			if(LinLog==0) saveCtau << "Fit/ctau_LSB_zoom_lin_rap" << rapBin << "_pt" << ptBin << ".pdf";
-			if(LinLog==1) saveCtau << "Fit/ctau_LSB_zoom_log_rap" << rapBin << "_pt" << ptBin << ".pdf";
+			if(LinLog==0) saveCtau << "Fit/chicFit/ctau_LSB_zoom_lin_rap" << rapBin << "_pt" << ptBin << ".pdf";
+			if(LinLog==1) saveCtau << "Fit/chicFit/ctau_LSB_zoom_log_rap" << rapBin << "_pt" << ptBin << ".pdf";
 		}
 		c1->SaveAs(saveCtau.str().c_str());
 
@@ -2664,6 +2699,14 @@ double plotLifetimeRSB(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 
 	double binWidth=(PlotMax-PlotMin)/double(nbins)*1000;
 
+	bool correctResolutionForPlotting=false;
+	double resCorrFactor=1.0525;
+	if(ptBin==0) resCorrFactor=1.0825;
+	if(ptBin==1) resCorrFactor=1.0725;
+	if(correctResolutionForPlotting){
+		ws->var("ctResolution")->setVal(ws->var("ctResolution")->getVal()*resCorrFactor);
+		ws->var("ctResolution2")->setVal(ws->var("ctResolution2")->getVal()*resCorrFactor);
+	}
 
 
 	RooRealVar *chicMass = ws->var("chicMass");
@@ -2671,15 +2714,15 @@ double plotLifetimeRSB(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 	RooRealVar *JpsictErr = ws->var("JpsictErr");
 	assert( 0 != Jpsict );
 
-	RooPlot *ctauFrame = Jpsict->frame(Range(PlotMin+0.001, PlotMax-0.001),Bins(nbins));
+	RooPlot *ctauFrame = ((RooRealVar*)ws->var("Jpsict"))->frame(Bins(nbins),Range(PlotMin, PlotMax));
 	assert ( 0 != ctauFrame );
 	ctauFrame->SetName(Form("ctau_plot_rap%d_pt%d",rapBin,ptBin));
 	ctauFrame->SetTitle("");
 	ctauFrame->GetYaxis()->SetTitle(Form("Events / %1.0f micron",binWidth));
 	ctauFrame->GetYaxis()->SetTitleOffset(1.3);
-	ctauFrame->GetXaxis()->SetRangeUser(PlotMin+0.001, PlotMax-0.001);
+	ctauFrame->GetXaxis()->SetRangeUser(PlotMin, PlotMax);
 
-	RooPlot *ctauFramePull = Jpsict->frame(Range(PlotMin+0.001, PlotMax-0.001),Bins(nbins));
+	RooPlot *ctauFramePull = ((RooRealVar*)ws->var("Jpsict"))->frame(Bins(nbins),Range(PlotMin, PlotMax));
 	assert ( 0 != ctauFramePull );
 	ctauFramePull->SetName(Form("pullctau_plot_rap%d_pt%d",rapBin,ptBin));
 	ctauFramePull->SetTitle("");
@@ -2690,10 +2733,10 @@ double plotLifetimeRSB(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 	ctauFramePull->GetYaxis()->SetLabelSize(0.08);
 	ctauFramePull->GetYaxis()->SetTitleOffset(0.4);
 	ctauFramePull->GetYaxis()->SetRangeUser(-5.99,5.99);
-	ctauFramePull->GetXaxis()->SetRangeUser(PlotMin+0.001, PlotMax-0.001);
+	ctauFramePull->GetXaxis()->SetRangeUser(PlotMin, PlotMax);
 
 
-	RooAbsData *data= ws->data(Form("data_rap%d_pt%d",rapBin,ptBin));
+	RooAbsData *data= ws->data(Form("data_rap%d_pt%d_SR",rapBin,ptBin));
 	assert ( 0 != data );
 	RooFitResult* fitRlt = dynamic_cast<RooFitResult*>(ws->obj(Form("fitresult_rap%d_pt%d",rapBin,ptBin)));
 	assert ( 0 != fitRlt);
@@ -2747,13 +2790,12 @@ double plotLifetimeRSB(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 	minY = 5e-1;
 	ctauFrame->GetYaxis()->SetRangeUser(minY,maxY);
 
-
 	cout<<"Plotting sum"<<endl;
 	fullPdf->plotOn(ctauFrame,
-			Normalization(ws->var("var_ev")->getVal()*ws->var("var_fTotInRSB")->getVal(),2),
+			//Normalization(ws->var("var_ev")->getVal()*ws->var("var_fTotInRSB")->getVal(),2),
 			LineWidth(onia::lineWidth_ML),
 			ProjWData(*JpsictErr, *dataRSBProj),
-			NumCPU(16),
+			NumCPU(1),
 			Name("myCurve"));
 	cout<<"Plotting sum finished"<<endl;
 
@@ -2765,7 +2807,7 @@ double plotLifetimeRSB(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 	double chi2_Ctau=chi2Pre_Ctau*ndof_Ctau;
 
 	TH1F* pull = new TH1F("pull","pull distribution", 100,-10.,10.);
-	gSystem->mkdir("Fit/root",kTRUE);
+	gSystem->mkdir("Fit/root",kTRUE);gSystem->mkdir("Fit/chicFit",kTRUE);
 	TFile *pullFile = new TFile(Form("Fit/root/pull_ctau_RSB_rap%d_pt%d.root",rapBin,ptBin),"RECREATE");
 
 	RooHist* hpull_ctau = ctauFrame->pullHist() ;
@@ -2810,14 +2852,23 @@ double plotLifetimeRSB(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 
 
 	if(plotBackground){
+		cout<<"Plotting comb background"<<endl;
+		fullPdf->plotOn(ctauFrame,
+				Components("ML_comb_background"),
+				//Normalization(ws->var("var_ev")->getVal()*ws->var("var_fTotInRSB")->getVal(),2),
+				LineStyle(onia::lineStyle_subCompPRsignal_ML),
+				LineColor(onia::colorBackground),
+				LineWidth(onia::lineWidth_ML),
+				ProjWData(*JpsictErr, *dataRSBProj), NumCPU(1));
+		cout<<"Plotting comb background finished"<<endl;
 		cout<<"Plotting background"<<endl;
 		fullPdf->plotOn(ctauFrame,
 				Components("ML_background"),
-				Normalization(ws->var("var_ev")->getVal()*ws->var("var_fTotInRSB")->getVal(),2),
+				//Normalization(ws->var("var_ev")->getVal()*ws->var("var_fTotInRSB")->getVal(),2),
 				LineStyle(onia::lineStyle_subComps_ML),
 				LineColor(onia::colorBackground),
 				LineWidth(onia::lineWidth_ML),
-				ProjWData(*JpsictErr, *dataRSBProj), NumCPU(16));
+				ProjWData(*JpsictErr, *dataRSBProj), NumCPU(1));
 		cout<<"Plotting background finished"<<endl;
 	}
 
@@ -2825,11 +2876,11 @@ double plotLifetimeRSB(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 		cout<<"Plotting Chic0"<<endl;
 		fullPdf->plotOn(ctauFrame,
 				Components("ML_chic0"),
-				Normalization(ws->var("var_ev")->getVal()*ws->var("var_fTotInRSB")->getVal(),2),
+				//Normalization(ws->var("var_ev")->getVal()*ws->var("var_fTotInRSB")->getVal(),2),
 				LineStyle(onia::lineStyle_subComps_ML),
 				LineColor(onia::colorChic0),
 				LineWidth(onia::lineWidth_ML),
-				ProjWData(*JpsictErr, *dataRSBProj), NumCPU(16));
+				ProjWData(*JpsictErr, *dataRSBProj), NumCPU(1));
 		cout<<"Plotting Chic0 finished"<<endl;
 	}
 
@@ -2837,11 +2888,11 @@ double plotLifetimeRSB(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 		cout<<"Plotting Chic1"<<endl;
 		fullPdf->plotOn(ctauFrame,
 				Components("ML_chic1"),
-				Normalization(ws->var("var_ev")->getVal()*ws->var("var_fTotInRSB")->getVal(),2),
+				//Normalization(ws->var("var_ev")->getVal()*ws->var("var_fTotInRSB")->getVal(),2),
 				LineStyle(onia::lineStyle_subComps_ML),
 				LineColor(onia::colorChic1),
 				LineWidth(onia::lineWidth_ML),
-				ProjWData(*JpsictErr, *dataRSBProj), NumCPU(16));
+				ProjWData(*JpsictErr, *dataRSBProj), NumCPU(1));
 		cout<<"Plotting Chic1 finished"<<endl;
 	}
 
@@ -2849,14 +2900,18 @@ double plotLifetimeRSB(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 		cout<<"Plotting Chic2"<<endl;
 		fullPdf->plotOn(ctauFrame,
 				Components("ML_chic2"),
-				Normalization(ws->var("var_ev")->getVal()*ws->var("var_fTotInRSB")->getVal(),2),
+				//Normalization(ws->var("var_ev")->getVal()*ws->var("var_fTotInRSB")->getVal(),2),
 				LineStyle(onia::lineStyle_subComps_ML),
 				LineColor(onia::colorChic2),
 				LineWidth(onia::lineWidth_ML),
-				ProjWData(*JpsictErr, *dataRSBProj), NumCPU(16));
+				ProjWData(*JpsictErr, *dataRSBProj), NumCPU(1));
 		cout<<"Plotting Chic2 finished"<<endl;
 	}
 
+	if(correctResolutionForPlotting){
+		ws->var("ctResolution")->setVal(ws->var("ctResolution")->getVal()/resCorrFactor);
+		ws->var("ctResolution2")->setVal(ws->var("ctResolution2")->getVal()/resCorrFactor);
+	}
 
 
 	double lineWidthRegions = 1.5;
@@ -2889,34 +2944,38 @@ double plotLifetimeRSB(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 
 	TH1* legend_Tot = data->createHistogram("legend_Tot",*Jpsict,Binning(50)) ; legend_Tot->SetLineColor(kBlue) ; legend_Tot->SetLineStyle(1) ; legend_Tot->SetLineWidth(2.) ;
 	TH1* legend_Background = data->createHistogram("legend_Background",*Jpsict,Binning(50)) ; legend_Background->SetLineColor(onia::colorBackground) ; legend_Background->SetLineStyle(onia::lineStyle_subComps_ML) ; legend_Background->SetLineWidth(onia::lineWidth_ML) ;
+	TH1* legend_Comb_Background = data->createHistogram("legend_Comb_Background",*Jpsict,Binning(50)) ; legend_Comb_Background->SetLineColor(onia::colorBackground) ; legend_Comb_Background->SetLineStyle(onia::lineStyle_subCompPRsignal_ML) ; legend_Comb_Background->SetLineWidth(onia::lineWidth_ML) ;
 	TH1* legend_Chic0 = data->createHistogram("legend_Chic0",*Jpsict,Binning(50)) ; legend_Chic0->SetLineColor(onia::colorChic0) ; legend_Chic0->SetLineStyle(onia::lineStyle_subComps_ML) ; legend_Chic0->SetLineWidth(onia::lineWidth_ML) ;
 	TH1* legend_Chic1 = data->createHistogram("legend_Chic1",*Jpsict,Binning(50)) ; legend_Chic1->SetLineColor(onia::colorChic1) ; legend_Chic1->SetLineStyle(onia::lineStyle_subComps_ML) ; legend_Chic1->SetLineWidth(onia::lineWidth_ML) ;
 	TH1* legend_Chic2 = data->createHistogram("legend_Chic2",*Jpsict,Binning(50)) ; legend_Chic2->SetLineColor(onia::colorChic2) ; legend_Chic2->SetLineStyle(onia::lineStyle_subComps_ML) ; legend_Chic2->SetLineWidth(onia::lineWidth_ML) ;
 
-	TLegend* CtauLegend=new TLegend(0.61,0.53,0.76,0.73);
+	TLegend* CtauLegend=new TLegend(0.13,0.71,0.23,0.91);
 	CtauLegend->SetFillColor(kWhite);
 	CtauLegend->SetFillStyle(0);
 	CtauLegend->SetTextFont(42);
 	CtauLegend->SetTextSize(0.035);
 	CtauLegend->SetBorderSize(0.);
 	CtauLegend->AddEntry(legend_Tot,"sum","l");
-	if(plotBackground) CtauLegend->AddEntry(legend_Background,"bkg","l");
+	if(plotBackground){
+		CtauLegend->AddEntry(legend_Background,"J/#psi BG","l");
+		CtauLegend->AddEntry(legend_Comb_Background,"#mu#mu#gamma BG","l");
+	}
 	if(plotChic0) CtauLegend->AddEntry(legend_Chic0,"#chi_{c0}","l");
 	if(plotChic1) CtauLegend->AddEntry(legend_Chic1,"#chi_{c1}","l");
 	if(plotChic2) CtauLegend->AddEntry(legend_Chic2,"#chi_{c2}","l");
 
 
-	double left=0.7, top=0.9, textSize=0.025;
+	double left=0.7, top=0.885, textSize=0.03;
 	TLatex *latex=new TLatex();
 	latex->SetTextFont(42);
 	latex->SetNDC(kTRUE);
 	latex->SetTextSize(textSize);
-	double step=textSize*1.3;
+	double step=textSize*1.6;
 
 
 	gStyle->SetPadBottomMargin(0.08); //0.12
 	gStyle->SetPadLeftMargin(0.09); //0.12
-	gStyle->SetPadRightMargin(0.02); //0.05
+	gStyle->SetPadRightMargin(0.035); //0.05
 	gStyle->SetPadTopMargin(0.05); //0.05
 
 	TCanvas *c1;
@@ -2953,29 +3012,29 @@ double plotLifetimeRSB(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 		linePRHigh->Draw("same");
 
 
-		textSize=0.04; latex->SetTextSize(textSize);
-		if(rapBin<1) left=0.60;
-		else left=0.585;
-		top=0.90;
-		if(rapBin==0) latex->DrawLatex(left,top,Form("|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[onia::kNbRapForPTBins]));
+		left=0.54; top=0.885; textSize=0.030; latex->SetTextSize(textSize);
+		if(rapBin==0) latex->DrawLatex(left,top,Form("|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[2]));
 		else if(rapBin==1) latex->DrawLatex(left,top,Form("|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[rapBin]));
 		else latex->DrawLatex(left,top,Form("%.1f < |y%s| < %.1f",onia::rapForPTRange[rapBin-1],onia::KinParticleChar,onia::rapForPTRange[rapBin]));
-
-		left=0.56; top-=textSize*1.7;
+		top-=step;
 		if(ptBin==0)
-			latex->DrawLatex(left,top,Form("%.0f < p%s_{T} < %.0f GeV",onia::pTRange[rapBin][ptBin],onia::KinParticleChar,onia::pTRange[rapBin][onia::kNbPTMaxBins]));
+			latex->DrawLatex(left,top,Form("%.0f < p%s_{T} < %.0f GeV",onia::pTRange[rapBin][ptBin],onia::KinParticleChar,onia::pTRange[rapBin][onia::kNbPTBins[rapBin]]));
 		else
 			latex->DrawLatex(left,top,Form("%.0f < p%s_{T} < %.0f GeV",onia::pTRange[rapBin][ptBin-1],onia::KinParticleChar,onia::pTRange[rapBin][ptBin]));
 
-		top-=textSize*1.7;
-		textSize=0.0310; latex->SetTextSize(textSize);
-		latex->DrawLatex(left,top,Form("#chi^{2}/ndf = %.1f / %d = %.1f", chi2_Ctau, ndof_Ctau, double(chi2_Ctau/ndof_Ctau)));
+		top-=step;
+		latex->SetTextColor(kRed);
+		latex->DrawLatex(left,top,Form("J/#psi SR, #chi RSB"));
+		latex->SetTextColor(kBlack);
+		top-=step;
+		latex->DrawLatex(left,top,Form("#chi^{2}/ndf = %.1f / %d", chi2_Ctau, ndof_Ctau));
+		top-=step;
 
 	    RooRealVar var_chi2ndf_Lifetime_RSB("var_chi2ndf_Lifetime_RSB","var_chi2ndf_Lifetime_RSB",double(chi2_Ctau/ndof_Ctau)); if(!ws->var("var_chi2ndf_Lifetime_RSB")) ws->import(var_chi2ndf_Lifetime_RSB); else ws->var("var_chi2ndf_Lifetime_RSB")->setVal(double(chi2_Ctau/ndof_Ctau));
 
 
 		textSize=0.03; latex->SetTextSize(textSize);
-		left=0.805; top=0.9;
+		left=0.775; top=0.885;
 		double stepsizeTimes=1.9;
 		latex->SetTextColor(onia::colorPR);
 		latex->SetTextSize(textSize);
@@ -3006,18 +3065,18 @@ double plotLifetimeRSB(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 		textSize=0.06; latex->SetTextSize(textSize);
 		left=0.385; top=0.875;
 		latex->SetTextSize(textSize);
-		latex->DrawLatex(left,top,Form("#mu_{pull}  =  %.3f #pm %.3f,  #sigma_{pull}  =  %.3f #pm %.3f",pullMean, err_pullMean, pullRMS, err_pullRMS));
+		//latex->DrawLatex(left,top,Form("#mu_{pull}  =  %.3f #pm %.3f,  #sigma_{pull}  =  %.3f #pm %.3f",pullMean, err_pullMean, pullRMS, err_pullRMS));
 
 		c1->cd();
 
 		std::stringstream saveCtau;
 		if(!zoom){
-			if(LinLog==0) saveCtau << "Fit/ctau_RSB_lin_rap" << rapBin << "_pt" << ptBin << ".pdf";
-			if(LinLog==1) saveCtau << "Fit/ctau_RSB_log_rap" << rapBin << "_pt" << ptBin << ".pdf";
+			if(LinLog==0) saveCtau << "Fit/chicFit/ctau_RSB_lin_rap" << rapBin << "_pt" << ptBin << ".pdf";
+			if(LinLog==1) saveCtau << "Fit/chicFit/ctau_RSB_log_rap" << rapBin << "_pt" << ptBin << ".pdf";
 		}
 		else{
-			if(LinLog==0) saveCtau << "Fit/ctau_RSB_zoom_lin_rap" << rapBin << "_pt" << ptBin << ".pdf";
-			if(LinLog==1) saveCtau << "Fit/ctau_RSB_zoom_log_rap" << rapBin << "_pt" << ptBin << ".pdf";
+			if(LinLog==0) saveCtau << "Fit/chicFit/ctau_RSB_zoom_lin_rap" << rapBin << "_pt" << ptBin << ".pdf";
+			if(LinLog==1) saveCtau << "Fit/chicFit/ctau_RSB_zoom_log_rap" << rapBin << "_pt" << ptBin << ".pdf";
 		}
 		c1->SaveAs(saveCtau.str().c_str());
 
@@ -3046,7 +3105,7 @@ void latexFloatingLifetimePars(RooWorkspace *ws, TLatex* latex){
 	double textSize, left, top;
 
 	textSize=0.03; latex->SetTextSize(textSize);
-	left=0.775; top=0.9;
+	left=0.725; top=0.885;
 	double stepsizeTimes=1.9;
 	latex->SetTextSize(textSize);
 	if(!ws->var("ctResolution")->isConstant()){
@@ -3069,6 +3128,7 @@ void latexFloatingLifetimePars(RooWorkspace *ws, TLatex* latex){
 	latex->DrawLatex(left,top,Form("#tau_{Bg}  =  %.3f #pm %.3f",ws->var("NP_TauBkg")->getVal(), ws->var("NP_TauBkg")->getError()));
 	top-=textSize*stepsizeTimes;
 	}
+	if(ws->var("FD_TauBkg")!=NULL)
 	if(!ws->var("FD_TauBkg")->isConstant()){
 	latex->DrawLatex(left,top,Form("#tau^{LS}_{Bg}  =  %.3f #pm %.3f",ws->var("FD_TauBkg")->getVal(), ws->var("FD_TauBkg")->getError()));
 	top-=textSize*stepsizeTimes;
@@ -3082,6 +3142,7 @@ void latexFloatingLifetimePars(RooWorkspace *ws, TLatex* latex){
 	latex->DrawLatex(left,top,Form("f^{Bg}_{NP}  =  %.3f #pm %.3f",ws->var("fBkgNP")->getVal(), ws->var("fBkgNP")->getError()));
 	top-=textSize*stepsizeTimes;
 	}
+	if(ws->var("fBkgFD")!=NULL)
 	if(!ws->var("fBkgFD")->isConstant()){
 	latex->DrawLatex(left,top,Form("f^{Bg}_{LS}  =  %.3f #pm %.3f",ws->var("fBkgFD")->getVal(), ws->var("fBkgFD")->getError()));
 	top-=textSize*stepsizeTimes;

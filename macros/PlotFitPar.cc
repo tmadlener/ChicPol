@@ -85,23 +85,23 @@ int main(int argc, char* argv[]){
     char dirname[2000];
     sprintf(predirname,"Fit/parameter");
     gSystem->mkdir(predirname);
-    sprintf(dirname,"%s/mass",predirname);
+    sprintf(dirname,"%s/chic_mass",predirname);
     gSystem->mkdir(dirname);
 	outfileCreate = new TFile(Form("%s/Par_chi.root",dirname,"RECREATE"));
 	outfileCreate->Close();
-    sprintf(dirname,"%s/lifetime",predirname);
+    sprintf(dirname,"%s/chic_lifetime",predirname);
     gSystem->mkdir(dirname);
 	outfileCreate = new TFile(Form("%s/Par_chi.root",dirname,"RECREATE"));
 	outfileCreate->Close();
-    sprintf(dirname,"%s/fitqual",predirname);
+    sprintf(dirname,"%s/chic_fitqual",predirname);
     gSystem->mkdir(dirname);
 	outfileCreate = new TFile(Form("%s/Par_chi.root",dirname,"RECREATE"));
 	outfileCreate->Close();
-    sprintf(dirname,"%s/regions",predirname);
+    sprintf(dirname,"%s/chic_regions",predirname);
     gSystem->mkdir(dirname);
 	outfileCreate = new TFile(Form("%s/Par_chi.root",dirname,"RECREATE"));
 	outfileCreate->Close();
-    sprintf(dirname,"%s/fractions",predirname);
+    sprintf(dirname,"%s/chic_fractions",predirname);
     gSystem->mkdir(dirname);
 	outfileCreate = new TFile(Form("%s/Par_chi.root",dirname,"RECREATE"));
 	outfileCreate->Close();
@@ -115,7 +115,7 @@ int main(int argc, char* argv[]){
 	bool logY=false;
 
 
-	sprintf(Folder, "fractions");  Ymin = 0.; Ymax = 1.; logY=false; int rapBin=1;
+	sprintf(Folder, "chic_fractions");  Ymin = 0.; Ymax = 1.; logY=false; int rapBin=1;
 	sprintf(SaveName, "default");
 
 	for(int rapBin = rapMin; rapBin < rapMax+1; rapBin++){
@@ -123,116 +123,116 @@ int main(int argc, char* argv[]){
 			PlotChiRegionFracs(nState, rapBin, ptMin, ptMax, Ymin, Ymax, Folder, SaveName, logY, RegionCode);
 	}
 
-	sprintf(SaveName, "Sig_CBmass0"); AddInclusiveResult=true; sprintf(ParName, "CBmass0"); sprintf(ParTitle,"m_{#chi_{c0}}"); sprintf(Folder, "mass");  Ymin = 3.375; Ymax = 3.425; logY=false;
+	sprintf(SaveName, "Sig_CBmass0"); sprintf(ParName, "CBmass0"); sprintf(ParTitle,"m_{#chi_{c0}}"); sprintf(Folder, "chic_mass");  Ymin = 3.375; Ymax = 3.425; logY=false;
 	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "Sig_CBmass1"); AddInclusiveResult=true; sprintf(ParName, "CBmass1"); sprintf(ParTitle,"m_{#chi_{c1}}"); sprintf(Folder, "mass");  Ymin = 3.5025; Ymax = 3.5075; logY=false;
+	sprintf(SaveName, "Sig_CBmass1"); sprintf(ParName, "CBmass1"); sprintf(ParTitle,"m_{#chi_{c1}}"); sprintf(Folder, "chic_mass");  Ymin = 3.5025; Ymax = 3.5075; logY=false;
 	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "Sig_CBmass2"); AddInclusiveResult=true; sprintf(ParName, "CBmass2"); sprintf(ParTitle,"m_{#chi_{c2}}"); sprintf(Folder, "mass");  Ymin = 3.5425; Ymax = 3.5575; logY=false;
+	sprintf(SaveName, "Sig_CBmass2"); sprintf(ParName, "CBmass2"); sprintf(ParTitle,"m_{#chi_{c2}}"); sprintf(Folder, "chic_mass");  Ymin = 3.5425; Ymax = 3.5575; logY=false;
 	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "Sig_CBsigma0"); AddInclusiveResult=true; sprintf(ParName, "CBsigma0"); sprintf(ParTitle,"#sigma_{#chi_{c0}}"); sprintf(Folder, "mass");  Ymin = 0.004; Ymax = 0.012; logY=false;
+	sprintf(SaveName, "Sig_CBsigma0"); sprintf(ParName, "CBsigma0"); sprintf(ParTitle,"#sigma_{#chi_{c0}}"); sprintf(Folder, "chic_mass");  Ymin = 0.004; Ymax = 0.012; logY=false;
 	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "Sig_CBsigma1"); AddInclusiveResult=true; sprintf(ParName, "CBsigma1"); sprintf(ParTitle,"#sigma_{#chi_{c1}}"); sprintf(Folder, "mass");  Ymin = 0.004; Ymax = 0.012; logY=false;
+	sprintf(SaveName, "Sig_CBsigma1"); sprintf(ParName, "CBsigma1"); sprintf(ParTitle,"#sigma_{#chi_{c1}}"); sprintf(Folder, "chic_mass");  Ymin = 0.004; Ymax = 0.012; logY=false;
 	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "Sig_CBsigma2"); AddInclusiveResult=true; sprintf(ParName, "CBsigma2"); sprintf(ParTitle,"#sigma_{#chi_{c2}}"); sprintf(Folder, "mass");  Ymin = 0.004; Ymax = 0.012; logY=false;
+	sprintf(SaveName, "Sig_CBsigma2"); sprintf(ParName, "CBsigma2"); sprintf(ParTitle,"#sigma_{#chi_{c2}}"); sprintf(Folder, "chic_mass");  Ymin = 0.004; Ymax = 0.012; logY=false;
 	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "BK_p1"); AddInclusiveResult=true; sprintf(ParName, "BK_p1"); sprintf(ParTitle,"p_{1}^{Bkg}"); sprintf(Folder, "mass");  Ymin = -.8; Ymax = 0.; logY=false;
+	sprintf(SaveName, "BK_p1"); sprintf(ParName, "BK_p1"); sprintf(ParTitle,"p_{1}^{Bkg}"); sprintf(Folder, "chic_mass");  Ymin = -.8; Ymax = 0.; logY=false;
 	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "BK_p2"); AddInclusiveResult=true; sprintf(ParName, "BK_p2"); sprintf(ParTitle,"p_{2}^{Bkg}"); sprintf(Folder, "mass");  Ymin = -1e-2; Ymax = 1e-1;
+	sprintf(SaveName, "BK_p2"); sprintf(ParName, "BK_p2"); sprintf(ParTitle,"p_{2}^{Bkg}"); sprintf(Folder, "chic_mass");  Ymin = -1e-2; Ymax = 1e-1;
 	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "Sig_CBalpha1"); AddInclusiveResult=true; sprintf(ParName, "CBalpha1"); sprintf(ParTitle,"#alpha^{CB}_{#chi_{c1}}"); sprintf(Folder, "mass");  Ymin = 0.3; Ymax = 0.8; logY=false;
+	sprintf(SaveName, "Sig_CBalpha1"); sprintf(ParName, "CBalpha1"); sprintf(ParTitle,"#alpha^{CB}_{#chi_{c1}}"); sprintf(Folder, "chic_mass");  Ymin = 0.3; Ymax = 1.3; logY=false;
 	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "Sig_CBalpha2"); AddInclusiveResult=true; sprintf(ParName, "CBalpha2"); sprintf(ParTitle,"#alpha^{CB}_{#chi_{c2}}"); sprintf(Folder, "mass");  Ymin = 0.3; Ymax = 0.8; logY=false;
+	sprintf(SaveName, "Sig_CBalpha2"); sprintf(ParName, "CBalpha2"); sprintf(ParTitle,"#alpha^{CB}_{#chi_{c2}}"); sprintf(Folder, "chic_mass");  Ymin = 0.3; Ymax = 1.3; logY=false;
 	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "Sig_CBn"); AddInclusiveResult=true; sprintf(ParName, "CBn"); sprintf(ParTitle,"n^{CB}_{#chi_{c1}"); sprintf(Folder, "mass");  Ymin = 1.; Ymax = 5.; logY=false;
+	sprintf(SaveName, "Sig_CBn"); sprintf(ParName, "CBn"); sprintf(ParTitle,"n^{CB}_{#chi_{c1}}"); sprintf(Folder, "chic_mass");  Ymin = 1.; Ymax = 5.; logY=false;
 	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "Sig_CBn2"); AddInclusiveResult=true; sprintf(ParName, "CBn2"); sprintf(ParTitle,"n^{CB}_{#chi_{c2}"); sprintf(Folder, "mass");  Ymin = 1.; Ymax = 5.; logY=false;
+	sprintf(SaveName, "Sig_CBn2"); sprintf(ParName, "CBn2"); sprintf(ParTitle,"n^{CB}_{#chi_{c2}}"); sprintf(Folder, "chic_mass");  Ymin = 1.; Ymax = 5.; logY=false;
 	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "fracBackground"); AddInclusiveResult=true; sprintf(ParName, "fracBackground"); sprintf(ParTitle,"f^{Tot}_{Bg}"); sprintf(Folder, "mass");  Ymin = 0.6; Ymax = 0.8; logY=false;
+	sprintf(SaveName, "fracBackground"); sprintf(ParName, "fracBackground"); sprintf(ParTitle,"f^{Tot}_{Bg}"); sprintf(Folder, "chic_mass");  Ymin = 0.6; Ymax = 0.8; logY=false;
 	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "fracSignal_chic0"); AddInclusiveResult=true; sprintf(ParName, "fracSignal_chic0"); sprintf(ParTitle,"f^{Sig}_{#chi_{c0}}"); sprintf(Folder, "mass");  Ymin = 0.; Ymax = 0.06; logY=false;
+	sprintf(SaveName, "fracSignal_chic0"); sprintf(ParName, "fracSignal_chic0"); sprintf(ParTitle,"f^{Sig}_{#chi_{c0}}"); sprintf(Folder, "chic_mass");  Ymin = 0.; Ymax = 0.06; logY=false;
 	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "fracSignal_chic1"); AddInclusiveResult=true; sprintf(ParName, "fracSignal_chic1"); sprintf(ParTitle,"f^{Sig}_{#chi_{c1}}"); sprintf(Folder, "mass");  Ymin = 0.6; Ymax = 0.85; logY=false;
+	sprintf(SaveName, "fracSignal_chic1"); sprintf(ParName, "fracSignal_chic1"); sprintf(ParTitle,"f^{Sig}_{#chi_{c1}}"); sprintf(Folder, "chic_mass");  Ymin = 0.6; Ymax = 0.85; logY=false;
 	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "NumEvE"); AddInclusiveResult=true; sprintf(ParName, "NumEvE"); sprintf(ParTitle,"n^{Tot}_{fit}"); sprintf(Folder, "mass");  Ymin = 1.; Ymax = 3e5; logY=true;
+	sprintf(SaveName, "NumEvE"); sprintf(ParName, "NumEvE"); sprintf(ParTitle,"n^{Tot}_{fit}"); sprintf(Folder, "chic_mass");  Ymin = 1.; Ymax = 3e5; logY=true;
 	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "Sig_PES"); AddInclusiveResult=true; sprintf(ParName, "PES"); sprintf(ParTitle,"photon energy scale"); sprintf(Folder, "mass");  Ymin = 0.975; Ymax = 1.; logY=false;
-	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-
-
-
-	sprintf(SaveName, "BK_DSD_TauBkg"); AddInclusiveResult=true; sprintf(ParName, "DSD_TauBkg"); sprintf(ParTitle,"#tau^{DS}_{Bg}"); sprintf(Folder, "lifetime");  Ymin = 1e-9; Ymax = 0.005; logY=true;
-	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "BK_FD_TauBkg"); AddInclusiveResult=true; sprintf(ParName, "FD_TauBkg"); sprintf(ParTitle,"#tau^{LS}_{Bg}"); sprintf(Folder, "lifetime");  Ymin = 0.; Ymax = 0.2; logY=false;
-	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "BK_NP_TauBkg"); AddInclusiveResult=true; sprintf(ParName, "NP_TauBkg"); sprintf(ParTitle,"#tau_{Bg}"); sprintf(Folder, "lifetime");  Ymin = 0.25; Ymax = 0.5; logY=false;
-	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "NP_TauChic"); AddInclusiveResult=true; sprintf(ParName, "NP_TauChic"); sprintf(ParTitle,"#tau_{#chi_{cJ}}"); sprintf(Folder, "lifetime");  Ymin = 0.25; Ymax = 0.5; logY=false;
-	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "Sig_ctResolution"); AddInclusiveResult=true; sprintf(ParName, "ctResolution"); sprintf(ParTitle,"#sigma^{scale}_{c#tau}"); sprintf(Folder, "lifetime");  Ymin = 0.7; Ymax = 1.1; logY=false;
-	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "Sig_ctResolution2"); AddInclusiveResult=true; sprintf(ParName, "ctResolution2"); sprintf(ParTitle,"#sigma^{scale2}_{c#tau}"); sprintf(Folder, "lifetime");  Ymin = 0.8; Ymax = 2.5; logY=false;
-	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "Sig_fracGauss2"); AddInclusiveResult=true; sprintf(ParName, "fracGauss2"); sprintf(ParTitle,"f_{G2}"); sprintf(Folder, "lifetime");  Ymin = 0.; Ymax = 1.; logY=false;
-	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "BK_fBkgFD"); AddInclusiveResult=true; sprintf(ParName, "fBkgFD"); sprintf(ParTitle,"f^{Bg}_{LS}"); sprintf(Folder, "lifetime");  Ymin = 0.; Ymax = 0.01; logY=false;
-	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "BK_fBkgNP"); AddInclusiveResult=true; sprintf(ParName, "fBkgNP"); sprintf(ParTitle,"f^{Bg}_{NP}"); sprintf(Folder, "lifetime");  Ymin = 0.4; Ymax = 0.7; logY=false;
-	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "fracNP_chic0"); AddInclusiveResult=true; sprintf(ParName, "fracNP_chic0"); sprintf(ParTitle,"f^{#chi_{c0}}_{NP}"); sprintf(Folder, "lifetime");  Ymin = 0.; Ymax = 1.; logY=false;
-	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "fracNP_chic1"); AddInclusiveResult=true; sprintf(ParName, "fracNP_chic1"); sprintf(ParTitle,"f^{#chi_{c1}}_{NP}"); sprintf(Folder, "lifetime");  Ymin = 0.15; Ymax = 0.35; logY=false;
-	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "fracNP_chic2"); AddInclusiveResult=true; sprintf(ParName, "fracNP_chic2"); sprintf(ParTitle,"f^{#chi_{c2}}_{NP}"); sprintf(Folder, "lifetime");  Ymin = 0.; Ymax = 0.2; logY=false;
-	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-
-	sprintf(SaveName, "covQualMigrad"); AddInclusiveResult=true; sprintf(ParName, "var_covQualMigrad"); sprintf(ParTitle,"Migrad covQual"); sprintf(Folder, "fitqual");  Ymin = 0.; Ymax = 40.; logY=false;
-	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "covQualHesse"); AddInclusiveResult=true; sprintf(ParName, "var_covQualHesse"); sprintf(ParTitle,"Hesse covQual"); sprintf(Folder, "fitqual");  Ymin = 0.; Ymax = 40.; logY=false;
+	sprintf(SaveName, "Sig_PES"); sprintf(ParName, "PES"); sprintf(ParTitle,"photon energy scale"); sprintf(Folder, "chic_mass");  Ymin = 0.975; Ymax = 1.; logY=false;
 	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
 
 
-	sprintf(SaveName, "Chi2ndf_Lifetime_RSB"); AddInclusiveResult=true; sprintf(ParName, "var_chi2ndf_Lifetime_RSB"); sprintf(ParTitle,"#chi^{2} / ndf (lifetime RSB)"); sprintf(Folder, "fitqual");  Ymin = 0.; Ymax = 35.; logY=false;
+
+	//sprintf(SaveName, "BK_DSD_TauBkg"); sprintf(ParName, "DSD_TauBkg"); sprintf(ParTitle,"#tau^{DS}_{Bg}"); sprintf(Folder, "chic_lifetime");  Ymin = 1e-9; Ymax = 0.005; logY=true;
+	//PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
+	//sprintf(SaveName, "BK_FD_TauBkg"); sprintf(ParName, "FD_TauBkg"); sprintf(ParTitle,"#tau^{LS}_{Bg}"); sprintf(Folder, "chic_lifetime");  Ymin = 0.; Ymax = 0.2; logY=false;
+	//PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
+	sprintf(SaveName, "BK_NP_TauBkg"); sprintf(ParName, "NP_TauBkg"); sprintf(ParTitle,"#tau_{Bg}"); sprintf(Folder, "chic_lifetime");  Ymin = 0.25; Ymax = 0.5; logY=false;
 	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "Chi2ndf_Lifetime_LSB"); AddInclusiveResult=true; sprintf(ParName, "var_chi2ndf_Lifetime_LSB"); sprintf(ParTitle,"#chi^{2} / ndf (lifetime LSB)"); sprintf(Folder, "fitqual");  Ymin = 0.; Ymax = 35.; logY=false;
+	sprintf(SaveName, "NP_TauChic"); sprintf(ParName, "NP_TauChic"); sprintf(ParTitle,"#tau_{#chi_{cJ}}"); sprintf(Folder, "chic_lifetime");  Ymin = 0.25; Ymax = 0.5; logY=false;
 	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "Chi2ndf_Lifetime_SR2"); AddInclusiveResult=true; sprintf(ParName, "var_chi2ndf_Lifetime_SR2"); sprintf(ParTitle,"#chi^{2} / ndf (lifetime SR2)"); sprintf(Folder, "fitqual");  Ymin = 0.; Ymax = 35.; logY=false;
+	sprintf(SaveName, "Sig_ctResolution"); sprintf(ParName, "ctResolution"); sprintf(ParTitle,"#sigma^{scale}_{c#tau}"); sprintf(Folder, "chic_lifetime");  Ymin = 0.7; Ymax = 1.1; logY=false;
 	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "Chi2ndf_Lifetime_SR1"); AddInclusiveResult=true; sprintf(ParName, "var_chi2ndf_Lifetime_SR1"); sprintf(ParTitle,"#chi^{2} / ndf (lifetime SR1)"); sprintf(Folder, "fitqual");  Ymin = 0.; Ymax = 35.; logY=false;
+	sprintf(SaveName, "Sig_ctResolution2"); sprintf(ParName, "ctResolution2"); sprintf(ParTitle,"#sigma^{scale2}_{c#tau}"); sprintf(Folder, "chic_lifetime");  Ymin = 0.8; Ymax = 2.5; logY=false;
 	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "Chi2ndf_Lifetime"); AddInclusiveResult=true; sprintf(ParName, "var_chi2ndf_Lifetime"); sprintf(ParTitle,"#chi^{2} / ndf (lifetime)"); sprintf(Folder, "fitqual");  Ymin = 0.; Ymax = 35.; logY=false;
+	sprintf(SaveName, "Sig_fracGauss2"); sprintf(ParName, "fracGauss2"); sprintf(ParTitle,"f_{G2}"); sprintf(Folder, "chic_lifetime");  Ymin = 0.; Ymax = 1.; logY=false;
 	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "Chi2ndf_Mass"); AddInclusiveResult=true; sprintf(ParName, "var_chi2ndf_Mass"); sprintf(ParTitle,"#chi^{2} / ndf (mass)"); sprintf(Folder, "fitqual");  Ymin = 0.; Ymax = 35.; logY=false;
+	//sprintf(SaveName, "BK_fBkgFD"); sprintf(ParName, "fBkgFD"); sprintf(ParTitle,"f^{Bg}_{LS}"); sprintf(Folder, "chic_lifetime");  Ymin = 0.; Ymax = 0.01; logY=false;
+	//PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
+	sprintf(SaveName, "BK_fBkgNP"); sprintf(ParName, "fBkgNP"); sprintf(ParTitle,"f^{Bg}_{NP}"); sprintf(Folder, "chic_lifetime");  Ymin = 0.4; Ymax = 0.7; logY=false;
+	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
+	sprintf(SaveName, "fracNP_chic0"); sprintf(ParName, "fracNP_chic0"); sprintf(ParTitle,"f^{#chi_{c0}}_{NP}"); sprintf(Folder, "chic_lifetime");  Ymin = 0.; Ymax = 1.; logY=false;
+	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
+	sprintf(SaveName, "fracNP_chic1"); sprintf(ParName, "fracNP_chic1"); sprintf(ParTitle,"f^{#chi_{c1}}_{NP}"); sprintf(Folder, "chic_lifetime");  Ymin = 0.15; Ymax = 0.35; logY=false;
+	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
+	sprintf(SaveName, "fracNP_chic2"); sprintf(ParName, "fracNP_chic2"); sprintf(ParTitle,"f^{#chi_{c2}}_{NP}"); sprintf(Folder, "chic_lifetime");  Ymin = 0.; Ymax = 0.2; logY=false;
+	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
+
+	sprintf(SaveName, "covQualMigrad"); sprintf(ParName, "var_covQualMigrad"); sprintf(ParTitle,"Migrad covQual"); sprintf(Folder, "chic_fitqual");  Ymin = 0.; Ymax = 40.; logY=false;
+	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
+	sprintf(SaveName, "covQualHesse"); sprintf(ParName, "var_covQualHesse"); sprintf(ParTitle,"Hesse covQual"); sprintf(Folder, "chic_fitqual");  Ymin = 0.; Ymax = 40.; logY=false;
 	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
 
 
-	sprintf(SaveName, "Def_Mass_SR1Max"); AddInclusiveResult=true; sprintf(ParName, "var_sig1MaxMass"); sprintf(ParTitle,"M^{SR1}_{high}"); sprintf(Folder, "regions");  Ymin = 3.425; Ymax = 3.575; logY=false;
+	sprintf(SaveName, "Chi2ndf_Lifetime_RSB"); sprintf(ParName, "var_chi2ndf_Lifetime_RSB"); sprintf(ParTitle,"#chi^{2} / ndf (lifetime RSB)"); sprintf(Folder, "chic_fitqual");  Ymin = 0.; Ymax = 3.; logY=false;
 	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "Def_Mass_SR1Min"); AddInclusiveResult=true; sprintf(ParName, "var_sig1MinMass"); sprintf(ParTitle,"M^{SR1}_{low}"); sprintf(Folder, "regions");  Ymin = 3.425; Ymax = 3.575; logY=false;
+	sprintf(SaveName, "Chi2ndf_Lifetime_LSB"); sprintf(ParName, "var_chi2ndf_Lifetime_LSB"); sprintf(ParTitle,"#chi^{2} / ndf (lifetime LSB)"); sprintf(Folder, "chic_fitqual");  Ymin = 0.; Ymax = 3.; logY=false;
 	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "Def_Mass_SR2Max"); AddInclusiveResult=true; sprintf(ParName, "var_sig2MaxMass"); sprintf(ParTitle,"M^{SR2}_{high}"); sprintf(Folder, "regions");  Ymin = 3.425; Ymax = 3.575; logY=false;
+	sprintf(SaveName, "Chi2ndf_Lifetime_SR2"); sprintf(ParName, "var_chi2ndf_Lifetime_SR2"); sprintf(ParTitle,"#chi^{2} / ndf (lifetime SR2)"); sprintf(Folder, "chic_fitqual");  Ymin = 0.; Ymax = 3.; logY=false;
 	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "Def_Mass_SR2Min"); AddInclusiveResult=true; sprintf(ParName, "var_sig2MinMass"); sprintf(ParTitle,"M^{SR2}_{low}"); sprintf(Folder, "regions");  Ymin = 3.425; Ymax = 3.575; logY=false;
+	sprintf(SaveName, "Chi2ndf_Lifetime_SR1"); sprintf(ParName, "var_chi2ndf_Lifetime_SR1"); sprintf(ParTitle,"#chi^{2} / ndf (lifetime SR1)"); sprintf(Folder, "chic_fitqual");  Ymin = 0.; Ymax = 3.; logY=false;
 	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "Def_Mass_LSBMax"); AddInclusiveResult=true; sprintf(ParName, "var_lsbMaxMass"); sprintf(ParTitle,"M^{LSB}_{high}"); sprintf(Folder, "regions");  Ymin = 3.425; Ymax = 3.575; logY=false;
+	sprintf(SaveName, "Chi2ndf_Lifetime"); sprintf(ParName, "var_chi2ndf_Lifetime"); sprintf(ParTitle,"#chi^{2} / ndf (lifetime)"); sprintf(Folder, "chic_fitqual");  Ymin = 0.; Ymax = 3.; logY=false;
 	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "Def_Mass_RSBMin"); AddInclusiveResult=true; sprintf(ParName, "var_rsbMinMass"); sprintf(ParTitle,"M^{RSB}_{low}"); sprintf(Folder, "regions");  Ymin = 3.425; Ymax = 3.575; logY=false;
-	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "Def_Ctau_PRMin"); AddInclusiveResult=true; sprintf(ParName, "var_PRMin"); sprintf(ParTitle,"l^{PR}_{low}"); sprintf(Folder, "regions");  Ymin = -0.1; Ymax = 0.1; logY=false;
-	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "Def_Ctau_PRMax"); AddInclusiveResult=true; sprintf(ParName, "var_PRMax"); sprintf(ParTitle,"l^{PR}_{high}"); sprintf(Folder, "regions");  Ymin = -0.1; Ymax = 0.1; logY=false;
-	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "Def_Ctau_NPMin"); AddInclusiveResult=true; sprintf(ParName, "var_NPMin"); sprintf(ParTitle,"l^{NP}_{low}"); sprintf(Folder, "regions");  Ymin = -0.1; Ymax = 0.1; logY=false;
+	sprintf(SaveName, "Chi2ndf_Mass"); sprintf(ParName, "var_chi2ndf_Mass"); sprintf(ParTitle,"#chi^{2} / ndf (mass)"); sprintf(Folder, "chic_fitqual");  Ymin = 0.; Ymax = 3.; logY=false;
 	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
 
-	//sprintf(SaveName, "N_PRChic1_in_PRSR1"); AddInclusiveResult=true; sprintf(ParName, "var_NPMin"); sprintf(ParTitle,"l^{NP}_{low}"); sprintf(Folder, "regions");  Ymin = -0.1; Ymax = 0.1; logY=false;
+
+	sprintf(SaveName, "Def_Mass_SR1Max"); sprintf(ParName, "var_sig1MaxMass"); sprintf(ParTitle,"M^{SR1}_{high}"); sprintf(Folder, "chic_regions");  Ymin = 3.425; Ymax = 3.575; logY=false;
+	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
+	sprintf(SaveName, "Def_Mass_SR1Min"); sprintf(ParName, "var_sig1MinMass"); sprintf(ParTitle,"M^{SR1}_{low}"); sprintf(Folder, "chic_regions");  Ymin = 3.425; Ymax = 3.575; logY=false;
+	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
+	sprintf(SaveName, "Def_Mass_SR2Max"); sprintf(ParName, "var_sig2MaxMass"); sprintf(ParTitle,"M^{SR2}_{high}"); sprintf(Folder, "chic_regions");  Ymin = 3.425; Ymax = 3.575; logY=false;
+	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
+	sprintf(SaveName, "Def_Mass_SR2Min"); sprintf(ParName, "var_sig2MinMass"); sprintf(ParTitle,"M^{SR2}_{low}"); sprintf(Folder, "chic_regions");  Ymin = 3.425; Ymax = 3.575; logY=false;
+	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
+	//sprintf(SaveName, "Def_Mass_LSBMax"); sprintf(ParName, "var_lsbMaxMass"); sprintf(ParTitle,"M^{LSB}_{high}"); sprintf(Folder, "chic_regions");  Ymin = 3.425; Ymax = 3.575; logY=false;
+	//PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
+	//sprintf(SaveName, "Def_Mass_RSBMin"); sprintf(ParName, "var_rsbMinMass"); sprintf(ParTitle,"M^{RSB}_{low}"); sprintf(Folder, "chic_regions");  Ymin = 3.425; Ymax = 3.575; logY=false;
+	//PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
+	sprintf(SaveName, "Def_Ctau_PRMin"); sprintf(ParName, "var_PRMin"); sprintf(ParTitle,"l^{PR}_{low}"); sprintf(Folder, "chic_regions");  Ymin = -0.1; Ymax = 0.1; logY=false;
+	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
+	sprintf(SaveName, "Def_Ctau_PRMax"); sprintf(ParName, "var_PRMax"); sprintf(ParTitle,"l^{PR}_{high}"); sprintf(Folder, "chic_regions");  Ymin = -0.1; Ymax = 0.1; logY=false;
+	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
+	sprintf(SaveName, "Def_Ctau_NPMin"); sprintf(ParName, "var_NPMin"); sprintf(ParTitle,"l^{NP}_{low}"); sprintf(Folder, "chic_regions");  Ymin = -0.1; Ymax = 0.1; logY=false;
+	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
+
+	//sprintf(SaveName, "N_PRChic1_in_PRSR1"); sprintf(ParName, "var_NPMin"); sprintf(ParTitle,"l^{NP}_{low}"); sprintf(Folder, "chic_regions");  Ymin = -0.1; Ymax = 0.1; logY=false;
 	//PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
 
-	sprintf(SaveName, "Def_Ctau_Resolution"); AddInclusiveResult=true; sprintf(ParName, "var_ctres"); sprintf(ParTitle,"#sigma_{l}"); sprintf(Folder, "regions");  Ymin = 0.; Ymax = 0.03; logY=false;
+	sprintf(SaveName, "Def_Ctau_Resolution"); sprintf(ParName, "var_ctres"); sprintf(ParTitle,"#sigma_{l}"); sprintf(Folder, "chic_regions");  Ymin = 0.; Ymax = 0.03; logY=false;
 	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
 
-	sprintf(SaveName, "N_PRChic1_in_PRSR1"); AddInclusiveResult=true; sprintf(ParName, "var_nPRChic1InPRSR1"); sprintf(ParTitle,"N^{PRSR1}_{PR#chi_{c1}}"); sprintf(Folder, "regions");  Ymin = 700; Ymax = 5e4; logY=true;
+	sprintf(SaveName, "N_PRChic1_in_PRSR1"); sprintf(ParName, "var_nPRChic1InPRSR1"); sprintf(ParTitle,"N^{PRSR1}_{PR#chi_{c1}}"); sprintf(Folder, "chic_regions");  Ymin = 700; Ymax = 5e4; logY=true;
 	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "N_PRChic2_in_PRSR2"); AddInclusiveResult=true; sprintf(ParName, "var_nPRChic2InPRSR2"); sprintf(ParTitle,"N^{PRSR2}_{PR#chi_{c2}}"); sprintf(Folder, "regions");  Ymin = 700; Ymax = 5e4; logY=true;
+	sprintf(SaveName, "N_PRChic2_in_PRSR2"); sprintf(ParName, "var_nPRChic2InPRSR2"); sprintf(ParTitle,"N^{PRSR2}_{PR#chi_{c2}}"); sprintf(Folder, "chic_regions");  Ymin = 700; Ymax = 5e4; logY=true;
 	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
 
 

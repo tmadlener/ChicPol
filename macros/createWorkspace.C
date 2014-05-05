@@ -4,12 +4,16 @@
 #include <string>
 #include <iostream>
 #include <sstream>
+#include "TRandom3.h"
 
 using namespace RooFit;
 
 void createWorkspace(const std::string &infilename, int nState, bool correctCtau, bool drawRapPt2D){
 	gROOT->SetStyle("Plain");
 	gStyle->SetTitleBorderSize(0);
+
+	delete gRandom;
+	gRandom = new TRandom3(23101987);
 
 	// Set some strings
 	const std::string workspacename = "ws_masslifetime",
@@ -37,6 +41,12 @@ void createWorkspace(const std::string &infilename, int nState, bool correctCtau
 	if(correctCtau) sprintf(lifetimeTitle,"l^{#chi} [mm]");
 
 	// define variables necessary for J/Psi(Psi(2S)) mass,lifetime fit
+	RooRealVar* JpsiMass =
+		new RooRealVar("JpsiMass", "M^{J/#psi} [GeV]", onia::massMin, onia::massMax);
+	RooRealVar* JpsiPt =
+		new RooRealVar("JpsiPt", "p^{J/#psi}_{T} [GeV]", 0. ,1000.);
+	RooRealVar* JpsiRap =
+		new RooRealVar("JpsiRap", "y^{J/#psi}", -2., 2.);
 	RooRealVar* chicMass =
 		new RooRealVar("chicMass", "M^{#chi} [GeV]", onia::chimassMin, onia::chimassMax);
 	RooRealVar* chicRap =
@@ -46,16 +56,19 @@ void createWorkspace(const std::string &infilename, int nState, bool correctCtau
 	RooRealVar* Jpsict =
 		new RooRealVar("Jpsict", lifetimeTitle, onia::ctVarMin, onia::ctVarMax);
 	RooRealVar* JpsictErr =
-		new RooRealVar("JpsictErr", Form("Error on %s",lifetimeTitle), 0.0001, 10);
+		new RooRealVar("JpsictErr", Form("Error on %s",lifetimeTitle), 0.0001, 1.);
 
 	// Set bins
 	Jpsict->setBins(10000,"cache");
-	Jpsict->setBins(100);
-	chicMass->setBins(100);
-	JpsictErr->setBins(100);
+	JpsiMass->setBins(10000,"cache");
+	JpsiPt->setBins(100);
+	JpsiRap->setBins(10000,"cache");
+	chicMass->setBins(10000,"cache");
+	//JpsictErr->setBins(100);
+	JpsictErr->setBins(10000,"cache");
 
 	// The list of data variables    
-	RooArgList dataVars(*chicMass,*chicRap,*chicPt,*Jpsict,*JpsictErr);
+	RooArgList dataVars(*JpsiMass,*JpsiPt,*JpsiRap,*chicMass,*chicRap,*chicPt,*Jpsict,*JpsictErr);
 
 	// construct dataset to contain events
 	RooDataSet* fullData = new RooDataSet("fullData","The Full Data From the Input ROOT Trees",dataVars);
@@ -67,6 +80,12 @@ void createWorkspace(const std::string &infilename, int nState, bool correctCtau
 	int numEntriesInAnalysis=0;
 	int numEntriesNotInAnalysis=0;
 
+	TFile* infile = new TFile("/afs/hephy.at/scratch/k/knuenz/tmp/ChicPol/JpsictErr2011_15_20.root", "READ");
+	cout<<"opened file"<<endl;
+	TH1F* h_JpsictErr=(TH1F*)infile->Get("h");
+	h_JpsictErr->Print();
+	cout<<"opened hist"<<endl;
+
 	// loop through events in tree and save them to dataset
 	for (int ientries = 0; ientries < entries; ientries++) {
 		numEntriesTotal++;
@@ -74,15 +93,55 @@ void createWorkspace(const std::string &infilename, int nState, bool correctCtau
 
 		tree->GetEntry(ientries);
 
-		double M =chic_rf->M();
+		double M_jpsi =jpsi->M();
+		double pt_jpsi =jpsi->Pt();
+		double y_jpsi =jpsi->Rapidity();
+		//double M =chic_rf->M();
+		double M =chic->M()-jpsi->M()+onia::MpsiPDG;
 		double y=chic->Rapidity();
 		double pt=chic->Pt();
 
+		//if (ientries%3==0){
+		//	M_jpsi = gRandom->Uniform(JpsiMass->getMin(), JpsiMass->getMax());
+		//}
 
 
-		if (M > chicMass->getMin() && M < chicMass->getMax()
+		//double JpsictErrRand = h_JpsictErr->GetRandom();
+		//double JpsictErrRand2 = h_JpsictErr->GetRandom();
+		//double JpsictMeanRand=0.;
+		////double pTcorrection=(pt-20.)*0.002;
+        //
+		////JpsictErrRand-=pTcorrection;
+		//if(JpsictErrRand<0) JpsictErrRand=0.001;
+		////JpsictErrRand2-=pTcorrection;
+		//if(JpsictErrRand2<0) JpsictErrRand2=0.001;
+        //
+		//if (ientries%1000000==0){
+		//	double exponent=0.4;
+		//	JpsictMeanRand=gRandom->Exp(exponent);
+		//}
+        //
+        //
+		//lifetime = gRandom->Gaus(JpsictMeanRand,0.8*JpsictErrRand);
+		//lifetimeErr = JpsictErrRand2;
+		//if (ientries%3==0){
+		//	lifetime = gRandom->Gaus(JpsictMeanRand,1.5*JpsictErrRand);
+		//}
+        //
+
+		double resCorrFactor=1.08;
+		if(lifetime<0)
+			lifetimeErr/=resCorrFactor;
+
+
+
+		if (
+				M > chicMass->getMin() && M < chicMass->getMax()
 				&& pt > chicPt->getMin() && pt < chicPt->getMax()
 				&& y > chicRap->getMin() && y < chicRap->getMax()
+				&& M_jpsi > JpsiMass->getMin() && M_jpsi < JpsiMass->getMax()
+				&& pt_jpsi > JpsiPt->getMin() && pt_jpsi < JpsiPt->getMax()
+				&& y_jpsi > JpsiRap->getMin() && y_jpsi < JpsiRap->getMax()
 				&& lifetime > Jpsict->getMin() && lifetime < Jpsict->getMax()
 				&& lifetimeErr > JpsictErr->getMin() && lifetimeErr < JpsictErr->getMax()
 			 ){
@@ -90,8 +149,13 @@ void createWorkspace(const std::string &infilename, int nState, bool correctCtau
 			chicPt      ->setVal(pt);
 			chicRap     ->setVal(y);
 			chicMass    ->setVal(M);
+			JpsiMass    ->setVal(M_jpsi);
+			JpsiPt    	->setVal(pt_jpsi);
+			JpsiRap     ->setVal(y_jpsi);
 			Jpsict      ->setVal(lifetime);
 			JpsictErr   ->setVal(lifetimeErr);
+
+			//cout<<"JpsiRap->getVal() "<<JpsiRap->getVal()<<endl;
 
 			fullData->add(dataVars);
 			numEntriesInAnalysis++;
@@ -113,6 +177,8 @@ void createWorkspace(const std::string &infilename, int nState, bool correctCtau
 		}
 
 	}//ientries
+
+	infile->Close();
 
 	cout << "entries entering all bins " << fullData->sumEntries() << endl;
 	cout << "numEntriesTotal " << numEntriesTotal << endl;
@@ -156,21 +222,36 @@ void createWorkspace(const std::string &infilename, int nState, bool correctCtau
 
 			// define pt and y cuts on dataset
 			std::stringstream cutString;
-			cutString << "(chicPt >= " << ptMin << " && chicPt < "<< ptMax << ") && "
-				<< "(TMath::Abs(chicRap) >= " << yMin << " && TMath::Abs(chicRap) < " << yMax << ")";
+
+			if(onia::KinParticleChi && !onia::KinParticleChiButJpsiRap){
+				cutString << "(chicPt >= " << ptMin << " && chicPt < "<< ptMax << ") && "
+						  << "(TMath::Abs(chicRap) >= " << yMin << " && TMath::Abs(chicRap) < " << yMax << ")";
+			}
+			if(!onia::KinParticleChi){
+				cutString << "(JpsiPt >= " << ptMin << " && JpsiPt < "<< ptMax << ") && "
+						  << "(TMath::Abs(JpsiRap) >= " << yMin << " && TMath::Abs(JpsiRap) < " << yMax << ")";
+			}
+			if(onia::KinParticleChi && onia::KinParticleChiButJpsiRap){
+				cutString << "(chicPt >= " << ptMin << " && chicPt < "<< ptMax << ") && "
+						  << "(TMath::Abs(JpsiRap) >= " << yMin << " && TMath::Abs(JpsiRap) < " << yMax << ")";
+			}
+
 
 			cout << "cutString: " << cutString.str().c_str() << endl;
 
 			// get the dataset for the fit
 			RooDataSet* binData = (RooDataSet*)fullData->reduce(cutString.str().c_str());
 			std::stringstream name;
-			name << "data_rap" << iRap << "_pt" << iPT;
+			name << "jpsi_data_rap" << iRap << "_pt" << iPT;
 			binData->SetNameTitle(name.str().c_str(), "Data For Fitting");    
 
 			double chicMeanPt = binData->mean(*chicPt);
 		    RooRealVar var_chicMeanPt("var_chicMeanPt","var_chicMeanPt",chicMeanPt); if(!ws->var("var_chicMeanPt")) ws->import(var_chicMeanPt); else ws->var("var_chicMeanPt")->setVal(chicMeanPt);
 			cout << "numEvents = " << binData->sumEntries() << endl;
 			cout << "chicMeanPt = " << chicMeanPt << endl;
+
+			double JpsiMeanRap = binData->mean(*JpsiRap);
+			cout << "JpsiMeanRap = " << JpsiMeanRap << endl;
 
 			// Import variables to workspace
 			ws->import(*binData);

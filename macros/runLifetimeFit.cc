@@ -81,11 +81,17 @@ int main(int argc, char* argv[]){
     for(int iRap = rapMin; iRap <= rapMax; iRap++){
       for(int iPT = ptMin; iPT <= ptMax; iPT++){
 
-	std::stringstream temp;
-	temp << "tmpFiles/fit_Psi" << nState-3 << "S_rap" << iRap << "_pt" << iPT <<".root";	
-	const std::string infilename = temp.str().c_str();
+    		std::stringstream tempFrom;
+    		tempFrom << "tmpFiles/backupWorkSpace/ws_MassFit_Jpsi_rap" << iRap << "_pt" << iPT << ".root";
+    		const std::string infilenameFrom = tempFrom.str().c_str();
 
-	lifetimeFit(infilename.c_str(), iRap, iPT, nState);
+    		std::stringstream tempTo;
+    		tempTo << "tmpFiles/backupWorkSpace/ws_MassLifetimeFit_Jpsi_rap" << iRap << "_pt" << iPT << ".root";
+    		const std::string infilenameTo = tempTo.str().c_str();
+
+  		gSystem->CopyFile(infilenameFrom.c_str(),infilenameTo.c_str(),kTRUE);
+
+	lifetimeFit(infilenameTo.c_str(), iRap, iPT, nState);
 
       }
     }

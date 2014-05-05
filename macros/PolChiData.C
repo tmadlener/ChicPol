@@ -49,6 +49,13 @@ void PolChiData::Loop(int nState, bool rejectCowboys, int FidCuts, bool MC, bool
 
 	//nentries=1000;
 
+
+	//TFile* infile = new TFile("/afs/hephy.at/scratch/k/knuenz/tmp/ChicPol/JpsictErr2011_15_20.root", "READ");
+	//cout<<"opened file"<<endl;
+	//TH1F* h_JpsictErr=(TH1F*)infile->Get("h");
+	//h_JpsictErr->Print();
+	//cout<<"opened hist"<<endl;
+
 	//loop over the events
 	for (Long64_t jentry=0; jentry<nentries; jentry++) {
 
@@ -189,6 +196,18 @@ void PolChiData::Loop(int nState, bool rejectCowboys, int FidCuts, bool MC, bool
 		jpsict=ctpv*10; //convert cm in mm
 		jpsictErr=ctpv_error*10; //convert cm in mm
 		probKVF=probFit1S;
+
+
+		double min=0.02;
+		double s1=500;
+		double s2=1.+s1*min*min;
+		double ScaleFactorjpsictErr=(1+s1*(jpsictErr)*(jpsictErr))/s2;
+
+		//if(jpsictErr>min)
+			//jpsictErr*=ScaleFactorjpsictErr;
+
+		//if(jentry % 2 == 0)
+			//jpsictErr=h_JpsictErr->GetRandom();
 
 		if(correctCtau){
 			double LifetimeCorrFactor = jpsi->Pt() / jpsi->M() * chic_rf->M() / chic->Pt();

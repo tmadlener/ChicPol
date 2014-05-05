@@ -1,7 +1,7 @@
 #include "calculatePar.cc"
 
 void buildLifetimePDF(RooWorkspace *ws);
-void doFit(RooWorkspace *ws, int nState, double BkgRatio3Sig, double fracBkgInSBL, double fracBkgInSBR, int rapBin, int ptBin);
+void doFit(RooWorkspace *ws, int nState, double BkgRatio3Sig, double fracBkgInLSB, double fracBkgInRSB, int rapBin, int ptBin);
 
 //=================================================================================
 void lifetimeFit(const std::string &infilename, int rapBin, int ptBin, int nState){
@@ -19,166 +19,51 @@ void lifetimeFit(const std::string &infilename, int rapBin, int ptBin, int nStat
 		return;
 	}
 
+	RooRealVar *JpsiMass = ws->var("JpsiMass");
+	assert( 0 != JpsiMass );
+	RooRealVar *JpsiRap = ws->var("JpsiRap");
+	assert( 0 != JpsiRap );
+
 	std::stringstream dataname;
 	dataname << "data_rap" << rapBin << "_pt" << ptBin;
 	RooAbsData* data = ws->data(dataname.str().c_str());
 
-	// calculate weighted sigma from mass fit
-	RooRealVar *JpsiMass = ws->var("JpsiMass");
-	RooRealVar *CBmass =  ws->var("CBmass");
-	RooRealVar *CBsigma = ws->var("CBsigma");
-	RooRealVar *CBsigma2 = ws->var("CBsigma2");
-	RooRealVar *fracCB1_ = ws->var("fracCB1");
-	RooRealVar *fracBkg_=(RooRealVar *)ws->var("fracBkg");
-	double Mean = CBmass->getVal();
-	double Sigma = CBsigma->getVal();
-	double Sigma2 = CBsigma2->getVal();
-	double fracCB1 = fracCB1_->getVal();
-	double SigmaWei = sqrt(pow(Sigma,2)*fracCB1+pow(Sigma2,2)*(1-fracCB1));
-	double fracBkg = fracBkg_->getVal();
-	double fracBkgErr = fracBkg_->getError();
-
-	// calculate signal mass range
-	double sigMaxMass = Mean+SigmaWei*onia::nSigMass;
-	double sigMinMass = Mean-SigmaWei*onia::nSigMass;
-	double sbHighMass = Mean+SigmaWei*onia::nSigBkgHigh;
-	double sbLowMass =  Mean-SigmaWei*onia::nSigBkgLow;
-
-	std::cout << "-------------- mass range --------------\n"
-		<< "signal range: " << sigMinMass << " - " << sigMaxMass << "\n"
-		<< "sbHighMass: " << sbHighMass << "\n"
-		<< "sbLowMass: " << sbLowMass << "\n"
-		<< "----------------------------------------" << std::endl;
-
-	// create datasets for LSB, RSB and SR
-	std::stringstream cutSR, cutSBL, cutSBR;
-	cutSR << "JpsiMass > " << sigMinMass << " && JpsiMass < " << sigMaxMass; 
-	cutSBL << "JpsiMass > " << onia::massMin << " && JpsiMass < " << sbLowMass; 
-	cutSBR << "JpsiMass > " << sbHighMass << " && JpsiMass < " << onia::massMax; 
-
-	std::stringstream binNameSR, binNameSBL, binNameSBR;
+	std::stringstream binNameSR, binNameLSB, binNameRSB;
 	binNameSR  << "data_rap" << rapBin << "_pt" << ptBin << "_SR";
-	binNameSBL << "data_rap" << rapBin << "_pt" << ptBin << "_SBL";
-	binNameSBR << "data_rap" << rapBin << "_pt" << ptBin << "_SBR";
+	binNameLSB << "data_rap" << rapBin << "_pt" << ptBin << "_LSB";
+	binNameRSB << "data_rap" << rapBin << "_pt" << ptBin << "_RSB";
 
-	RooAbsData* dataSR, *dataSBL, *dataSBR; 
-	int events=0;
-	if(nState==4 && ((rapBin==1 && ptBin<5)||(rapBin==2 && ptBin<5))){
-		// for 1S, rap1,pt 1 2 3 4; rap2,pt 1 2 3 4, not use the full statistics
-		//1S, [1,4], SR:231029, SBL:16500, SBR:5521
-		//1S, [2,5]: SR:144617, SBL:7672,  SBR:2483
-		events = data->numEntries()/(6-ptBin);
-		dataSR	= data->reduce(Cut(cutSR.str().c_str()),
-				EventRange(0,events));
-		dataSBL = data->reduce(Cut(cutSBL.str().c_str()),
-				EventRange(0,events));
-		dataSBR = data->reduce(Cut(cutSBR.str().c_str()),
-				EventRange(0,events));
-	}
-	//else if(nState==5 && rapBin==2 && ptBin==1){
-	//	events = data->numEntries()/5;
-	//	dataSR  = data->reduce(Cut(cutSR.str().c_str()),
-	//			    EventRange(0,events));
-	//	dataSBL = data->reduce(Cut(cutSBL.str().c_str()),
-	//			    EventRange(0,events));
-	//	dataSBR = data->reduce(Cut(cutSBR.str().c_str()),
-	//			    EventRange(0,events));
-	//}
-	else{
-		dataSR	= data->reduce(Cut(cutSR.str().c_str()));
-		dataSBL = data->reduce(Cut(cutSBL.str().c_str()));
-		dataSBR = data->reduce(Cut(cutSBR.str().c_str()));
-	}
-	//***
-	if(nState==4 && rapBin==2 && (ptBin==1 || ptBin==2 || ptBin==5 || ptBin==6)){
-		cout<<"**** Using less statisticals for lifetime fit"<<endl;
-		events = data->numEntries()/(8-ptBin);
-		if(ptBin==1) events = data->numEntries()/(11-ptBin);
-		dataSR  = data->reduce(Cut(cutSR.str().c_str()),
-				EventRange(0,events));
-		dataSBL = data->reduce(Cut(cutSBL.str().c_str()),
-				EventRange(0,events));
-		dataSBR = data->reduce(Cut(cutSBR.str().c_str()),
-				EventRange(0,events));
-	}
-	//***
+	RooAbsData* dataSR = ws->data(binNameSR.str().c_str());
+	RooAbsData* dataLSB = ws->data(binNameLSB.str().c_str());
+	RooAbsData* dataRSB = ws->data(binNameRSB.str().c_str());
 
-	dataSR->SetNameTitle(binNameSR.str().c_str(), "data in signal region");
-	dataSBL->SetNameTitle(binNameSBL.str().c_str(), "data in LSB");
-	dataSBR->SetNameTitle(binNameSBR.str().c_str(), "data in RSB");
-
-	ws->import(*dataSR);
-	ws->import(*dataSBL);
-	ws->import(*dataSBR);
 
 	std:: cout << "----------------------------" << "\n"
 		<< "events in SR: " << dataSR->numEntries() << "\n"
-		<< "events in LSB: " << dataSBL->numEntries() << "\n"
-		<< "events in RSB: " << dataSBR->numEntries() << "\n"
+		<< "events in LSB: " << dataLSB->numEntries() << "\n"
+		<< "events in RSB: " << dataRSB->numEntries() << "\n"
 		<< "----------------------------" << std::endl;
 
 	// caculating median of different regions by filling events into histogram and getting the mean
 	TH1* histSR =  dataSR->createHistogram("histSR", *JpsiMass,  Binning(120));
-	TH1* histSBL = dataSBL->createHistogram("histSBL", *JpsiMass, Binning(120));
-	TH1* histSBR = dataSBR->createHistogram("histSBR", *JpsiMass, Binning(120));
+	TH1* histLSB = dataLSB->createHistogram("histLSB", *JpsiMass, Binning(120));
+	TH1* histRSB = dataRSB->createHistogram("histRSB", *JpsiMass, Binning(120));
 
 	double meanSR = histSR->GetMean();
-	double meanSBL = histSBL->GetMean();
-	double meanSBR = histSBR->GetMean();
+	double meanLSB = histLSB->GetMean();
+	double meanRSB = histRSB->GetMean();
 
 	RooRealVar* MeanSR = new RooRealVar("MeanSR","MeanSR",meanSR);
-	RooRealVar* MeanSBL = new RooRealVar("MeanSBL","MeanSBL",meanSBL);
-	RooRealVar* MeanSBR = new RooRealVar("MeanSBR","MeanSBR",meanSBR);
-	ws->import(RooArgList(*MeanSR, *MeanSBL, *MeanSBR));
+	RooRealVar* MeanLSB = new RooRealVar("MeanLSB","MeanLSB",meanLSB);
+	RooRealVar* MeanRSB = new RooRealVar("MeanRSB","MeanRSB",meanRSB);
+	ws->import(RooArgList(*MeanSR, *MeanLSB, *MeanRSB));
 
 	std::cout << "----------------------------" << "\n"
 		<< "meanSR: " << meanSR << "\n"
-		<< "meanSBL: " << meanSBL << "\n"
-		<< "meanSBR: " << meanSBR 
+		<< "meanLSB: " << meanLSB << "\n"
+		<< "meanRSB: " << meanRSB
 		<< "----------------------------" << std::endl;
 
-	// calculate background fraction in signal region
-	double BkgRatio3Sig = getFracBkgIn3Sigma(rapBin, ptBin, infilename.c_str(), onia::nSigMass);
-	double BkgRatio3SigErr = getFracBkgErrIn3Sigma(rapBin, ptBin, infilename.c_str(), onia::nSigMass);
-
-	std::cout << "------------ background fraction ----------------" << "\n"
-		<< "background fraction in "<<onia::nSigMass<<" sigma mass window: " << BkgRatio3Sig << "\n"
-		<< "error on background fraction: " << BkgRatio3SigErr << "\n"
-		<< "-------------------------------------------------" << std::endl;
-
-	RooRealVar* FracBkg = new RooRealVar("FracBkg","FracBkg",BkgRatio3Sig);
-	RooRealVar* FracBkgErr = new RooRealVar("FracBkgErr","FracBkgErr",BkgRatio3SigErr);
-	ws->import(RooArgList(*FracBkg, *FracBkgErr));
-
-	//**** added 2013-3-4
-	RooAbsPdf *bkgMassShape = (RooAbsPdf*)ws->pdf("bkgMassShape");
-	RooAddPdf *sigMassShape = (RooAddPdf*)ws->pdf("sigMassShape");
-	RooAddPdf *massPdf = (RooAddPdf*)ws->pdf("massModel");
-	JpsiMass->setRange("SR",sigMinMass,sigMaxMass);
-	JpsiMass->setRange("SBL",onia::massMin, sbLowMass);
-	JpsiMass->setRange("SBR",sbHighMass, onia::massMax);
-	RooRealVar *fracBkgSBL = (RooRealVar*)bkgMassShape->createIntegral(*JpsiMass,NormSet(*JpsiMass),Range("SBL"));
-	RooRealVar *fracBkgSBR = (RooRealVar*)bkgMassShape->createIntegral(*JpsiMass,NormSet(*JpsiMass),Range("SBR"));
-	RooRealVar *fullInSBL  = (RooRealVar*)massPdf->createIntegral(*JpsiMass,NormSet(*JpsiMass),Range("SBL"));
-	RooRealVar *fullInSBR  = (RooRealVar*)massPdf->createIntegral(*JpsiMass,NormSet(*JpsiMass),Range("SBR"));
-	double fracBkgSBL_val = fracBkgSBL->getVal();
-	double fracBkgSBR_val = fracBkgSBR->getVal();
-	double fullInSBL_val  = fullInSBL->getVal();
-	double fullInSBR_val  = fullInSBR->getVal();
-	double fracBkgInSBL = fracBkgSBL_val * fracBkg / fullInSBL_val ; 
-	double fracBkgInSBR = fracBkgSBR_val * fracBkg / fullInSBR_val ;
-	double fracBkgInSBLErr = fracBkgSBL_val / fullInSBL_val * fracBkgErr ;
-	double fracBkgInSBRErr = fracBkgSBR_val / fullInSBR_val * fracBkgErr ;
-
-	RooRealVar* FracBkgSBL = new RooRealVar("FracBkgSBL","FracBkgSBL",fracBkgInSBL);
-	RooRealVar* FracBkgSBLErr = new RooRealVar("FracBkgSBLErr","FracBkgSBLErr",fracBkgInSBLErr);
-	ws->import(RooArgList(*FracBkgSBL, *FracBkgSBLErr));
-	RooRealVar* FracBkgSBR = new RooRealVar("FracBkgSBR","FracBkgSBR",fracBkgInSBR);
-	RooRealVar* FracBkgSBRErr = new RooRealVar("FracBkgSBRErr","FracBkgSBRErr",fracBkgInSBRErr);
-	ws->import(RooArgList(*FracBkgSBR, *FracBkgSBRErr));
-	cout<<"fracBkgInSBL: "<<fracBkgInSBL<<" fracBkgInSBLErr: "<<fracBkgInSBLErr<<endl;
-	cout<<"fracBkgInSBR: "<<fracBkgInSBR<<" fracBkgInSBRErr: "<<fracBkgInSBRErr<<endl;
-	//****
 
 	// building lifetime pdf
 	std::cout << ">>>Building Mass and LifeTime PDF" << std::endl;
@@ -186,7 +71,7 @@ void lifetimeFit(const std::string &infilename, int rapBin, int ptBin, int nStat
 
 	// fitting
 	std::cout << ">>>Fitting" << std::endl;
-	doFit(ws, nState, BkgRatio3Sig, fracBkgInSBL, fracBkgInSBR, rapBin, ptBin);
+	doFit(ws, nState, ws->var("var_frac_jpsi_BGInSR")->getVal(), ws->var("var_frac_jpsi_BGInLSB")->getVal(), ws->var("var_frac_jpsi_BGInRSB")->getVal(), rapBin, ptBin);
 
 	std::cout << ">>>Writing results to root file" << std::endl;
 	ws->Write();
@@ -199,289 +84,306 @@ void buildLifetimePDF(RooWorkspace *ws){
 
 	//----prompt
 	//resolution function
-	ws->factory("RooGaussModel::promptLifetime(Jpsict,promptMean[0,-.01,.01],ctResolution[1,.001,2], 1, JpsictErr)");
-	((RooGaussModel*)ws->pdf("promptLifetime"))->advertiseFlatScaleFactorIntegral(true);
+	ws->factory("RooGaussModel::jpsi_promptLifetime(Jpsict,jpsi_promptMean[0.],jpsi_ctResolution[0.8,0.5,1.15], 1, JpsictErr)");
+	((RooGaussModel*)ws->pdf("jpsi_promptLifetime"))->advertiseFlatScaleFactorIntegral(true);
 
-	ws->factory("RooGaussModel::promptLifetime2(Jpsict,promptMean, ctResolution2[1,.001,6], 1, JpsictErr)");
-	((RooGaussModel*)ws->pdf("promptLifetime2"))->advertiseFlatScaleFactorIntegral(true);
+	ws->factory("RooGaussModel::jpsi_promptLifetime2(Jpsict,jpsi_promptMean, jpsi_ctResolution2[1.3,1.15,2.5], 1, JpsictErr)");
+	((RooGaussModel*)ws->pdf("jpsi_promptLifetime2"))->advertiseFlatScaleFactorIntegral(true);
 
-	RooGaussModel* promptLifetime = (RooGaussModel*)ws->pdf("promptLifetime");
-	RooGaussModel* promptLifetime2 = (RooGaussModel*)ws->pdf("promptLifetime2");
-	RooRealVar fracGauss2("fracGauss2","fracGauss2",.01,.0,.45);
-	RooAddModel TotalPromptLifetime("TotalPromptLifetime","TotalPromptLifetime",
-			RooArgSet(*promptLifetime2,*promptLifetime),fracGauss2);
-	ws->import(fracGauss2);
-	ws->import(TotalPromptLifetime);
-	TotalPromptLifetime.Print();
+	ws->factory("RooGaussModel::jpsi_promptLifetime3(Jpsict,jpsi_promptMean, jpsi_ctResolution3[1.8,1.5,5.], 1, JpsictErr)");
+	((RooGaussModel*)ws->pdf("jpsi_promptLifetime3"))->advertiseFlatScaleFactorIntegral(true);
+
+	RooGaussModel* jpsi_promptLifetime = (RooGaussModel*)ws->pdf("jpsi_promptLifetime");
+	RooGaussModel* jpsi_promptLifetime2 = (RooGaussModel*)ws->pdf("jpsi_promptLifetime2");
+	RooGaussModel* jpsi_promptLifetime3 = (RooGaussModel*)ws->pdf("jpsi_promptLifetime3");
+	RooRealVar jpsi_fracGauss2("jpsi_fracGauss2","jpsi_fracGauss2",0.219,0.,0.45);
+	RooRealVar jpsi_fracGauss3("jpsi_fracGauss3","jpsi_fracGauss3",0.1,0.,0.45);
+	//RooAddModel jpsi_TotalPromptLifetime("jpsi_TotalPromptLifetime","jpsi_TotalPromptLifetime", RooArgList(*jpsi_promptLifetime3,*jpsi_promptLifetime2,*jpsi_promptLifetime),RooArgList(jpsi_fracGauss3,jpsi_fracGauss2));
+	RooAddModel jpsi_TotalPromptLifetime("jpsi_TotalPromptLifetime","jpsi_TotalPromptLifetime", RooArgList(*jpsi_promptLifetime2,*jpsi_promptLifetime),RooArgList(jpsi_fracGauss2));
+	ws->import(jpsi_fracGauss2);
+	ws->import(jpsi_fracGauss3);
+	ws->import(jpsi_TotalPromptLifetime);
+	jpsi_TotalPromptLifetime.Print();
+
+	//ws->factory("RooDecay::jpsi_promptSignalDSD(Jpsict,jpsi_signalTauDSD[.016,0.001,0.2],jpsi_TotalPromptLifetime,RooDecay::DoubleSided)");
+
+	//RooAddModel jpsi_TotalPromptLifetime("jpsi_TotalPromptLifetime","jpsi_TotalPromptLifetime", RooArgList(*jpsi_promptGauss1,*jpsi_promptGauss2),RooArgList(jpsi_fracGauss2));
+
+	//ws->factory("RooGaussModel::jpsi_promptGauss1(Jpsict,mean[0],width1[0.005,0.001,0.03])");
+	//ws->factory("RooGaussModel::jpsi_promptGauss2(Jpsict,mean,width2[0.01,0.005,0.05])");
+	//ws->factory("RooGaussModel::jpsi_promptGauss3(Jpsict,mean,width3[0.03,0.02,0.08])");
+	//ws->factory("RooGaussModel::jpsi_promptGauss4(Jpsict,mean,width4[0.06,0.06,0.5])");
+	//RooGaussModel* jpsi_promptGauss1 = (RooGaussModel*)ws->pdf("jpsi_promptGauss1");
+	//RooGaussModel* jpsi_promptGauss2 = (RooGaussModel*)ws->pdf("jpsi_promptGauss2");
+	//RooGaussModel* jpsi_promptGauss3 = (RooGaussModel*)ws->pdf("jpsi_promptGauss3");
+	//RooGaussModel* jpsi_promptGauss4 = (RooGaussModel*)ws->pdf("jpsi_promptGauss4");
+	//RooRealVar jpsi_fracPromptGauss1("jpsi_fracPromptGauss1","jpsi_fracPromptGauss1",0.1,0.01,0.7);
+	//RooRealVar jpsi_fracPromptGauss2("jpsi_fracPromptGauss2","jpsi_fracPromptGauss2",0.25,0.01,0.7);
+	//RooRealVar jpsi_fracPromptGauss3("jpsi_fracPromptGauss3","jpsi_fracPromptGauss3",0.6,0.01,0.7);
+	//ws->import(jpsi_fracPromptGauss1);
+	//ws->import(jpsi_fracPromptGauss2);
+	//ws->import(jpsi_fracPromptGauss3);
+	//RooAddModel jpsi_TotalPromptLifetime("jpsi_TotalPromptLifetime","jpsi_TotalPromptLifetime", RooArgList(*jpsi_promptGauss1,*jpsi_promptGauss2,*jpsi_promptGauss3,*jpsi_promptGauss4),RooArgList(jpsi_fracPromptGauss1,jpsi_fracPromptGauss2,jpsi_fracPromptGauss3));
+	//ws->import(jpsi_TotalPromptLifetime);
+
 
 	//----noprompt
-	ws->factory("RooDecay::nonPromptSSD(Jpsict,nonPromptTau[.3,.01,3],TotalPromptLifetime,RooDecay::SingleSided)");
+	ws->factory("RooDecay::jpsi_nonPromptSSD(Jpsict,jpsi_nonPromptTau[.377,.15,0.6],jpsi_TotalPromptLifetime,RooDecay::SingleSided)");
 
 	//----background
-	//SBL
-	ws->factory("RooDecay::backgroundSSD_SBL(Jpsict,bkgTauSSD_SBL[.4,0,3],TotalPromptLifetime,RooDecay::SingleSided)");
-	ws->factory("RooDecay::backgroundFD(Jpsict,bkgTauFD[.2,.00001,3],TotalPromptLifetime,RooDecay::Flipped)");
-	ws->factory("RooDecay::backgroundDSD(Jpsict,bkgTauDSD[.05,0,3],TotalPromptLifetime,RooDecay::DoubleSided)");
-	ws->factory("SUM::backgroundlifetimeLpre(fBkgSSDR_SBL[.4,0,1.]*backgroundSSD_SBL,fBkgDSD_SBL[.2,0,1.]*backgroundDSD,backgroundFD)");
+	//LSB
+	ws->factory("RooDecay::jpsi_backgroundSSD(Jpsict,jpsi_bkgTauSSD[.355,0.1,0.6],jpsi_TotalPromptLifetime,RooDecay::SingleSided)");
+	ws->factory("RooDecay::jpsi_backgroundFD(Jpsict,jpsi_bkgTauFD[.11,.01,0.3],jpsi_TotalPromptLifetime,RooDecay::Flipped)");
+	ws->factory("RooDecay::jpsi_backgroundDSD(Jpsict,jpsi_bkgTauDSD[.016,0.001,0.05],jpsi_TotalPromptLifetime,RooDecay::DoubleSided)");
+	//ws->factory("SUM::jpsi_backgroundlifetimeLpre(jpsi_fBkgSSDR_LSB[.4,0,1.]*jpsi_backgroundSSD,jpsi_fBkgDSD_LSB[.2,0,1.]*jpsi_backgroundDSD,jpsi_backgroundFD)");
+	ws->factory("SUM::jpsi_backgroundlifetimeLpre(jpsi_fBkgSSDR[.7,0.45,0.95]*jpsi_backgroundSSD,jpsi_fBkgDSD[.25,0.05,0.35]*jpsi_backgroundDSD,jpsi_backgroundFD)");
 
-	////SBR
-	ws->factory("RooDecay::backgroundSSD_SBR(Jpsict,bkgTauSSD_SBR[.4,0,3],TotalPromptLifetime,RooDecay::SingleSided)");
-	ws->factory("SUM::backgroundlifetimeRpre(fBkgSSDR_SBR[.4,0,1.]*backgroundSSD_SBR,fBkgDSD_SBR[.2,0,1.]*backgroundDSD,backgroundFD)");
+	////RSB
+	//ws->factory("RooDecay::jpsi_backgroundSSD_RSB(Jpsict,jpsi_bkgTauSSD_RSB[.4,0,3],jpsi_TotalPromptLifetime,RooDecay::SingleSided)");
+	//ws->factory("SUM::jpsi_backgroundlifetimeRpre(jpsi_fBkgSSDR_RSB[.4,0,1.]*jpsi_backgroundSSD,jpsi_fBkgDSD_RSB[.2,0,1.]*jpsi_backgroundDSD,jpsi_backgroundFD)");
+	ws->factory("SUM::jpsi_backgroundlifetimeRpre(jpsi_fBkgSSDR*jpsi_backgroundSSD,jpsi_fBkgDSD*jpsi_backgroundDSD,jpsi_backgroundFD)");
 
 	//Signal region
 	//interpolation
-	ws->factory("expr::fBkgSSDR('@0+(@2-@3)*(@1-@0)/(@4-@3)',fBkgSSDR_SBL,fBkgSSDR_SBR,MeanSR,MeanSBL,MeanSBR)");
-	ws->factory("expr::fBkgDSD('@0+(@2-@3)*(@1-@0)/(@4-@3)',fBkgDSD_SBL,fBkgDSD_SBR,MeanSR,MeanSBL,MeanSBR)");
-	ws->factory("expr::bkgTauSSD('@0+(@2-@3)*(@1-@0)/(@4-@3)',bkgTauSSD_SBL,bkgTauSSD_SBR,MeanSR,MeanSBL,MeanSBR)");
+	//ws->factory("expr::jpsi_fBkgSSDR('@0+(@2-@3)*(@1-@0)/(@4-@3)',jpsi_fBkgSSDR_LSB,jpsi_fBkgSSDR_RSB,MeanSR,MeanLSB,MeanRSB)");
+	//ws->factory("expr::jpsi_fBkgDSD('@0+(@2-@3)*(@1-@0)/(@4-@3)',jpsi_fBkgDSD_LSB,jpsi_fBkgDSD_RSB,MeanSR,MeanLSB,MeanRSB)");
+	//ws->factory("expr::bkgTauSSD('@0+(@2-@3)*(@1-@0)/(@4-@3)',bkgTauSSD_LSB,bkgTauSSD_RSB,MeanSR,MeanLSB,MeanRSB)");
 
-	ws->factory("RooDecay::backgroundSSD(Jpsict,bkgTauSSD,TotalPromptLifetime,RooDecay::SingleSided)");
-	ws->factory("SUM::backgroundlifetime(fBkgSSDR*backgroundSSD,fBkgDSD*backgroundDSD,backgroundFD)");
+	//ws->factory("RooDecay::jpsi_backgroundSSD(Jpsict,jpsi_bkgTauSSD,jpsi_TotalPromptLifetime,RooDecay::SingleSided)");
+	ws->factory("SUM::jpsi_backgroundlifetime(jpsi_fBkgSSDR*jpsi_backgroundSSD,jpsi_fBkgDSD*jpsi_backgroundDSD,jpsi_backgroundFD)");
 
 	//---final pdf
 	//signal region
-	ws->factory("SUM::fulllifetime(fBkg[0.5,0.,1.]*backgroundlifetime,fPrompt[0.5,0.,1.]*TotalPromptLifetime,nonPromptSSD)");
-	ws->factory("RooGaussian::fBkgConstraint(fBkg, FracBkg, FracBkgErr)"); 
-	ws->factory("PROD::lifetimeConstraint(fulllifetime, fBkgConstraint)"); 
+	ws->factory("SUM::jpsi_fulllifetimeSRnoC(jpsi_fBkg[0.05,0.,1.]*jpsi_backgroundlifetime,jpsi_fPrompt[0.55,0.,1.]*jpsi_TotalPromptLifetime,jpsi_nonPromptSSD)");
+	//ws->factory("SUM::jpsi_fulllifetimeSRnoC(jpsi_fBkg[0.05,0.,1.]*jpsi_backgroundlifetime,jpsi_fPrompt[0.55,0.,1.]*jpsi_promptSignalDSD,jpsi_nonPromptSSD)");
 
-	RooRealVar* fBkgSBL = new RooRealVar("fBkgSBL","fBkgSBL",0.8,0.,1.);
-	RooRealVar* fBkgSBR = new RooRealVar("fBkgSBR","fBkgSBR",0.8,0.,1.);
-	ws->import(*fBkgSBL); ws->import(*fBkgSBR);
+	RooRealVar jpsi_FracBkg("jpsi_FracBkg","jpsi_FracBkg",ws->var("var_frac_jpsi_BGInSR")->getVal());
+	ws->import(jpsi_FracBkg);
+	RooRealVar jpsi_FracBkgErr("jpsi_FracBkgErr","jpsi_FracBkgErr",ws->var("var_frac_jpsi_BGInSR")->getError());
+	ws->import(jpsi_FracBkgErr);
+	ws->factory("RooGaussian::jpsi_fBkgConstraint(jpsi_fBkg, jpsi_FracBkg, jpsi_FracBkgErr)");
+	ws->factory("PROD::jpsi_fulllifetimeSR(jpsi_fulllifetimeSRnoC, jpsi_fBkgConstraint)");
+
+	RooRealVar* jpsi_fBkgLSB = new RooRealVar("jpsi_fBkgLSB","jpsi_fBkgLSB",0.8,0.,1.);
+	RooRealVar* jpsi_fBkgRSB = new RooRealVar("jpsi_fBkgRSB","jpsi_fBkgRSB",0.8,0.,1.);
+	ws->import(*jpsi_fBkgLSB); ws->import(*jpsi_fBkgRSB);
 
 	//f_P / f_NP should be same in LSB,SR,RSB, to interpolate f_P in L(R)SB from SR
-	ws->factory("expr::fPromptSBL('@0*(1.-@1)/(1.-@2)',fPrompt,fBkgSBL,fBkg)");
-	ws->factory("expr::fPromptSBR('@0*(1.-@1)/(1.-@2)',fPrompt,fBkgSBR,fBkg)");
+	ws->factory("expr::jpsi_fPromptLSB('@0*(1.-@1)/(1.-@2)',jpsi_fPrompt,jpsi_fBkgLSB,jpsi_fBkg)");
+	ws->factory("expr::jpsi_fPromptRSB('@0*(1.-@1)/(1.-@2)',jpsi_fPrompt,jpsi_fBkgRSB,jpsi_fBkg)");
 
-	//SBL
-	ws->factory("SUM::backgroundlifetimeLnoC(fBkgSBL*backgroundlifetimeLpre,fPromptSBL*TotalPromptLifetime,nonPromptSSD)");
-	ws->factory("RooGaussian::fBkgSBLConstraint(fBkgSBL, FracBkgSBL, FracBkgSBLErr)");
-	ws->factory("PROD::backgroundlifetimeL(backgroundlifetimeLnoC, fBkgSBLConstraint)"); 
+	//LSB
+	ws->factory("SUM::jpsi_backgroundlifetimeLnoC(jpsi_fBkgLSB*jpsi_backgroundlifetimeLpre,jpsi_fPromptLSB*jpsi_TotalPromptLifetime,jpsi_nonPromptSSD)");
+	//ws->factory("SUM::jpsi_backgroundlifetimeLnoC(jpsi_fBkgLSB*jpsi_backgroundlifetimeLpre,jpsi_fPromptLSB*jpsi_promptSignalDSD,jpsi_nonPromptSSD)");
+	RooRealVar jpsi_FracBkgLSB("jpsi_FracBkgLSB","jpsi_FracBkgLSB",ws->var("var_frac_jpsi_BGInLSB")->getVal());
+	ws->import(jpsi_FracBkgLSB);
+	RooRealVar jpsi_FracBkgLSBErr("jpsi_FracBkgLSBErr","jpsi_FracBkgLSBErr",ws->var("var_frac_jpsi_BGInLSB")->getError());
+	ws->import(jpsi_FracBkgLSBErr);
+	ws->factory("RooGaussian::jpsi_fBkgLSBConstraint(jpsi_fBkgLSB, jpsi_FracBkgLSB, jpsi_FracBkgLSBErr)");
+	ws->factory("PROD::jpsi_backgroundlifetimeL(jpsi_backgroundlifetimeLnoC, jpsi_fBkgLSBConstraint)");
 
-	//SBR
-	ws->factory("SUM::backgroundlifetimeRnoC(fBkgSBR*backgroundlifetimeRpre,fPromptSBR*TotalPromptLifetime,nonPromptSSD)");
-	ws->factory("RooGaussian::fBkgSBRConstraint(fBkgSBR, FracBkgSBR, FracBkgSBRErr)");
-	ws->factory("PROD::backgroundlifetimeR(backgroundlifetimeRnoC, fBkgSBRConstraint)"); 
+	//RSB
+	ws->factory("SUM::jpsi_backgroundlifetimeRnoC(jpsi_fBkgRSB*jpsi_backgroundlifetimeRpre,jpsi_fPromptRSB*jpsi_TotalPromptLifetime,jpsi_nonPromptSSD)");
+	//ws->factory("SUM::jpsi_backgroundlifetimeRnoC(jpsi_fBkgRSB*jpsi_backgroundlifetimeRpre,jpsi_fPromptRSB*jpsi_promptSignalDSD,jpsi_nonPromptSSD)");
+	RooRealVar jpsi_FracBkgRSB("jpsi_FracBkgRSB","jpsi_FracBkgRSB",ws->var("var_frac_jpsi_BGInRSB")->getVal());
+	ws->import(jpsi_FracBkgRSB);
+	RooRealVar jpsi_FracBkgRSBErr("jpsi_FracBkgRSBErr","jpsi_FracBkgRSBErr",ws->var("var_frac_jpsi_BGInRSB")->getError());
+	ws->import(jpsi_FracBkgRSBErr);
+	ws->factory("RooGaussian::jpsi_fBkgRSBConstraint(jpsi_fBkgRSB, jpsi_FracBkgRSB, jpsi_FracBkgRSBErr)");
+	ws->factory("PROD::jpsi_backgroundlifetimeR(jpsi_backgroundlifetimeRnoC, jpsi_fBkgRSBConstraint)");
 
 	ws->Print("v");
 }
 
 
 //=================================================================================
-void doFit(RooWorkspace *ws, int nState, double BkgRatio3Sig, double fracBkgInSBL, double fracBkgInSBR, int rapBin, int ptBin){
+void doFit(RooWorkspace *ws, int nState, double BkgRatio3Sig, double fracBkgInLSB, double fracBkgInRSB, int rapBin, int ptBin){
 
 	RooRealVar JpsiMass(*ws->var("JpsiMass"));
 	RooRealVar Jpsict(*ws->var("Jpsict"));
 
-	stringstream binNameSR, binNameSBL, binNameSBR;
+	stringstream binNameSR, binNameLSB, binNameRSB;
 	binNameSR  << "data_rap" << rapBin << "_pt" << ptBin <<"_SR";
-	binNameSBL << "data_rap" << rapBin << "_pt" << ptBin <<"_SBL";
-	binNameSBR << "data_rap" << rapBin << "_pt" << ptBin <<"_SBR";
+	binNameLSB << "data_rap" << rapBin << "_pt" << ptBin <<"_LSB";
+	binNameRSB << "data_rap" << rapBin << "_pt" << ptBin <<"_RSB";
 	RooDataSet *dataSR = (RooDataSet*)ws->data(binNameSR.str().c_str());
-	RooDataSet *dataSBL = (RooDataSet*)ws->data(binNameSBL.str().c_str());
-	RooDataSet *dataSBR = (RooDataSet*)ws->data(binNameSBR.str().c_str());
+	RooDataSet *dataLSB = (RooDataSet*)ws->data(binNameLSB.str().c_str());
+	RooDataSet *dataRSB = (RooDataSet*)ws->data(binNameRSB.str().c_str());
 
-	if(nState==4){
-		ws->var("fBkgSSDR_SBL")->setVal(.7); //0.4
-		ws->var("fBkgSSDR_SBR")->setVal(.7); //0.4
-		ws->var("fBkgDSD_SBL")->setVal(.2);
-		ws->var("fBkgDSD_SBR")->setVal(.2);
-		if(ptBin>7){
-			//// old
-			//ws->var("fBkgSSDR_SBL")->setVal(.77);
-			//ws->var("fBkgSSDR_SBR")->setVal(.77);
-			//ws->var("fBkgSSDR_SBL")->setConstant(kTRUE);
-			//ws->var("fBkgSSDR_SBR")->setConstant(kTRUE);
-			//ws->var("fBkgDSD_SBL")->setMax(.23);
-			//ws->var("fBkgDSD_SBR")->setMax(.23);
-			////new model
-			ws->var("fBkgSSDR_SBL")->setVal(.785);
-			ws->var("fBkgSSDR_SBR")->setVal(.785);
-			ws->var("fBkgSSDR_SBL")->setConstant(kTRUE);
-			ws->var("fBkgSSDR_SBR")->setConstant(kTRUE);
-			ws->var("fBkgDSD_SBL")->setMax(.215);
-			ws->var("fBkgDSD_SBR")->setMax(.215);
-		}
+	//starting parameter of constrained parameters
+	ws->var("jpsi_fBkg")->setVal(BkgRatio3Sig);
+	ws->var("jpsi_fBkgLSB")->setVal(fracBkgInLSB);
+	ws->var("jpsi_fBkgRSB")->setVal(fracBkgInRSB);
+	ws->var("jpsi_fBkgLSB")->setConstant(kTRUE);
+	ws->var("jpsi_fBkgRSB")->setConstant(kTRUE);
 
-		ws->var("bkgTauSSD_SBL")->setVal(.4);
-		ws->var("bkgTauSSD_SBR")->setVal(.4);
-		ws->var("bkgTauFD")->setVal(.1);
-		ws->var("bkgTauDSD")->setVal(.01);
+	//parameter juggling of free parameters
 
-		ws->var("fBkg")->setVal(BkgRatio3Sig);
-		ws->var("fPrompt")->setVal(.3);
-		ws->var("fBkgSBL")->setVal(fracBkgInSBL);
-		ws->var("fBkgSBR")->setVal(fracBkgInSBR);
+	//ws->var("jpsi_fBkg")->setVal(0.);
+	//ws->var("jpsi_fPrompt")->setVal(0.999999);
+	//ws->var("jpsi_fBkgLSB")->setVal(0.);
+	//ws->var("jpsi_fBkgRSB")->setVal(0.);
+	//ws->var("jpsi_ctResolution2")->setMax(2.5);
 
-		ws->var("nonPromptTau")->setVal(.4);
+	//ws->var("jpsi_fBkg")->setConstant(kTRUE);
+	//ws->var("jpsi_fPrompt")->setConstant(kTRUE);
+	//ws->var("jpsi_fBkgSSDR")->setConstant(kTRUE);
+	//ws->var("jpsi_fBkgDSD")->setConstant(kTRUE);
+	//ws->var("jpsi_bkgTauSSD")->setConstant(kTRUE);
+	//ws->var("jpsi_bkgTauFD")->setConstant(kTRUE);
+	//ws->var("jpsi_bkgTauDSD")->setConstant(kTRUE);
+	//ws->var("jpsi_nonPromptTau")->setConstant(kTRUE);
 
-		//** set limit
-		ws->var("bkgTauSSD_SBL")->setMax(1.);
-		ws->var("bkgTauSSD_SBR")->setMax(1.);
-		ws->var("bkgTauFD")->setMax(0.3);
-		//ws->var("bkgTauDSD")->setMax(0.04); //0.05
-		ws->var("nonPromptTau")->setMax(1.);
-		//ws->var("fBkgSBL")->setMin(0.75);
-		//ws->var("fBkgSBR")->setMin(0.84);
-		if(ptBin>10){
-			ws->var("bkgTauDSD")->setMax(0.005);
-			ws->var("bkgTauDSD")->setVal(0.);
-		}
-		//**
+	//ws->var("jpsi_ctResolution")->setVal(0.848*1.0525);
+	//ws->var("jpsi_ctResolution2")->setVal(1.426*1.0525);
+	//ws->var("jpsi_ctResolution")->setConstant(kTRUE);
+	//ws->var("jpsi_ctResolution2")->setConstant(kTRUE);
+	//ws->var("jpsi_fracGauss2")->setConstant(kTRUE);
 
-		ws->var("promptMean")->setVal(0.);
-		ws->var("ctResolution")->setVal(.9);
-		ws->var("promptMean")->setConstant(kTRUE);
-		ws->var("ctResolution")->setConstant(kTRUE);
 
-		if(rapBin == 1)
-			ws->var("ctResolution2")->setVal(1.1);
-		else if(rapBin == 2)
-			ws->var("ctResolution2")->setVal(1.5);
-		ws->var("ctResolution2")->setConstant(kTRUE);
-		ws->var("fracGauss2")->setVal(0.2);
-		ws->var("fracGauss2")->setMin(0.04);
-	}
-	else if(nState==5){
-		ws->var("fBkgSSDR_SBL")->setVal(.6);
-		ws->var("fBkgSSDR_SBR")->setVal(.3);
-		ws->var("fBkgDSD_SBL")->setVal(.4);
-		ws->var("fBkgDSD_SBR")->setVal(.6);
+	//RooAbsPdf *ModelLifeSR = (RooAbsPdf*)ws->pdf("jpsi_fulllifetimeSR");
+	//RooAbsPdf *ModelLifeLSB = (RooAbsPdf*)ws->pdf("jpsi_backgroundlifetimeL");
+	//RooAbsPdf *ModelLifeRSB = (RooAbsPdf*)ws->pdf("jpsi_backgroundlifetimeR");
 
-		ws->var("bkgTauSSD_SBL")->setVal(.4);
-		ws->var("bkgTauSSD_SBR")->setVal(.4);
-		ws->var("bkgTauFD")->setVal(.1);
-		ws->var("bkgTauDSD")->setVal(.01);
+	RooAbsPdf *ModelLifeSR = (RooAbsPdf*)ws->pdf("jpsi_fulllifetimeSR");
+	RooAbsPdf *ModelLifeLSB = (RooAbsPdf*)ws->pdf("jpsi_backgroundlifetimeLnoC");
+	RooAbsPdf *ModelLifeRSB = (RooAbsPdf*)ws->pdf("jpsi_backgroundlifetimeRnoC");
 
-		ws->var("fBkg")->setVal(BkgRatio3Sig);
-		ws->var("fPrompt")->setVal(.3);
-		ws->var("fBkgSBL")->setVal(fracBkgInSBL);
-		ws->var("fBkgSBR")->setVal(fracBkgInSBR);
 
-		ws->var("nonPromptTau")->setVal(.4);
-
-		//** set limit
-		ws->var("bkgTauSSD_SBL")->setMax(1.);
-		ws->var("bkgTauSSD_SBR")->setMax(1.);
-		ws->var("bkgTauFD")->setMax(0.3);
-		ws->var("bkgTauDSD")->setMax(0.05);
-		ws->var("nonPromptTau")->setMax(1.);
-		ws->var("fBkgDSD_SBL")->setMin(0.2);
-		ws->var("fBkgDSD_SBR")->setMin(0.2);
-		//**
-
-		ws->var("promptMean")->setVal(0.);
-		ws->var("ctResolution")->setVal(.9);
-		ws->var("promptMean")->setConstant(kTRUE);
-		ws->var("ctResolution")->setConstant(kTRUE);
-		ws->var("ctResolution2")->setVal(3.);
-		ws->var("ctResolution2")->setConstant(kTRUE);
-		ws->var("fracGauss2")->setVal(0.01);
-	}
-
-	RooAbsPdf *ModelLifeSR = (RooAbsPdf*)ws->pdf("lifetimeConstraint");
-	RooAbsPdf *ModelLifeSBL = (RooAbsPdf*)ws->pdf("backgroundlifetimeL");
-	RooAbsPdf *ModelLifeSBR = (RooAbsPdf*)ws->pdf("backgroundlifetimeR");
 
 	RooArgSet *NLLs = new RooArgSet();
-	RooAbsReal *MLNLLSR = NULL, *MLNLLSBL = NULL, *MLNLLSBR = NULL;
+	RooAbsReal *MLNLLSR = NULL, *MLNLLLSB = NULL, *MLNLLRSB = NULL;
 
 	MLNLLSR = (RooAbsReal *)ModelLifeSR->createNLL(*dataSR,
 			ConditionalObservables(RooArgSet(*ws->var("JpsictErr"))),
-			Constrain(RooArgSet(*ws->var("fBkg"))),
+			Constrain(RooArgSet(*ws->var("jpsi_fBkg"))),
 			Extended(kFALSE),
 			NumCPU(6));
-	MLNLLSBL = (RooAbsReal *)ModelLifeSBL->createNLL(*dataSBL,
+	MLNLLLSB = (RooAbsReal *)ModelLifeLSB->createNLL(*dataLSB,
 			ConditionalObservables(RooArgSet(*ws->var("JpsictErr"))),
-			Constrain(RooArgSet(*ws->var("fBkgSBL"))),
+			//Constrain(RooArgSet(*ws->var("jpsi_fBkgLSB"))),
 			Extended(kFALSE),
 			NumCPU(6));
-	MLNLLSBR = (RooAbsReal *)ModelLifeSBR->createNLL(*dataSBR,
+	MLNLLRSB = (RooAbsReal *)ModelLifeRSB->createNLL(*dataRSB,
 			ConditionalObservables(RooArgSet(*ws->var("JpsictErr"))),
-			Constrain(RooArgSet(*ws->var("fBkgSBR"))),
+			//Constrain(RooArgSet(*ws->var("jpsi_fBkgRSB"))),
 			Extended(kFALSE),
 			NumCPU(6));
 
+	cout<<"SR NLL before fit = "<<MLNLLSR->getVal()<<endl;
+
 	NLLs->add(*MLNLLSR);
-	NLLs->add(*MLNLLSBL);
-	NLLs->add(*MLNLLSBR);
+	NLLs->add(*MLNLLLSB);
+	NLLs->add(*MLNLLRSB);
 
 	RooAddition *simNLL = new RooAddition("add","add",*NLLs);
 	RooMinuit *lMinuit = new RooMinuit(*simNLL);
+	//RooMinuit *lMinuit = new RooMinuit(*MLNLLSR);
 
 	lMinuit->setStrategy(1); 
-	if(nState==4 && ptBin > 7) lMinuit->setStrategy(2); 
+	//if(nState==4 && ptBin > 7) lMinuit->setStrategy(2);
 	lMinuit->setPrintEvalErrors(-1);
 	lMinuit->setEvalErrorWall(false);
 	lMinuit->setVerbose(false);
 	lMinuit->setPrintLevel(-1);
 
-	stringstream rltName, snapshotName;
-	rltName<< "l_fitresult_rap"<<rapBin<<"_pt"<<ptBin;
-	snapshotName<< "l_snapshot_rap"<<rapBin<<"_pt"<<ptBin;
-	RooFitResult *fitresult;
-
-	lMinuit->simplex();
 	lMinuit->migrad();
-	fitresult = (RooFitResult*)lMinuit->save(rltName.str().c_str());
-	cout<<"fitresult->covQual(): "<<fitresult->covQual()<<endl;
-	lMinuit->migrad();
-	fitresult = (RooFitResult*)lMinuit->save(rltName.str().c_str());
-	cout<<"fitresult->covQual(): "<<fitresult->covQual()<<endl;
-	lMinuit->hesse();
-	fitresult = (RooFitResult*)lMinuit->save(rltName.str().c_str());
-	cout<<"fitresult->covQual(): "<<fitresult->covQual()<<endl;
 
-	double BkgTauFD = ((RooRealVar*)ws->var("bkgTauFD"))->getVal();
-	double BkgTauDSD = ((RooRealVar*)ws->var("bkgTauDSD"))->getVal();
-	double CtResolution = ((RooRealVar*)ws->var("ctResolution"))->getVal();
-	double CtResolution2 = ((RooRealVar*)ws->var("ctResolution2"))->getVal();
+    std::stringstream rltNameMigrad;
+    rltNameMigrad<< "fitresultaftermigrad_rap"<<rapBin<<"_pt"<<ptBin;
+    RooFitResult *fitresultaftermigrad = (RooFitResult*)lMinuit->save(rltNameMigrad.str().c_str());
+    double covQualMigrad=fitresultaftermigrad->covQual();
+	cout<<"covQualMigrad = "<<covQualMigrad<<endl;
 
-	int refitCount = 0;
-	while(BkgTauFD < BkgTauDSD){
-		if(refitCount>3) break;
-		cout<<"bkgTauFD < bkgTauDSD"<<endl;
-		ws->var("bkgTauFD")->setVal(BkgTauDSD);
-		ws->var("bkgTauDSD")->setVal(BkgTauFD);
+    if(covQualMigrad<3){
+    	cout<<"-> repeat migrad() one more time..."<<endl;
+    	lMinuit->migrad();
+        fitresultaftermigrad = (RooFitResult*)lMinuit->save(rltNameMigrad.str().c_str());
+        double covQualMigradTen=10*covQualMigrad;
+        covQualMigrad=fitresultaftermigrad->covQual();
+    	cout<<"second turn migrad -> covQualMigrad = "<<covQualMigrad<<endl;
+        covQualMigrad+=covQualMigradTen;
+    	cout<<"-> MigradCovQualHistory = "<<covQualMigrad<<endl;
+    }
 
-		lMinuit->migrad();
-		fitresult = (RooFitResult*)lMinuit->save(rltName.str().c_str());
-		cout<<"fitresult->covQual(): "<<fitresult->covQual()<<endl;
-		lMinuit->migrad();
-		fitresult = (RooFitResult*)lMinuit->save(rltName.str().c_str());
-		cout<<"fitresult->covQual(): "<<fitresult->covQual()<<endl;
-		lMinuit->hesse();
-		fitresult = (RooFitResult*)lMinuit->save(rltName.str().c_str());
-		cout<<"fitresult->covQual(): "<<fitresult->covQual()<<endl;
+    lMinuit->hesse();
 
-		BkgTauFD = ((RooRealVar*)ws->var("bkgTauFD"))->getVal();
-		BkgTauDSD = ((RooRealVar*)ws->var("bkgTauDSD"))->getVal();
 
-		refitCount++;
-	}
+    std::cout<< "End of fit" <<std::endl;
+    std::stringstream rltName, snapshotName;
+    rltName<< "jpsi_l_fitresult_rap"<<rapBin<<"_pt"<<ptBin;
+    snapshotName<< "jpsi_l_snapshot_rap"<<rapBin<<"_pt"<<ptBin;
+    RooFitResult *fitresult = (RooFitResult*)lMinuit->save(rltName.str().c_str());
+    ws->import(*fitresult,kTRUE);
+    fitresult->Print();
+    double covQualHesse=fitresult->covQual();
+	cout<<"covQualHesse = "<<covQualHesse<<endl;
 
-	while(CtResolution > CtResolution2){
-		if(refitCount>3) break;
-		cout<<"CtResolution > CtResolution2"<<endl;
-		ws->var("ctResolution")->setVal(CtResolution2);
-		ws->var("ctResolution2")->setVal(CtResolution);
 
-		lMinuit->migrad();
-		fitresult = (RooFitResult*)lMinuit->save(rltName.str().c_str());
-		cout<<"fitresult->covQual(): "<<fitresult->covQual()<<endl;
-		lMinuit->migrad();
-		fitresult = (RooFitResult*)lMinuit->save(rltName.str().c_str());
-		cout<<"fitresult->covQual(): "<<fitresult->covQual()<<endl;
-		lMinuit->hesse();
-		fitresult = (RooFitResult*)lMinuit->save(rltName.str().c_str());
-		cout<<"fitresult->covQual(): "<<fitresult->covQual()<<endl;
+	cout<<"SR NLL after fit = "<<MLNLLSR->getVal()<<endl;
+	cout<<"LSB NLL after fit = "<<MLNLLLSB->getVal()<<endl;
+	cout<<"RSB NLL after fit = "<<MLNLLRSB->getVal()<<endl;
 
-		CtResolution = ((RooRealVar*)ws->var("ctResolution"))->getVal();
-		CtResolution2 = ((RooRealVar*)ws->var("ctResolution2"))->getVal();
+	//ws->var("jpsi_ctResolution")->setVal(0.89);
+	//ws->var("jpsi_ctResolution2")->setVal(1.5);
 
-		refitCount++;
-	}
+	cout<<"SR NLL after manually changing resolutions = "<<MLNLLSR->getVal()<<endl;
+	cout<<"LSB NLL after manually changing resolutions = "<<MLNLLLSB->getVal()<<endl;
+	cout<<"RSB NLL after manually changing resolutions = "<<MLNLLRSB->getVal()<<endl;
 
-	cout<<">>>>>>Refitted "<<refitCount<<" times"<<endl;
-	if(refitCount>3) cout<<">>>>>>Fit not converged"<<endl;
+
+	//double BkgTauFD = ((RooRealVar*)ws->var("bkgTauFD"))->getVal();
+	//double BkgTauDSD = ((RooRealVar*)ws->var("bkgTauDSD"))->getVal();
+	//double CtResolution = ((RooRealVar*)ws->var("ctResolution"))->getVal();
+	//double CtResolution2 = ((RooRealVar*)ws->var("ctResolution2"))->getVal();
+    //
+	//int refitCount = 0;
+	//while(BkgTauFD < BkgTauDSD){
+	//	if(refitCount>3) break;
+	//	cout<<"bkgTauFD < bkgTauDSD"<<endl;
+	//	ws->var("bkgTauFD")->setVal(BkgTauDSD);
+	//	ws->var("bkgTauDSD")->setVal(BkgTauFD);
+    //
+	//	lMinuit->migrad();
+	//	fitresult = (RooFitResult*)lMinuit->save(rltName.str().c_str());
+	//	cout<<"fitresult->covQual(): "<<fitresult->covQual()<<endl;
+	//	lMinuit->migrad();
+	//	fitresult = (RooFitResult*)lMinuit->save(rltName.str().c_str());
+	//	cout<<"fitresult->covQual(): "<<fitresult->covQual()<<endl;
+	//	lMinuit->hesse();
+	//	fitresult = (RooFitResult*)lMinuit->save(rltName.str().c_str());
+	//	cout<<"fitresult->covQual(): "<<fitresult->covQual()<<endl;
+    //
+	//	BkgTauFD = ((RooRealVar*)ws->var("bkgTauFD"))->getVal();
+	//	BkgTauDSD = ((RooRealVar*)ws->var("bkgTauDSD"))->getVal();
+    //
+	//	refitCount++;
+	//}
+    //
+	//while(CtResolution > CtResolution2){
+	//	if(refitCount>3) break;
+	//	cout<<"CtResolution > CtResolution2"<<endl;
+	//	ws->var("ctResolution")->setVal(CtResolution2);
+	//	ws->var("ctResolution2")->setVal(CtResolution);
+    //
+	//	lMinuit->migrad();
+	//	fitresult = (RooFitResult*)lMinuit->save(rltName.str().c_str());
+	//	cout<<"fitresult->covQual(): "<<fitresult->covQual()<<endl;
+	//	lMinuit->migrad();
+	//	fitresult = (RooFitResult*)lMinuit->save(rltName.str().c_str());
+	//	cout<<"fitresult->covQual(): "<<fitresult->covQual()<<endl;
+	//	lMinuit->hesse();
+	//	fitresult = (RooFitResult*)lMinuit->save(rltName.str().c_str());
+	//	cout<<"fitresult->covQual(): "<<fitresult->covQual()<<endl;
+    //
+	//	CtResolution = ((RooRealVar*)ws->var("ctResolution"))->getVal();
+	//	CtResolution2 = ((RooRealVar*)ws->var("ctResolution2"))->getVal();
+    //
+	//	refitCount++;
+	//}
+    //
+	//cout<<">>>>>>Refitted "<<refitCount<<" times"<<endl;
+	//if(refitCount>3) cout<<">>>>>>Fit not converged"<<endl;
 
 	fitresult->Print();
 	ws->import(*fitresult,kTRUE);
