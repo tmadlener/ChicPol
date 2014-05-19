@@ -129,13 +129,20 @@ namespace onia{
   int colour_rapForPTBins[] = {1, 30, 4, 2, 3, kMagenta+1};
   int marker_rapForPTBins[] = {20, 21, 25, 20, 22, 29};
 
+  //Chic plots:
 	int colorBackground=1;
-	int colorChic0=902;
-	int colorChic1=418;
+	int colorChic0=901;
+	int colorChic1=417;
 	int colorChic2=632;
 	int colorPR=616;
 	int colorNP=600;
+  //Jpsi plots:
 	int colorJpsi=633;
+	int ColorMuMuBG=903;
+	int ColorSumJpsiSignal=419;
+	int ColorPRJpsi=600;
+	int ColorNPJpsi=632;
+
 
 	double lineWidth_ML=2.;
 	double markerSize_ML=0.8;

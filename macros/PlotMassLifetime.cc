@@ -894,12 +894,12 @@ double plotMass(RooWorkspace *ws, int rapBin, int ptBin, int nState){
 		left=(sig1MinMass-fullMassMin)/fullMass+0.0125; top=0.885;
 		latex->DrawLatex(left,top,Form("N^{SR1}_{#chi_{c1}} = %1.0f", ws->var("var_nChic1")->getVal()*ws->var("var_fChic1InSR1")->getVal()));
 		top-=textSize*2.25;
-		latex->DrawLatex(left,top,Form("f^{SR1}_{Bkg} = %1.2f", ws->var("var_fracBackgroundInSR1")->getVal()));
+		latex->DrawLatex(left,top,Form("f^{SR1}_{BG} = %1.2f", ws->var("var_fracBackgroundInSR1")->getVal()));
 
 		left=(sig2MinMass-fullMassMin)/fullMass+0.0125; top=0.885;
 		latex->DrawLatex(left,top,Form("N^{SR2}_{#chi_{c2}} = %1.0f", ws->var("var_nChic2")->getVal()*ws->var("var_fChic2InSR2")->getVal()));
 		top-=textSize*2.25;
-		latex->DrawLatex(left,top,Form("f^{SR2}_{Bkg} = %1.2f", ws->var("var_fracBackgroundInSR2")->getVal()));
+		latex->DrawLatex(left,top,Form("f^{SR2}_{BG} = %1.2f", ws->var("var_fracBackgroundInSR2")->getVal()));
 
 
 		textSize=0.03; latex->SetTextSize(textSize);
@@ -909,12 +909,12 @@ double plotMass(RooWorkspace *ws, int rapBin, int ptBin, int nState){
 
 		latex->DrawLatex(left,top,Form("n^{Tot}_{data}  =  %.0f",ws->var("var_data_ev")->getVal()));
 		top-=textSize*stepsizeTimes;
-		if(!ws->var("NumEvE")->isConstant()){
-		latex->DrawLatex(left,top,Form("n^{Tot}_{fit}  =  %.1f #pm %.1f",ws->var("NumEvE")->getVal(), ws->var("NumEvE")->getError()));
-		top-=textSize*stepsizeTimes;
-		}
+		//if(!ws->var("NumEvE")->isConstant()){
+		//latex->DrawLatex(left,top,Form("n^{Tot}_{fit}  =  %.1f #pm %.1f",ws->var("NumEvE")->getVal(), ws->var("NumEvE")->getError()));
+		//top-=textSize*stepsizeTimes;
+		//}
 		if(!ws->var("fracBackground")->isConstant()){
-		latex->DrawLatex(left,top,Form("f^{Tot}_{Bg}  =  %.3f #pm %.3f",ws->var("fracBackground")->getVal(), ws->var("fracBackground")->getError()));
+		latex->DrawLatex(left,top,Form("f^{#chi}_{#psiBG}  =  %.3f #pm %.3f",ws->var("fracBackground")->getVal(), ws->var("fracBackground")->getError()));
 		top-=textSize*stepsizeTimes;
 		}
 		if(!ws->var("fracSignal_chic0")->isConstant()){
@@ -962,23 +962,23 @@ double plotMass(RooWorkspace *ws, int rapBin, int ptBin, int nState){
 		top-=textSize*stepsizeTimes;
 		}
 		if(!ws->var("alpha1")->isConstant()){
-		latex->DrawLatex(left,top,Form("#alpha^{Bkg}  =  %.3f #pm %.3f",ws->var("alpha1")->getVal(), ws->var("alpha1")->getError()));
+		latex->DrawLatex(left,top,Form("#alpha^{BG}  =  %.3f #pm %.3f",ws->var("alpha1")->getVal(), ws->var("alpha1")->getError()));
 		top-=textSize*stepsizeTimes;
 		}
 		if(!ws->var("beta1")->isConstant()){
-		latex->DrawLatex(left,top,Form("#beta^{Bkg}  =  %.3f #pm %.3f",ws->var("beta1")->getVal(), ws->var("beta1")->getError()));
+		latex->DrawLatex(left,top,Form("#beta^{BG}  =  %.3f #pm %.3f",ws->var("beta1")->getVal(), ws->var("beta1")->getError()));
 		top-=textSize*stepsizeTimes;
 		}
 		if(!ws->var("q01S")->isConstant()){
-		latex->DrawLatex(left,top,Form("Q_{0}^{Bkg}  =  %.4f #pm %.4f",ws->var("q01S")->getVal(), ws->var("q01S")->getError()));
+		latex->DrawLatex(left,top,Form("Q_{0}^{BG}  =  %.4f #pm %.4f",ws->var("q01S")->getVal(), ws->var("q01S")->getError()));
 		top-=textSize*stepsizeTimes;
 		}
 		if(!ws->var("BK_p1")->isConstant()){
-		latex->DrawLatex(left,top,Form("p_{1}^{Bkg}  =  %.4f #pm %.4f",ws->var("BK_p1")->getVal(), ws->var("BK_p1")->getError()));
+		latex->DrawLatex(left,top,Form("p_{1}^{BG}  =  %.4f #pm %.4f",ws->var("BK_p1")->getVal(), ws->var("BK_p1")->getError()));
 		top-=textSize*stepsizeTimes;
 		}
 		if(!ws->var("BK_p2")->isConstant()){
-		latex->DrawLatex(left,top,Form("p_{2}^{Bkg}  =  %.4f #pm %.4f",ws->var("BK_p2")->getVal(), ws->var("BK_p2")->getError()));
+		latex->DrawLatex(left,top,Form("p_{2}^{BG}  =  %.4f #pm %.4f",ws->var("BK_p2")->getVal(), ws->var("BK_p2")->getError()));
 		top-=textSize*stepsizeTimes;
 		}
 
@@ -1750,7 +1750,7 @@ double plotLifetimeSR1(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 		top-=textSize*stepsizeTimes;
 		latex->DrawLatex(left,top,Form("f^{PRSR1}_{NP#chi_{c1}}  =  %.3f",ws->var("var_fracNPChic1InPRSR1")->getVal()));
 		top-=textSize*stepsizeTimes;
-		latex->DrawLatex(left,top,Form("f^{PRSR1}_{Bg}  =  %.3f",ws->var("var_fracBackgroundInPRSR1")->getVal()));
+		latex->DrawLatex(left,top,Form("f^{PRSR1}_{BG}  =  %.3f",ws->var("var_fracBackgroundInPRSR1")->getVal()));
 		top-=textSize*stepsizeTimes;
 		if(plotChic2){
 			latex->DrawLatex(left,top,Form("f^{PRSR1}_{PR#chi_{c2}}  =  %.3f",ws->var("var_fracPRChic2InPRSR1")->getVal()));
@@ -1764,7 +1764,7 @@ double plotLifetimeSR1(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 		top-=textSize*stepsizeTimes;
 		latex->DrawLatex(left,top,Form("f^{NPSR1}_{PR#chi_{c1}}  =  %.3f",ws->var("var_fracPRChic1InNPSR1")->getVal()));
 		top-=textSize*stepsizeTimes;
-		latex->DrawLatex(left,top,Form("f^{NPSR1}_{Bg}  =  %.3f",ws->var("var_fracBackgroundInNPSR1")->getVal()));
+		latex->DrawLatex(left,top,Form("f^{NPSR1}_{BG}  =  %.3f",ws->var("var_fracBackgroundInNPSR1")->getVal()));
 		top-=textSize*stepsizeTimes;
 		//if(plotChic2){
 		//	latex->DrawLatex(left,top,Form("f^{NPSR1}_{NP#chi_{c2}}  =  %.3f",ws->var("var_fracNPChic2InNPSR1")->getVal()));
@@ -2179,7 +2179,7 @@ double plotLifetimeSR2(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 		top-=textSize*stepsizeTimes;
 		latex->DrawLatex(left,top,Form("f^{PRSR2}_{NP#chi_{c2}}  =  %.3f",ws->var("var_fracNPChic2InPRSR2")->getVal()));
 		top-=textSize*stepsizeTimes;
-		latex->DrawLatex(left,top,Form("f^{PRSR2}_{Bg}  =  %.3f",ws->var("var_fracBackgroundInPRSR2")->getVal()));
+		latex->DrawLatex(left,top,Form("f^{PRSR2}_{BG}  =  %.3f",ws->var("var_fracBackgroundInPRSR2")->getVal()));
 		top-=textSize*stepsizeTimes;
 		if(plotChic1){
 			latex->DrawLatex(left,top,Form("f^{PRSR2}_{PR#chi_{c1}}  =  %.3f",ws->var("var_fracPRChic1InPRSR2")->getVal()));
@@ -2193,7 +2193,7 @@ double plotLifetimeSR2(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 		top-=textSize*stepsizeTimes;
 		latex->DrawLatex(left,top,Form("f^{NPSR2}_{PR#chi_{c2}}  =  %.3f",ws->var("var_fracPRChic2InNPSR2")->getVal()));
 		top-=textSize*stepsizeTimes;
-		latex->DrawLatex(left,top,Form("f^{NPSR2}_{Bg}  =  %.3f",ws->var("var_fracBackgroundInNPSR2")->getVal()));
+		latex->DrawLatex(left,top,Form("f^{NPSR2}_{BG}  =  %.3f",ws->var("var_fracBackgroundInNPSR2")->getVal()));
 		top-=textSize*stepsizeTimes;
 		if(plotChic1){
 			latex->DrawLatex(left,top,Form("f^{NPSR2}_{NP#chi_{c1}}  =  %.3f",ws->var("var_fracNPChic1InNPSR2")->getVal()));
@@ -2517,7 +2517,7 @@ double plotLifetimeLSB(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 	CtauLegend->SetBorderSize(0.);
 	CtauLegend->AddEntry(legend_Tot,"sum","l");
 	if(plotBackground){
-		CtauLegend->AddEntry(legend_Background,"J/#psi BG","l");
+		CtauLegend->AddEntry(legend_Background,"J/#psi#gamma BG","l");
 		CtauLegend->AddEntry(legend_Comb_Background,"#mu#mu#gamma BG","l");
 	}
 	if(plotChic0) CtauLegend->AddEntry(legend_Chic0,"#chi_{c0}","l");
@@ -2597,7 +2597,7 @@ double plotLifetimeLSB(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 		double stepsizeTimes=1.9;
 		latex->SetTextColor(onia::colorPR);
 		latex->SetTextSize(textSize);
-		latex->DrawLatex(left,top,Form("f^{PRLSB}_{Bg}  =  %.3f",ws->var("var_fracBackgroundInPRLSB")->getVal()));
+		latex->DrawLatex(left,top,Form("f^{PRLSB}_{BG}  =  %.3f",ws->var("var_fracBackgroundInPRLSB")->getVal()));
 		top-=textSize*stepsizeTimes;
 		if(plotChic0){
 			latex->DrawLatex(left,top,Form("f^{PRLSB}_{PR#chi_{c0}}  =  %.3f",ws->var("var_fracPRChic0InPRLSB")->getVal()));
@@ -2619,7 +2619,7 @@ double plotLifetimeLSB(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 		}
 		latex->SetTextColor(onia::colorNP);
 		latex->SetTextSize(textSize);
-		latex->DrawLatex(left,top,Form("f^{NPLSB}_{Bg}  =  %.3f",ws->var("var_fracBackgroundInNPLSB")->getVal()));
+		latex->DrawLatex(left,top,Form("f^{NPLSB}_{BG}  =  %.3f",ws->var("var_fracBackgroundInNPLSB")->getVal()));
 		top-=textSize*stepsizeTimes;
 		if(plotChic0){
 			latex->DrawLatex(left,top,Form("f^{NPLSB}_{NP#chi_{c0}}  =  %.3f",ws->var("var_fracNPChic0InNPLSB")->getVal()));
@@ -2957,7 +2957,7 @@ double plotLifetimeRSB(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 	CtauLegend->SetBorderSize(0.);
 	CtauLegend->AddEntry(legend_Tot,"sum","l");
 	if(plotBackground){
-		CtauLegend->AddEntry(legend_Background,"J/#psi BG","l");
+		CtauLegend->AddEntry(legend_Background,"J/#psi#gamma BG","l");
 		CtauLegend->AddEntry(legend_Comb_Background,"#mu#mu#gamma BG","l");
 	}
 	if(plotChic0) CtauLegend->AddEntry(legend_Chic0,"#chi_{c0}","l");
@@ -3038,7 +3038,7 @@ double plotLifetimeRSB(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 		double stepsizeTimes=1.9;
 		latex->SetTextColor(onia::colorPR);
 		latex->SetTextSize(textSize);
-		latex->DrawLatex(left,top,Form("f^{PRRSB}_{Bg}  =  %.3f",ws->var("var_fracBackgroundInPRRSB")->getVal()));
+		latex->DrawLatex(left,top,Form("f^{PRRSB}_{BG}  =  %.3f",ws->var("var_fracBackgroundInPRRSB")->getVal()));
 		top-=textSize*stepsizeTimes;
 		if(plotChic2){
 			latex->DrawLatex(left,top,Form("f^{PRRSB}_{PR#chi_{c2}}  =  %.3f",ws->var("var_fracPRChic2InPRRSB")->getVal()));
@@ -3048,7 +3048,7 @@ double plotLifetimeRSB(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 		}
 		latex->SetTextColor(onia::colorNP);
 		latex->SetTextSize(textSize);
-		latex->DrawLatex(left,top,Form("f^{NPRSB}_{Bg}  =  %.3f",ws->var("var_fracBackgroundInNPRSB")->getVal()));
+		latex->DrawLatex(left,top,Form("f^{NPRSB}_{BG}  =  %.3f",ws->var("var_fracBackgroundInNPRSB")->getVal()));
 		top-=textSize*stepsizeTimes;
 		if(plotChic2){
 			latex->DrawLatex(left,top,Form("f^{NPRSB}_{NP#chi_{c2}}  =  %.3f",ws->var("var_fracNPChic2InNPRSB")->getVal()));
@@ -3109,42 +3109,42 @@ void latexFloatingLifetimePars(RooWorkspace *ws, TLatex* latex){
 	double stepsizeTimes=1.9;
 	latex->SetTextSize(textSize);
 	if(!ws->var("ctResolution")->isConstant()){
-	latex->DrawLatex(left,top,Form("#sigma^{scale}_{c#tau}  =  %.3f #pm %.3f",ws->var("ctResolution")->getVal(), ws->var("ctResolution")->getError()));
+	latex->DrawLatex(left,top,Form("#sigma^{scale}_{l}  =  %.3f #pm %.3f",ws->var("ctResolution")->getVal(), ws->var("ctResolution")->getError()));
 	top-=textSize*stepsizeTimes;
 	}
 	if(!ws->var("ctResolution2")->isConstant()){
-	latex->DrawLatex(left,top,Form("#sigma^{scale2}_{c#tau}  =  %.3f #pm %.3f",ws->var("ctResolution2")->getVal(), ws->var("ctResolution2")->getError()));
+	latex->DrawLatex(left,top,Form("#sigma^{scale2}_{l}  =  %.3f #pm %.3f",ws->var("ctResolution2")->getVal(), ws->var("ctResolution2")->getError()));
 	top-=textSize*stepsizeTimes;
 	}
 	if(!ws->var("fracGauss2")->isConstant()){
-	latex->DrawLatex(left,top,Form("f_{G2}  =  %.3f #pm %.3f",ws->var("fracGauss2")->getVal(), ws->var("fracGauss2")->getError()));
+	latex->DrawLatex(left,top,Form("f_{G_{2}}  =  %.3f #pm %.3f",ws->var("fracGauss2")->getVal(), ws->var("fracGauss2")->getError()));
 	top-=textSize*stepsizeTimes;
 	}
 	if(!ws->var("NP_TauChic")->isConstant()){
-	latex->DrawLatex(left,top,Form("#tau_{#chi_{cJ}}  =  %.3f #pm %.3f",ws->var("NP_TauChic")->getVal(), ws->var("NP_TauChic")->getError()));
+	latex->DrawLatex(left,top,Form("#tau^{NP}_{#chi_{cJ}}  =  %.3f #pm %.3f mm",ws->var("NP_TauChic")->getVal(), ws->var("NP_TauChic")->getError()));
 	top-=textSize*stepsizeTimes;
 	}
 	if(!ws->var("NP_TauBkg")->isConstant()){
-	latex->DrawLatex(left,top,Form("#tau_{Bg}  =  %.3f #pm %.3f",ws->var("NP_TauBkg")->getVal(), ws->var("NP_TauBkg")->getError()));
+	latex->DrawLatex(left,top,Form("#tau_{#psiBG}  =  %.3f #pm %.3f mm",ws->var("NP_TauBkg")->getVal(), ws->var("NP_TauBkg")->getError()));
 	top-=textSize*stepsizeTimes;
 	}
-	if(ws->var("FD_TauBkg")!=NULL)
-	if(!ws->var("FD_TauBkg")->isConstant()){
-	latex->DrawLatex(left,top,Form("#tau^{LS}_{Bg}  =  %.3f #pm %.3f",ws->var("FD_TauBkg")->getVal(), ws->var("FD_TauBkg")->getError()));
-	top-=textSize*stepsizeTimes;
-	}
-	if(ws->var("DSD_TauBkg")!=NULL)
-	if(!ws->var("DSD_TauBkg")->isConstant()){
-	latex->DrawLatex(left,top,Form("#tau^{DS}_{Bg}  =  %.3f #pm %.3f",ws->var("DSD_TauBkg")->getVal(), ws->var("DSD_TauBkg")->getError()));
-	top-=textSize*stepsizeTimes;
-	}
+	//if(ws->var("FD_TauBkg")!=NULL)
+	//if(!ws->var("FD_TauBkg")->isConstant()){
+	//latex->DrawLatex(left,top,Form("#tau^{LS}_{BG}  =  %.3f #pm %.3f mm",ws->var("FD_TauBkg")->getVal(), ws->var("FD_TauBkg")->getError()));
+	//top-=textSize*stepsizeTimes;
+	//}
+	//if(ws->var("DSD_TauBkg")!=NULL)
+	//if(!ws->var("DSD_TauBkg")->isConstant()){
+	//latex->DrawLatex(left,top,Form("#tau^{DS}_{BG}  =  %.3f #pm %.3f mm",ws->var("DSD_TauBkg")->getVal(), ws->var("DSD_TauBkg")->getError()));
+	//top-=textSize*stepsizeTimes;
+	//}
 	if(!ws->var("fBkgNP")->isConstant()){
-	latex->DrawLatex(left,top,Form("f^{Bg}_{NP}  =  %.3f #pm %.3f",ws->var("fBkgNP")->getVal(), ws->var("fBkgNP")->getError()));
+	latex->DrawLatex(left,top,Form("f^{#psiBG}_{NP}  =  %.3f #pm %.3f",ws->var("fBkgNP")->getVal(), ws->var("fBkgNP")->getError()));
 	top-=textSize*stepsizeTimes;
 	}
 	if(ws->var("fBkgFD")!=NULL)
 	if(!ws->var("fBkgFD")->isConstant()){
-	latex->DrawLatex(left,top,Form("f^{Bg}_{LS}  =  %.3f #pm %.3f",ws->var("fBkgFD")->getVal(), ws->var("fBkgFD")->getError()));
+	latex->DrawLatex(left,top,Form("f^{BG}_{LS}  =  %.3f #pm %.3f",ws->var("fBkgFD")->getVal(), ws->var("fBkgFD")->getError()));
 	top-=textSize*stepsizeTimes;
 	}
 	if(!ws->var("fracNP_chic0")->isConstant()){

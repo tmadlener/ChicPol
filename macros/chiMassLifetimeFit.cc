@@ -184,15 +184,21 @@ void chiMassLifetimeFit(const std::string &infilename, int rapBin, int ptBin, in
     ws->factory("PROD::ML_comb_background(M_background,L_comb_background|JpsictErr)");
     ws->factory("SUM::ML_signal(fracSignal_chic1[0.8,0.,1.]*ML_chic1, fracSignal_chic0[0.02,0.,0.06]*ML_chic0, ML_chic2)");
 
+	RooFormulaVar fracSignal_chic2("fracSignal_chic2","1-@0-@1",RooArgList(*ws->var("fracSignal_chic0"),*ws->var("fracSignal_chic1")));
+	ws->import(fracSignal_chic2);
+
     //full mass lifetime shape
-    ws->factory("SUM::ML_fullModelNonE(fracBackground[0.6,0.,1.]*ML_background, jpsi_fBkg*ML_comb_background, ML_signal)");
-    ws->factory(Form("ExtendPdf::ML_fullModel(ML_fullModelNonE, NumEvE[%f,%f,%f])",ev, ev/ExtensionFactor, ev*ExtensionFactor));
+    ws->factory("SUM::ML_fullModel(fracBackground[0.6,0.,1.]*ML_background, jpsi_fBkg*ML_comb_background, ML_signal)");
+    //ws->factory(Form("ExtendPdf::ML_fullModel(ML_fullModelNonE, NumEvE[%f,%f,%f])",ev, ev/ExtensionFactor, ev*ExtensionFactor));
 
     //full mass shape
     ws->factory("SUM::M_signal(fracSignal_chic1*M_chic1, fracSignal_chic0*M_chic0, M_chic2)");
-    ws->factory("SUM::M_fullModelNonE(fracBackground*M_background, jpsi_fBkg*M_background, M_signal)");
-    ws->factory("ExtendPdf::M_fullModel(M_fullModelNonE, NumEvE)");
+    ws->factory("SUM::M_fullModel(fracBackground*M_background, jpsi_fBkg*M_background, M_signal)");
+    //ws->factory("ExtendPdf::M_fullModel(M_fullModelNonE, NumEvE)");
 
+
+    RooRealVar NumEvE("NumEvE","NumEvE",0.);
+	ws->import(NumEvE);
 
 
 
@@ -254,6 +260,10 @@ void chiMassLifetimeFit(const std::string &infilename, int rapBin, int ptBin, in
     //else if(rapBin == 2){
     //    ws->var("ctResolution2")->setVal(1.5);
     //}
+
+
+    ws->var("CBn")->setVal(2.75);
+    ws->var("CBn")->setConstant(kTRUE);
 
 
     //Fix comb background from jpsi fit
@@ -394,7 +404,7 @@ void chiMassLifetimeFit(const std::string &infilename, int rapBin, int ptBin, in
     RooArgSet *NLLs = new RooArgSet();
     RooAbsReal *MassNLL = NULL;
 
-    MassNLL = (RooAbsReal *)fullPdf->createNLL(*data, NumCPU(4));
+    MassNLL = (RooAbsReal *)fullPdf->createNLL(*data, /*Extended(true), */NumCPU(4));
 
     NLLs->add(*MassNLL);
 

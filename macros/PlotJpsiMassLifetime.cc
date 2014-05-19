@@ -16,6 +16,7 @@
 #include "RooAbsReal.h"
 #include "RooDataHist.h"
 #include "RooHistPdf.h"
+#include "RooFormulaVar.h"
 
 using namespace RooFit;
 
@@ -23,6 +24,7 @@ double plotMass(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool SpeedP
 double plotMassRap(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool SpeedPlotting, int nSpeedPlotting, bool zoom);
 double plotLifeSig(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool SpeedPlotting, int nSpeedPlotting, bool zoom);
 double plotLifeBg(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool SpeedPlotting, int nSpeedPlotting, bool zoom, int SB);
+double plotJpsiPedagogical(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool SpeedPlotting, int nSpeedPlotting, bool zoom, int LinLog);
 void latexFloatingLifetimePars(RooWorkspace *ws, TLatex* latex, int region);
 //==============================================
 
@@ -66,6 +68,10 @@ void PlotMassLifetime(const std::string &infilename, int rapBin, int ptBin, int 
 			jpsi_chi2ndfbuffer = plotLifeSig(ws, rapBin, ptBin, nState, SpeedPlotting, nSpeedPlotting, true);
 			std::cout << ">>>>PlottingJpsi mass-rap" << std::endl;
 			jpsi_chi2ndfbuffer = plotMassRap(ws, rapBin, ptBin, nState, SpeedPlotting, nSpeedPlotting, false);
+			std::cout << ">>>>PlottingJpsi pedagogical lin" << std::endl;
+			jpsi_chi2ndfbuffer = plotJpsiPedagogical(ws, rapBin, ptBin, nState, SpeedPlotting, nSpeedPlotting, true, 1);
+			std::cout << ">>>>PlottingJpsi pedagogical log" << std::endl;
+			jpsi_chi2ndfbuffer = plotJpsiPedagogical(ws, rapBin, ptBin, nState, SpeedPlotting, nSpeedPlotting, true, 0);
 			break;
 		case 2:
 			std::cout << ">>>>PlottingJpsi mass" << std::endl;
@@ -96,6 +102,12 @@ void PlotMassLifetime(const std::string &infilename, int rapBin, int ptBin, int 
 			std::cout << ">>>>PlottingJpsi lifetime signal region" << std::endl;
 			jpsi_chi2ndfLifeSR = plotLifeSig(ws, rapBin, ptBin, nState, SpeedPlotting, nSpeedPlotting, false);
 			jpsi_chi2ndfbuffer = plotLifeSig(ws, rapBin, ptBin, nState, SpeedPlotting, nSpeedPlotting, true);
+			break;
+		case 7:
+			std::cout << ">>>>PlottingJpsi pedagogical lin" << std::endl;
+			jpsi_chi2ndfbuffer = plotJpsiPedagogical(ws, rapBin, ptBin, nState, SpeedPlotting, nSpeedPlotting, true, 1);
+			std::cout << ">>>>PlottingJpsi pedagogical log" << std::endl;
+			jpsi_chi2ndfbuffer = plotJpsiPedagogical(ws, rapBin, ptBin, nState, SpeedPlotting, nSpeedPlotting, true, 0);
 			break;
 		default:
 			std::cerr << "I do not know what do do with this value of PlottingJpsi" << std::endl;
@@ -136,7 +148,7 @@ double plotMass(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool SpeedP
 	int  nbins=90; //0.005 bin size
 	TGaxis::SetMaxDigits(3);
 
-	nbins=32;
+	//nbins=32;
 
 	gSystem->mkdir("Fit/jpsiFit",kTRUE);
 
@@ -260,14 +272,14 @@ double plotMass(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool SpeedP
 	sigMassShape_jpsi->plotOn(massFrame,
 			Normalization(nEntries*(1.-fracBkg),2),
 			LineStyle(2),
-			LineColor(kGreen+2),
+			LineColor(onia::ColorSumJpsiSignal),
 			LineWidth(2),
 			ProjWData(*JpsiRap, *data));
 	cout<<"plot bkgMassShape"<<endl;
 	bkgMassShape->plotOn(massFrame,
 			Normalization(nEntries*fracBkg,2),
 			LineStyle(2),
-			LineColor(kPink+3),
+			LineColor(onia::ColorMuMuBG),
 			LineWidth(2),
 			ProjWData(*JpsiRap, *data));
 
@@ -294,131 +306,157 @@ double plotMass(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool SpeedP
 
 	TH1* legendBlue = data->createHistogram("legendBlue",*JpsiMass,Binning(50)) ; legendBlue->SetLineColor(JpsiFitColor) ; legendBlue->SetLineStyle(kSolid) ; legendBlue->SetLineWidth(2) ;
 	TH1* legendBlueDash = data->createHistogram("legendBlueDash",*JpsiMass,Binning(50)) ; legendBlueDash->SetLineColor(kBlue) ; legendBlueDash->SetLineStyle(5) ; legendBlueDash->SetLineWidth(2) ;
-	TH1* legendRed = data->createHistogram("legendRed",*JpsiMass,Binning(50)) ; legendRed->SetLineColor(kRed) ; legendRed->SetLineStyle(2) ; legendRed->SetLineWidth(2) ;
+	TH1* legendRed = data->createHistogram("legendRed",*JpsiMass,Binning(50)) ; legendRed->SetLineColor(onia::ColorNPJpsi) ; legendRed->SetLineStyle(2) ; legendRed->SetLineWidth(2) ;
 	TH1* legendBlack = data->createHistogram("legendBlack",*JpsiMass,Binning(50)) ; legendBlack->SetLineColor(kBlack) ; legendBlack->SetLineStyle(kSolid) ; legendBlack->SetLineWidth(2) ;
-	TH1* legendGreen = data->createHistogram("legendGreen",*JpsiMass,Binning(50)) ; legendGreen->SetLineColor(kGreen+2) ; legendGreen->SetLineStyle(2) ; legendGreen->SetLineWidth(2) ;
-	TH1* legendGreenDash = data->createHistogram("legendGreenDash",*JpsiMass,Binning(50)) ; legendGreenDash->SetLineColor(kGreen+2) ; legendGreenDash->SetLineStyle(2) ; legendGreenDash->SetLineWidth(2) ;
-	TH1* legendPink = data->createHistogram("legendPink",*JpsiMass,Binning(50)) ; legendPink->SetLineColor(kPink+3) ; legendPink->SetLineStyle(7) ; legendPink->SetLineWidth(2) ;
+	TH1* legendGreen = data->createHistogram("legendGreen",*JpsiMass,Binning(50)) ; legendGreen->SetLineColor(onia::ColorSumJpsiSignal) ; legendGreen->SetLineStyle(2) ; legendGreen->SetLineWidth(2) ;
+	TH1* legendGreenDash = data->createHistogram("legendGreenDash",*JpsiMass,Binning(50)) ; legendGreenDash->SetLineColor(onia::ColorSumJpsiSignal) ; legendGreenDash->SetLineStyle(2) ; legendGreenDash->SetLineWidth(2) ;
+	TH1* legendPink = data->createHistogram("legendPink",*JpsiMass,Binning(50)) ; legendPink->SetLineColor(onia::ColorMuMuBG) ; legendPink->SetLineStyle(7) ; legendPink->SetLineWidth(2) ;
 
-	TLegend* MassLegend=new TLegend(0.7,0.55,0.88,0.75);
+	TLegend* MassLegend=new TLegend(0.78,0.35,0.905,0.5);
 	MassLegend->SetFillColor(kWhite);
 	MassLegend->SetTextFont(42);
 	MassLegend->SetTextSize(0.035);
 	MassLegend->SetBorderSize(0.);
 	MassLegend->AddEntry(legendBlue,"sum","l");
 	MassLegend->AddEntry(legendGreen,"J/#psi","l");
-	MassLegend->AddEntry(legendPink,"BG","l");
+	MassLegend->AddEntry(legendPink,"#mu#mu BG","l");
 
 	double left=0.7, top=0.9, textSize=0.03;
 	TLatex *latex=new TLatex();
-	latex->SetTextFont(42);
-	latex->SetNDC(kTRUE);
-	latex->SetTextSize(textSize);
-	double step=textSize*1.6;
 
 	gStyle->SetPadBottomMargin(0.08); //0.12
 	gStyle->SetPadLeftMargin(0.09); //0.12
 	gStyle->SetPadRightMargin(0.035); //0.05
 	gStyle->SetPadTopMargin(0.05); //0.05
 
+	TCanvas *c1;
+	TPad *pad1;
+	TPad *pad2;
 
-	TCanvas *c1=new TCanvas("c1","",1000,900);
+	for(int LinLog=0; LinLog<2; LinLog++){
+		cout<<"LinLog "<<LinLog<<endl;
 
-	c1->cd();
-	TPad *pad1 = new TPad("pad1","pad1",0.,0.,1.,0.3);
-	pad1->SetGridy();
-	pad1->SetBottomMargin(0.2);
-	pad1->Draw();
-	c1->cd();
-	TPad *pad2 = new TPad("pad2","pad2",0.,0.3,1.,1.);
-	pad2->Draw();
+		left=0.65, top=0.9, textSize=0.03;
+		latex->SetTextFont(42);
+		latex->SetNDC(kTRUE);
+		latex->SetTextSize(textSize);
+		double step=textSize*1.6;
 
-	pad2->cd(0);pad2->SetLogy(0);
+		c1=new TCanvas("c1","",1000,900);
 
-	massFrame->Draw(); MassLegend->Draw();
-	//lineSBLow->Draw("same"); lineSBHigh->Draw("same"); lineSigLow->Draw("same"); lineSigHigh->Draw("same");
-	top=0.885; textSize=0.030; latex->SetTextSize(textSize);
+		c1->cd();
+		pad1 = new TPad("pad1","pad1",0.,0.,1.,0.3);
+		pad1->SetGridy();
+		pad1->SetBottomMargin(0.2);
+		pad1->Draw();
+		c1->cd();
+		pad2 = new TPad("pad2","pad2",0.,0.3,1.,1.);
+		pad2->Draw();
 
-	latex->SetTextColor(kRed);
-	latex->DrawLatex(left,top,"J/#psi");
-	latex->SetTextColor(kBlack);
+		if(LinLog==1) massFrame->SetMinimum(massFrame->GetMaximum()*4e-3);
+		if(LinLog==1) massFrame->SetMaximum(massFrame->GetMaximum()*3.);
 
-	top-=step;
-	textSize=0.03; latex->SetTextSize(textSize);
+		pad2->cd(0);
+		if(LinLog==0) pad2->SetLogy(false);
+		if(LinLog==1) pad2->SetLogy(true);
 
+		massFrame->Draw(); MassLegend->Draw();
+		//lineSBLow->Draw("same"); lineSBHigh->Draw("same"); lineSigLow->Draw("same"); lineSigHigh->Draw("same");
+		top=0.885; textSize=0.030; latex->SetTextSize(textSize);
+		left=0.74;
 
-	if(rapBin==0) latex->DrawLatex(left,top,Form("%.1f < |y%s| < %.1f",onia::rapForPTRange[rapBin],onia::KinParticleChar,onia::rapForPTRange[2]));
-	else if(rapBin==1) latex->DrawLatex(left,top,Form("|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[rapBin]));
-	else latex->DrawLatex(left,top,Form("%.1f < |y%s| < %.1f",onia::rapForPTRange[rapBin-1],onia::KinParticleChar,onia::rapForPTRange[rapBin]));
-	top-=step;
-	if(ptBin==0)
-		latex->DrawLatex(left,top,Form("%.0f < p%s_{T} < %.0f GeV",onia::pTRange[rapBin][ptBin],onia::KinParticleChar,onia::pTRange[rapBin][onia::kNbPTBins[rapBin]]));
-	else
-		latex->DrawLatex(left,top,Form("%.0f < p%s_{T} < %.0f GeV",onia::pTRange[rapBin][ptBin-1],onia::KinParticleChar,onia::pTRange[rapBin][ptBin]));
+		latex->SetTextColor(kRed);
+		latex->DrawLatex(left,top,"J/#psi");
+		latex->SetTextColor(kBlack);
 
-
-	left=0.15; top=0.885; textSize=0.03;
-	latex->SetTextSize(textSize);
-	latex->DrawLatex(left,top,Form("#chi^{2}/ndf = %.1f / %d", chi2_Mass, ndof_Mass));
-	top-=step;
-	if(!ws->var("CBmass_p0_jpsi")->isConstant()){
-		latex->DrawLatex(left,top,Form("#mu_{p0}   =  %.3f #pm %.3f MeV",Meanp0*1000, Meanp0Err*1000));
 		top-=step;
-	}
-	if(!ws->var("CBmass_p1_jpsi")->isConstant()){
-		latex->DrawLatex(left,top,Form("#mu_{p1}   =  %.3f #pm %.3f MeV",Meanp1*1000, Meanp1Err*1000));
-		top-=step;
-	}
-	if(!ws->var("CBmass_p2_jpsi")->isConstant()){
-		latex->DrawLatex(left,top,Form("#mu_{p2}   =  %.3f #pm %.3f MeV",Meanp2*1000, Meanp2Err*1000));
-		top-=step;
-	}
-
-	if(!ws->var("CBsigma_p0_jpsi")->isConstant()){
-		latex->DrawLatex(left,top,Form("#sigma_{p0}  =  %.3f #pm %.3f MeV",Sigmap0*1000, Sigmap0Err*1000));
-		top-=step;
-	}
-	if(!ws->var("CBsigma_p1_jpsi")->isConstant()){
-		latex->DrawLatex(left,top,Form("#sigma_{p1}  =  %.3f #pm %.3f MeV",Sigmap1*1000, Sigmap1Err*1000));
-		top-=step;
-	}
-	if(!ws->var("CBsigma_p2_jpsi")->isConstant()){
-		latex->DrawLatex(left,top,Form("#sigma_{p2}  =  %.3f #pm %.3f MeV",Sigmap2*1000, Sigmap2Err*1000));
-		top-=step;
-	}
-
-	if(!ws->var("CBalpha_p0_jpsi")->isConstant()){
-		latex->DrawLatex(left,top,Form("#alpha_{p0}  =  %.3f #pm %.3f",Alphap0, Alphap0Err));
-		top-=step;
-	}
-	if(!ws->var("CBalpha_p1_jpsi")->isConstant()){
-		latex->DrawLatex(left,top,Form("#alpha_{p1}  =  %.3f #pm %.3f",Alphap1, Alphap1Err));
-		top-=step;
-	}
-	if(!ws->var("bkgLambda_jpsi")->isConstant()){
-		latex->DrawLatex(left,top,Form("#lambda_{BG} =  %.3f #pm %.3f",lambda, lambdaErr)); // change to has positive value
-		top-=step;
-	}
-	if(!ws->var("fracBkg_jpsi")->isConstant()){
-		latex->DrawLatex(left,top,Form("f_{Bg}  =  %.3f #pm %.3f",fracBkg, fracBkgErr));
-		top-=step;
-	}
-
-	top-=step;
-	latex->DrawLatex(left,top,Form("n_{CB}  =  %.1f",cbN));
+		textSize=0.03; latex->SetTextSize(textSize);
 
 
-	top-=step;
-	latex->DrawLatex(left,top,Form("effective #sigma =  %.3f MeV",ws->var("var_massres")->getVal()*1000));
-	top-=step;
-	latex->DrawLatex(left,top,Form("#frac{B}{B+S} (#pm3#sigma)  =  %.3f",ws->var("var_frac_jpsi_BGInSR")->getVal()));
+		if(rapBin==0) latex->DrawLatex(left,top,Form("%.1f < |y%s| < %.1f",onia::rapForPTRange[rapBin],onia::KinParticleChar,onia::rapForPTRange[2]));
+		else if(rapBin==1) latex->DrawLatex(left,top,Form("|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[rapBin]));
+		else latex->DrawLatex(left,top,Form("%.1f < |y%s| < %.1f",onia::rapForPTRange[rapBin-1],onia::KinParticleChar,onia::rapForPTRange[rapBin]));
+		top-=step;
+		if(ptBin==0)
+			latex->DrawLatex(left,top,Form("%.0f < p%s_{T} < %.0f GeV",onia::pTRange[rapBin][ptBin],onia::KinParticleChar,onia::pTRange[rapBin][onia::kNbPTBins[rapBin]]));
+		else
+			latex->DrawLatex(left,top,Form("%.0f < p%s_{T} < %.0f GeV",onia::pTRange[rapBin][ptBin-1],onia::KinParticleChar,onia::pTRange[rapBin][ptBin]));
 
-	pad1->cd(0); pad1->SetLogy(0);
-	massFramePull->Draw();
+		//left=0.675;
+		top-=step;
+		top-=step;
+		if(ws->var("CBn_jpsi")->isConstant()){
+			latex->DrawLatex(left,top,Form("n^{CB}_{#psi}  =  %.1f",cbN));
+			top-=step;
+		}
 
-	std::stringstream saveMass;
-	saveMass << "Fit/jpsiFit/mass_rap" << rapBin << "_pt" << ptBin << ".pdf";
-	c1->SaveAs(saveMass.str().c_str());
+		latex->DrawLatex(left,top,Form("effective #sigma =  %.3f MeV",ws->var("var_massres")->getVal()*1000));
+		top-=step;
+		latex->DrawLatex(left,top,Form("#frac{B}{B+S} (#pm3#sigma)  =  %.3f",ws->var("var_frac_jpsi_BGInSR")->getVal()));
+
+
+		left=0.15; top=0.885; textSize=0.03;
+		latex->SetTextSize(textSize);
+		latex->DrawLatex(left,top,Form("#chi^{2}/ndf = %.1f / %d", chi2_Mass, ndof_Mass));
+		top-=step;
+		if(!ws->var("CBmass_p0_jpsi")->isConstant()){
+			latex->DrawLatex(left,top,Form("#mu_{#psi}   =  %.3f #pm %.3f MeV",Meanp0*1000, Meanp0Err*1000));
+			top-=step;
+		}
+		if(!ws->var("CBmass_p1_jpsi")->isConstant()){
+			latex->DrawLatex(left,top,Form("#mu_{p1}   =  %.3f #pm %.3f MeV",Meanp1*1000, Meanp1Err*1000));
+			top-=step;
+		}
+		if(!ws->var("CBmass_p2_jpsi")->isConstant()){
+			latex->DrawLatex(left,top,Form("#mu_{p2}   =  %.3f #pm %.3f MeV",Meanp2*1000, Meanp2Err*1000));
+			top-=step;
+		}
+
+		if(!ws->var("CBsigma_p0_jpsi")->isConstant()){
+			latex->DrawLatex(left,top,Form("#sigma^{p0}_{#psi}  =  %.3f #pm %.3f MeV",Sigmap0*1000, Sigmap0Err*1000));
+			top-=step;
+		}
+		if(!ws->var("CBsigma_p1_jpsi")->isConstant()){
+			latex->DrawLatex(left,top,Form("#sigma^{p1}_{#psi}  =  %.3f #pm %.3f MeV",Sigmap1*1000, Sigmap1Err*1000));
+			top-=step;
+		}
+		if(!ws->var("CBsigma_p2_jpsi")->isConstant()){
+			latex->DrawLatex(left,top,Form("#sigma^{p2}_{#psi}  =  %.3f #pm %.3f MeV",Sigmap2*1000, Sigmap2Err*1000));
+			top-=step;
+		}
+
+		if(!ws->var("CBalpha_p0_jpsi")->isConstant()){
+			latex->DrawLatex(left,top,Form("#alpha^{CB}_{#psi}  =  %.3f #pm %.3f",Alphap0, Alphap0Err));
+			top-=step;
+		}
+		if(!ws->var("CBn_jpsi")->isConstant()){
+			latex->DrawLatex(left,top,Form("n^{CB}_{#psi}  =  %.3f #pm %.3f",cbN, cbNErr));
+			top-=step;
+		}
+		if(!ws->var("CBalpha_p1_jpsi")->isConstant()){
+			latex->DrawLatex(left,top,Form("#alpha_{p1}  =  %.3f #pm %.3f",Alphap1, Alphap1Err));
+			top-=step;
+		}
+		if(!ws->var("bkgLambda_jpsi")->isConstant()){
+			latex->DrawLatex(left,top,Form("#lambda_{BG} =  %.3f #pm %.3f GeV^{-1}",lambda, lambdaErr)); // change to has positive value
+			top-=step;
+		}
+		if(!ws->var("fracBkg_jpsi")->isConstant()){
+			latex->DrawLatex(left,top,Form("f^{#psi}_{#mu#muBG}  =  %.3f #pm %.3f",fracBkg, fracBkgErr));
+			top-=step;
+		}
+
+
+		pad1->cd(0); pad1->SetLogy(0);
+		massFramePull->Draw();
+
+		std::stringstream saveMass;
+		if(LinLog==0) saveMass << "Fit/jpsiFit/mass_lin_rap" << rapBin << "_pt" << ptBin << ".pdf";
+		if(LinLog==1) saveMass << "Fit/jpsiFit/mass_log_rap" << rapBin << "_pt" << ptBin << ".pdf";
+
+		c1->SaveAs(saveMass.str().c_str());
+
+	}
 
 	delete c1;
 	delete legendBlue;
@@ -681,6 +719,7 @@ double plotLifeSig(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool Spe
 	RooRealVar JpsiMass(*ws->var("JpsiMass"));
 	RooRealVar Jpsict(*ws->var("Jpsict"));
 	RooRealVar *JpsictErr = ws->var("JpsictErr");
+	RooFormulaVar *JpsictErrDeformed = (RooFormulaVar*)ws->function("JpsictErrDeformed");
 
 	RooPlot *ctauFrame=((RooRealVar*)ws->var("Jpsict"))->frame(Bins(nbins), Range(PlotMin, PlotMax));
 	ctauFrame->SetName(Form("ctausig_plot_rap%d_pt%d",rapBin,ptBin));
@@ -843,34 +882,34 @@ double plotLifeSig(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool Spe
 			ProjWData(*JpsictErr, *dataSRProj),
 			Normalization(fPrompt),
 			LineStyle(5),
-			LineColor(kBlue),
+			LineColor(onia::ColorPRJpsi),
 			LineWidth(2), NumCPU(1));
 
 	promptLifetime->plotOn(ctauFrame,
 			ProjWData(*JpsictErr, *dataSRProj),
 			Normalization(fPrompt*(1.-fracGauss2)),
 			LineStyle(5),
-			LineColor(kBlue),
+			LineColor(onia::ColorPRJpsi),
 			LineWidth(1.), NumCPU(1));
 	promptLifetime2->plotOn(ctauFrame,
 			ProjWData(*JpsictErr, *dataSRProj),
 			Normalization(fPrompt*fracGauss2),
 			LineStyle(5),
-			LineColor(kBlue),
+			LineColor(onia::ColorPRJpsi),
 			LineWidth(1.), NumCPU(1));
 
 	nonPromptSSD->plotOn(ctauFrame,
 			ProjWData(*JpsictErr, *dataSRProj),
 			Normalization(fNonPrompt),
 			LineStyle(2),
-			LineColor(kRed),
+			LineColor(onia::ColorNPJpsi),
 			LineWidth(2), NumCPU(1));
 
 	backgroundlifetime->plotOn(ctauFrame,
 			ProjWData(*JpsictErr, *dataSRProj),
 			Normalization(fBkg),
 			LineStyle(7),
-			LineColor(kPink+3),
+			LineColor(onia::ColorMuMuBG),
 			LineWidth(2), NumCPU(1));
 
 
@@ -933,7 +972,7 @@ double plotLifeSig(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool Spe
 	//jpsi_promptlifetime_asHistPdf->plotOn(ctauFrame,
 	//		Normalization(fPrompt),
 	//		LineStyle(5),
-	//		LineColor(kGreen+2),
+	//		LineColor(onia::ColorSumJpsiSignal),
 	//		LineWidth(2), NumCPU(1));
 
 
@@ -950,12 +989,12 @@ double plotLifeSig(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool Spe
 
 
 	TH1* legendBlue = dataSR->createHistogram("legendBlue",JpsiMass,Binning(50)) ; legendBlue->SetLineColor(JpsiFitColor) ; legendBlue->SetLineStyle(kSolid) ; legendBlue->SetLineWidth(2) ;
-	TH1* legendBlueDash = dataSR->createHistogram("legendBlueDash",JpsiMass,Binning(50)) ; legendBlueDash->SetLineColor(kBlue) ; legendBlueDash->SetLineStyle(5) ; legendBlueDash->SetLineWidth(2) ;
-	TH1* legendRed = dataSR->createHistogram("legendRed",JpsiMass,Binning(50)) ; legendRed->SetLineColor(kRed) ; legendRed->SetLineStyle(2) ; legendRed->SetLineWidth(2) ;
+	TH1* legendBlueDash = dataSR->createHistogram("legendBlueDash",JpsiMass,Binning(50)) ; legendBlueDash->SetLineColor(onia::ColorPRJpsi) ; legendBlueDash->SetLineStyle(5) ; legendBlueDash->SetLineWidth(2) ;
+	TH1* legendRed = dataSR->createHistogram("legendRed",JpsiMass,Binning(50)) ; legendRed->SetLineColor(onia::ColorNPJpsi) ; legendRed->SetLineStyle(2) ; legendRed->SetLineWidth(2) ;
 	TH1* legendBlack = dataSR->createHistogram("legendBlack",JpsiMass,Binning(50)) ; legendBlack->SetLineColor(kBlack) ; legendBlack->SetLineStyle(kSolid) ; legendBlack->SetLineWidth(2) ;
 	TH1* legendGreen = dataSR->createHistogram("legendGreen",JpsiMass,Binning(50)) ; legendGreen->SetLineColor(kGreen) ; legendGreen->SetLineStyle(kSolid) ; legendGreen->SetLineWidth(2) ;
 	TH1* legendGreenDash = dataSR->createHistogram("legendGreenDash",JpsiMass,Binning(50)) ; legendGreenDash->SetLineColor(kGreen) ; legendGreenDash->SetLineStyle(2) ; legendGreenDash->SetLineWidth(2) ;
-	TH1* legendPink = dataSR->createHistogram("legendPink",JpsiMass,Binning(50)) ; legendPink->SetLineColor(kPink+3) ; legendPink->SetLineStyle(7) ; legendPink->SetLineWidth(2) ;
+	TH1* legendPink = dataSR->createHistogram("legendPink",JpsiMass,Binning(50)) ; legendPink->SetLineColor(onia::ColorMuMuBG) ; legendPink->SetLineStyle(7) ; legendPink->SetLineWidth(2) ;
 
 
 	TLegend* LifetimeLegendSig=new TLegend(0.13,0.75,0.23,0.91);
@@ -966,7 +1005,7 @@ double plotLifeSig(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool Spe
 	LifetimeLegendSig->AddEntry(legendBlue,"sum","l");
 	LifetimeLegendSig->AddEntry(legendBlueDash,"PR J/#psi","l");
 	LifetimeLegendSig->AddEntry(legendRed,"NP J/#psi","l");
-	LifetimeLegendSig->AddEntry(legendPink,"BG","l");
+	LifetimeLegendSig->AddEntry(legendPink,"#mu#mu BG","l");
 
 	double left=0.5, top=0.9, textSize=0.03;
 	TLatex *latex=new TLatex();
@@ -1252,21 +1291,21 @@ double plotLifeBg(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool Spee
 			ProjWData(*JpsictErr, *dataSBProj),
 			Normalization(fPrompt),
 			LineStyle(5),
-			LineColor(kBlue),
+			LineColor(onia::ColorPRJpsi),
 			LineWidth(2), NumCPU(1));
 
 	nonPromptSSD->plotOn(ctauFrame,
 			ProjWData(*JpsictErr, *dataSBProj),
 			Normalization(fNonPrompt),
 			LineStyle(2),
-			LineColor(kRed),
+			LineColor(onia::ColorNPJpsi),
 			LineWidth(2), NumCPU(1));
 
 	backgroundlifetime->plotOn(ctauFrame,
 			ProjWData(*JpsictErr, *dataSBProj),
 			Normalization(fBkg),
 			LineStyle(7),
-			LineColor(kPink+3),
+			LineColor(onia::ColorMuMuBG),
 			LineWidth(2), NumCPU(1));
 
 
@@ -1278,12 +1317,12 @@ double plotLifeBg(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool Spee
 
 
 	TH1* legendBlue = dataSB->createHistogram("legendBlue",JpsiMass,Binning(50)) ; legendBlue->SetLineColor(JpsiFitColor) ; legendBlue->SetLineStyle(kSolid) ; legendBlue->SetLineWidth(2) ;
-	TH1* legendBlueDash = dataSB->createHistogram("legendBlueDash",JpsiMass,Binning(50)) ; legendBlueDash->SetLineColor(kBlue) ; legendBlueDash->SetLineStyle(5) ; legendBlueDash->SetLineWidth(2) ;
-	TH1* legendRed = dataSB->createHistogram("legendRed",JpsiMass,Binning(50)) ; legendRed->SetLineColor(kRed) ; legendRed->SetLineStyle(2) ; legendRed->SetLineWidth(2) ;
+	TH1* legendBlueDash = dataSB->createHistogram("legendBlueDash",JpsiMass,Binning(50)) ; legendBlueDash->SetLineColor(onia::ColorPRJpsi) ; legendBlueDash->SetLineStyle(5) ; legendBlueDash->SetLineWidth(2) ;
+	TH1* legendRed = dataSB->createHistogram("legendRed",JpsiMass,Binning(50)) ; legendRed->SetLineColor(onia::ColorNPJpsi) ; legendRed->SetLineStyle(2) ; legendRed->SetLineWidth(2) ;
 	TH1* legendBlack = dataSB->createHistogram("legendBlack",JpsiMass,Binning(50)) ; legendBlack->SetLineColor(kBlack) ; legendBlack->SetLineStyle(kSolid) ; legendBlack->SetLineWidth(2) ;
 	TH1* legendGreen = dataSB->createHistogram("legendGreen",JpsiMass,Binning(50)) ; legendGreen->SetLineColor(kGreen) ; legendGreen->SetLineStyle(kSolid) ; legendGreen->SetLineWidth(2) ;
 	TH1* legendGreenDash = dataSB->createHistogram("legendGreenDash",JpsiMass,Binning(50)) ; legendGreenDash->SetLineColor(kGreen) ; legendGreenDash->SetLineStyle(2) ; legendGreenDash->SetLineWidth(2) ;
-	TH1* legendPink = dataSB->createHistogram("legendPink",JpsiMass,Binning(50)) ; legendPink->SetLineColor(kPink+3) ; legendPink->SetLineStyle(7) ; legendPink->SetLineWidth(2) ;
+	TH1* legendPink = dataSB->createHistogram("legendPink",JpsiMass,Binning(50)) ; legendPink->SetLineColor(onia::ColorMuMuBG) ; legendPink->SetLineStyle(7) ; legendPink->SetLineWidth(2) ;
 
 
 	TLegend* LifetimeLegendSig=new TLegend(0.13,0.75,0.23,0.91);
@@ -1294,7 +1333,7 @@ double plotLifeBg(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool Spee
 	LifetimeLegendSig->AddEntry(legendBlue,"sum","l");
 	LifetimeLegendSig->AddEntry(legendBlueDash,"PR J/#psi","l");
 	LifetimeLegendSig->AddEntry(legendRed,"NP J/#psi","l");
-	LifetimeLegendSig->AddEntry(legendPink,"BG","l");
+	LifetimeLegendSig->AddEntry(legendPink,"#mu#mu BG","l");
 
 	double left=0.5, top=0.9, textSize=0.03;
 	TLatex *latex=new TLatex();
@@ -1393,6 +1432,571 @@ double plotLifeBg(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool Spee
 	return chi2_LSig/ndof_LSig;
 }
 
+
+//==============================================
+double plotJpsiPedagogical(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool SpeedPlotting, int nSpeedPlotting, bool zoom, int LinLog){
+
+	bool plotModels=true;
+
+	int  nbins=60; //0.005 bin size
+	TGaxis::SetMaxDigits(3);
+
+	double PlotMin;
+	double PlotMax;
+
+	PlotMin=2.875;
+	PlotMax=3.3;
+
+
+	gSystem->mkdir("Fit/jpsiFit",kTRUE);
+
+	double binWidth=(PlotMax-PlotMin)/double(nbins)*1000;
+
+	RooRealVar *JpsiMass = ws->var("JpsiMass");
+	assert( 0 != JpsiMass );
+	RooRealVar *JpsiRap = ws->var("JpsiRap");
+	assert( 0 != JpsiRap );
+
+	RooPlot *massFrame = JpsiMass->frame(Bins(nbins), Range(PlotMin, PlotMax));
+	assert ( 0 != massFrame );
+	massFrame->SetName(Form("mass_plot_rap%d_pt%d",rapBin,ptBin));
+	massFrame->SetTitle("");
+	massFrame->GetYaxis()->SetTitle(Form("Events / %1.0f MeV",binWidth));
+	massFrame->GetYaxis()->SetTitleOffset(0.7);
+
+
+	RooAbsData *data= ws->data(Form("jpsi_data_rap%d_pt%d",rapBin,ptBin));
+	assert ( 0 != data );
+	RooFitResult* fitRlt = dynamic_cast<RooFitResult*>(ws->obj(Form("m_fitresult_rap%d_pt%d",rapBin,ptBin)));
+	assert ( 0 != fitRlt);
+
+
+	double Mean = -1.0, MeanErr = -1.0;
+	getVarFromWorkspace(ws, "CBmass_p0_jpsi", Mean, MeanErr);
+	double Sigma = -1.0, SigmaErr = -1.0;
+	getVarFromWorkspace(ws, "var_massres", Sigma, SigmaErr);
+	double fracBkg = -1.0, fracBkgErr = -1.0;
+	getVarFromWorkspace(ws, "fracBkg_jpsi", fracBkg, fracBkgErr);
+
+	std::stringstream masssnapshotname;
+	masssnapshotname << "m_snapshot_rap" << rapBin << "_pt" << ptBin;
+	ws->loadSnapshot(masssnapshotname.str().c_str());
+
+	RooAbsPdf *massPdf = ws->pdf("massModel_jpsi");
+	assert ( 0 != massPdf );
+	RooAbsPdf *bkgMassShape = ws->pdf("bkgMassShape_jpsi");
+	assert ( 0 != bkgMassShape );
+	RooAbsPdf *sigMassShape_jpsi = ws->pdf("sigMassShape_jpsi");
+	assert ( 0 != sigMassShape_jpsi );
+	RooAbsPdf *gaussMassShape_jpsi = ws->pdf("gaussMassShape_jpsi");
+	assert ( 0 != gaussMassShape_jpsi );
+	RooAbsPdf *FullmassPdf = ws->pdf("FullmassPdf");
+	assert ( 0 != FullmassPdf );
+
+	int nEntries = data->numEntries();
+
+	int JpsiFitColor=633;
+
+	cout<<"plot data"<<endl;
+	data->plotOn(massFrame,MarkerSize(onia::markerSize_ML));
+	cout<<"plot FullmassPdf"<<endl;
+
+if(plotModels){
+	FullmassPdf->plotOn(massFrame,
+			Normalization(nEntries,2),
+			LineWidth(2),
+			LineColor(JpsiFitColor)
+			);
+
+
+	cout<<"plot sigMassShape_jpsi"<<endl;
+	sigMassShape_jpsi->plotOn(massFrame,
+			Normalization(nEntries*(1.-fracBkg),2),
+			LineStyle(2),
+			LineColor(onia::ColorSumJpsiSignal),
+			LineWidth(2),
+			ProjWData(*JpsiRap, *data));
+	cout<<"plot bkgMassShape"<<endl;
+	bkgMassShape->plotOn(massFrame,
+			Normalization(nEntries*fracBkg,2),
+			LineStyle(2),
+			LineColor(onia::ColorMuMuBG),
+			LineWidth(2),
+			ProjWData(*JpsiRap, *data));
+}
+
+	double minY = 0.;
+
+	double sbLowMass=Mean-onia::nSigBkgLow*Sigma;
+	double sbHighMass=Mean+onia::nSigBkgHigh*Sigma;
+	double sigMinMass=Mean-onia::nSigMass*Sigma;
+	double sigMaxMass=Mean+onia::nSigMass*Sigma;
+
+	double maxY = 0.;
+	maxY = massFrame->GetMaximum()*0.3;
+	double lineWidth = 2.0;
+	TLine *lineSBLow = new TLine(sbLowMass, minY, sbLowMass, maxY);
+	TLine *lineSBHigh = new TLine(sbHighMass, minY, sbHighMass, maxY);
+	TLine *lineSigLow = new TLine(sigMinMass, minY, sigMinMass, maxY);
+	TLine *lineSigHigh = new TLine(sigMaxMass, minY, sigMaxMass, maxY);
+	lineSBLow->SetLineWidth(lineWidth);lineSBHigh->SetLineWidth(lineWidth);
+	lineSigLow->SetLineWidth(lineWidth);lineSigHigh->SetLineWidth(lineWidth);
+	lineSBLow->SetLineColor(onia::ColorMuMuBG);lineSBHigh->SetLineColor(onia::ColorMuMuBG);
+	lineSigLow->SetLineColor(onia::ColorSumJpsiSignal);lineSigHigh->SetLineColor(onia::ColorSumJpsiSignal);
+	lineSBLow->SetLineStyle(7);lineSBHigh->SetLineStyle(7);
+	lineSigLow->SetLineStyle(5);lineSigHigh->SetLineStyle(5);
+
+	TH1* legendBlue = data->createHistogram("legendBlue",*JpsiMass,Binning(50)) ; legendBlue->SetLineColor(JpsiFitColor) ; legendBlue->SetLineStyle(kSolid) ; legendBlue->SetLineWidth(2) ;
+	TH1* legendBlueDash = data->createHistogram("legendBlueDash",*JpsiMass,Binning(50)) ; legendBlueDash->SetLineColor(onia::ColorPRJpsi) ; legendBlueDash->SetLineStyle(5) ; legendBlueDash->SetLineWidth(2) ;
+	TH1* legendRed = data->createHistogram("legendRed",*JpsiMass,Binning(50)) ; legendRed->SetLineColor(onia::ColorNPJpsi) ; legendRed->SetLineStyle(2) ; legendRed->SetLineWidth(2) ;
+	TH1* legendBlack = data->createHistogram("legendBlack",*JpsiMass,Binning(50)) ; legendBlack->SetLineColor(kBlack) ; legendBlack->SetLineStyle(kSolid) ; legendBlack->SetLineWidth(2) ;
+	TH1* legendGreen = data->createHistogram("legendGreen",*JpsiMass,Binning(50)) ; legendGreen->SetLineColor(onia::ColorSumJpsiSignal) ; legendGreen->SetLineStyle(2) ; legendGreen->SetLineWidth(2) ;
+	TH1* legendGreenDash = data->createHistogram("legendGreenDash",*JpsiMass,Binning(50)) ; legendGreenDash->SetLineColor(onia::ColorSumJpsiSignal) ; legendGreenDash->SetLineStyle(2) ; legendGreenDash->SetLineWidth(2) ;
+	TH1* legendPink = data->createHistogram("legendPink",*JpsiMass,Binning(50)) ; legendPink->SetLineColor(onia::ColorMuMuBG) ; legendPink->SetLineStyle(7) ; legendPink->SetLineWidth(2) ;
+
+	TLegend* MassLegend=new TLegend(0.1,0.585,0.3,0.925);
+	MassLegend->SetFillColor(kWhite);
+	MassLegend->SetTextFont(42);
+	MassLegend->SetTextSize(0.055);
+	MassLegend->SetBorderSize(0.);
+	MassLegend->AddEntry(legendBlue,"sum","l");
+	MassLegend->AddEntry(legendGreen,"PR+NP J/#psi","l");
+	MassLegend->AddEntry(legendBlueDash,"PR J/#psi","l");
+	MassLegend->AddEntry(legendRed,"NP J/#psi","l");
+	MassLegend->AddEntry(legendPink,"#mu#mu BG","l");
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	nbins=onia::LifetimePlotBins/3.;
+	TGaxis::SetMaxDigits(3);
+
+
+	if(zoom){
+		PlotMin=onia::ctPlotMinZoom;
+		PlotMax=onia::ctPlotMaxZoom;
+	}
+	else{
+		PlotMin=onia::ctPlotMin;
+		PlotMax=onia::ctPlotMax;
+	}
+
+	binWidth=(PlotMax-PlotMin)/double(nbins)*1000;
+
+	RooRealVar Jpsict(*ws->var("Jpsict"));
+	RooRealVar *JpsictErr = ws->var("JpsictErr");
+
+	double enlargeYby=onia::enlargeYby_ML;
+
+	RooFitResult* fitRltCtau = (RooFitResult*)ws->obj(Form("jpsi_l_fitresult_rap%d_pt%d",rapBin,ptBin));
+	if(!fitRltCtau) { cout<<">>=======Error: no Fit result object in workspace=========="<<endl; return 0.; }
+	fitRltCtau->Print();
+
+	RooAddModel *Prompt = (RooAddModel*)ws->pdf("jpsi_TotalPromptLifetime");
+	RooAbsPdf *nonPromptSSD = (RooAbsPdf*)ws->pdf("jpsi_nonPromptSSD");
+
+	RooAddPdf *ModelLifeLSB = (RooAddPdf*)ws->pdf("jpsi_backgroundlifetimeLnoC");
+	RooAddPdf *ModelLifeRSB = (RooAddPdf*)ws->pdf("jpsi_backgroundlifetimeRnoC");
+	RooAddPdf *ModelLifeSR = (RooAddPdf*)ws->pdf("jpsi_fulllifetimeSR");
+
+	RooAbsPdf *backgroundlifetimeLSB = (RooAbsPdf*)ws->pdf("jpsi_backgroundlifetimeLpre");
+	RooAbsPdf *backgroundlifetimeRSB = (RooAbsPdf*)ws->pdf("jpsi_backgroundlifetimeLpre");
+	RooAbsPdf *backgroundlifetimeSR = (RooAbsPdf*)ws->pdf("jpsi_backgroundlifetime");
+
+
+
+
+	RooRealVar *fBkgLSB_ = (RooRealVar*)ws->var("jpsi_fBkgLSB");
+	RooRealVar *fBkgRSB_ = (RooRealVar*)ws->var("jpsi_fBkgRSB");
+	RooRealVar *fBkgSR_ = (RooRealVar*)ws->var("jpsi_fBkg");
+	RooRealVar *fPromptLSB_ = (RooRealVar*)ws->function("jpsi_fPromptLSB");
+	RooRealVar *fPromptRSB_ = (RooRealVar*)ws->function("jpsi_fPromptRSB");
+	RooRealVar *fPromptSR_ = (RooRealVar*)ws->function("jpsi_fPrompt");
+
+	double fBkgLSB = fBkgLSB_->getVal();
+	double fPromptLSB = fPromptLSB_->getVal();
+	double fNonPromptLSB =  1.-fBkgLSB-fPromptLSB;
+
+	double fBkgRSB = fBkgRSB_->getVal();
+	double fPromptRSB = fPromptRSB_->getVal();
+	double fNonPromptRSB =  1.-fBkgRSB-fPromptRSB;
+
+	double fBkgSR = fBkgSR_->getVal();
+	double fPromptSR = fPromptSR_->getVal();
+	double fNonPromptSR =  1.-fBkgSR-fPromptSR;
+
+	double Ymax=0;
+
+
+	double ctauYOffset=1.75;
+
+	RooPlot *ctauFrameLSB=((RooRealVar*)ws->var("Jpsict"))->frame(Bins(nbins), Range(PlotMin, PlotMax));
+	ctauFrameLSB->SetName(Form("ctausig_plot_rap%d_pt%d",rapBin,ptBin));
+	ctauFrameLSB->GetYaxis()->SetTitle(Form("Events / %1.0f micron",binWidth));
+	ctauFrameLSB->SetTitle("");
+	ctauFrameLSB->GetYaxis()->SetTitleOffset(ctauYOffset);
+
+	RooDataSet *dataLSB=(RooDataSet *)ws->data(Form("data_rap%d_pt%d_LSB",rapBin,ptBin));
+    RooAbsData* dataLSBProj;
+    if(SpeedPlotting){
+    	dataLSBProj = dataLSB->reduce(EventRange(0,nSpeedPlotting));
+    }
+    else{
+    	dataLSBProj = dataLSB->reduce(EventRange(0,1e10));
+    }
+    cout<<"number of events in dataLSB = "<<dataLSB->numEntries()<<endl;
+    cout<<"number of events in dataLSBProj = "<<dataLSBProj->numEntries()<<endl;
+
+	cout<<"dataLSB->numEntries: "<<dataLSB->numEntries()<<endl;
+
+
+	//ploting signal region
+	dataLSB->plotOn(ctauFrameLSB,MarkerSize(onia::markerSize_ML), Name("myHist"));
+
+	maxY = ctauFrameLSB->GetMaximum()*enlargeYby;
+	minY = 5e-1;
+	ctauFrameLSB->GetYaxis()->SetRangeUser(minY,maxY);
+
+if(plotModels){
+	ModelLifeLSB->plotOn(ctauFrameLSB,
+			ProjWData(*JpsictErr, *dataLSBProj),
+			LineWidth(2),
+			LineColor(JpsiFitColor),
+			NumCPU(1),
+			Name("myCurve"));
+
+
+	Prompt->plotOn(ctauFrameLSB,
+			ProjWData(*JpsictErr, *dataLSBProj),
+			Normalization(fPromptLSB),
+			LineStyle(5),
+			LineColor(onia::ColorPRJpsi),
+			LineWidth(2), NumCPU(1));
+
+	nonPromptSSD->plotOn(ctauFrameLSB,
+			ProjWData(*JpsictErr, *dataLSBProj),
+			Normalization(fNonPromptLSB),
+			LineStyle(2),
+			LineColor(onia::ColorNPJpsi),
+			LineWidth(2), NumCPU(1));
+
+	backgroundlifetimeLSB->plotOn(ctauFrameLSB,
+			ProjWData(*JpsictErr, *dataLSBProj),
+			Normalization(fBkgLSB),
+			LineStyle(7),
+			LineColor(onia::ColorMuMuBG),
+			LineWidth(2), NumCPU(1));
+}
+
+	Ymax = ctauFrameLSB->GetMaximum();
+	cout<<"Ymax: "<<Ymax<<endl;
+	ctauFrameLSB->SetMaximum(Ymax);
+	ctauFrameLSB->SetMinimum(1.1);
+
+
+
+
+
+	RooPlot *ctauFrameRSB=((RooRealVar*)ws->var("Jpsict"))->frame(Bins(nbins), Range(PlotMin, PlotMax));
+	ctauFrameRSB->SetName(Form("ctausig_plot_rap%d_pt%d",rapBin,ptBin));
+	ctauFrameRSB->GetYaxis()->SetTitle(Form("Events / %1.0f micron",binWidth));
+	ctauFrameRSB->SetTitle("");
+	ctauFrameRSB->GetYaxis()->SetTitleOffset(ctauYOffset);
+
+	RooDataSet *dataRSB=(RooDataSet *)ws->data(Form("data_rap%d_pt%d_RSB",rapBin,ptBin));
+    RooAbsData* dataRSBProj;
+    if(SpeedPlotting){
+    	dataRSBProj = dataRSB->reduce(EventRange(0,nSpeedPlotting));
+    }
+    else{
+    	dataRSBProj = dataRSB->reduce(EventRange(0,1e10));
+    }
+    cout<<"number of events in dataRSB = "<<dataRSB->numEntries()<<endl;
+    cout<<"number of events in dataRSBProj = "<<dataRSBProj->numEntries()<<endl;
+
+	cout<<"dataRSB->numEntries: "<<dataRSB->numEntries()<<endl;
+
+
+	//ploting signal region
+	dataRSB->plotOn(ctauFrameRSB,MarkerSize(onia::markerSize_ML), Name("myHist"));
+
+	maxY = ctauFrameRSB->GetMaximum()*enlargeYby;
+	minY = 5e-1;
+	ctauFrameRSB->GetYaxis()->SetRangeUser(minY,maxY);
+
+if(plotModels){
+	ModelLifeRSB->plotOn(ctauFrameRSB,
+			ProjWData(*JpsictErr, *dataRSBProj),
+			LineWidth(2),
+			LineColor(JpsiFitColor),
+			NumCPU(1),
+			Name("myCurve"));
+
+
+	Prompt->plotOn(ctauFrameRSB,
+			ProjWData(*JpsictErr, *dataRSBProj),
+			Normalization(fPromptRSB),
+			LineStyle(5),
+			LineColor(onia::ColorPRJpsi),
+			LineWidth(2), NumCPU(1));
+
+	nonPromptSSD->plotOn(ctauFrameRSB,
+			ProjWData(*JpsictErr, *dataRSBProj),
+			Normalization(fNonPromptRSB),
+			LineStyle(2),
+			LineColor(onia::ColorNPJpsi),
+			LineWidth(2), NumCPU(1));
+
+	backgroundlifetimeRSB->plotOn(ctauFrameRSB,
+			ProjWData(*JpsictErr, *dataRSBProj),
+			Normalization(fBkgRSB),
+			LineStyle(7),
+			LineColor(onia::ColorMuMuBG),
+			LineWidth(2), NumCPU(1));
+}
+
+	Ymax = ctauFrameRSB->GetMaximum();
+	cout<<"Ymax: "<<Ymax<<endl;
+	ctauFrameRSB->SetMaximum(Ymax);
+	ctauFrameRSB->SetMinimum(1.1);
+
+
+
+
+
+	RooPlot *ctauFrameSR=((RooRealVar*)ws->var("Jpsict"))->frame(Bins(nbins), Range(PlotMin, PlotMax));
+	ctauFrameSR->SetName(Form("ctausig_plot_rap%d_pt%d",rapBin,ptBin));
+	ctauFrameSR->GetYaxis()->SetTitle(Form("Events / %1.0f micron",binWidth));
+	ctauFrameSR->SetTitle("");
+	ctauFrameSR->GetYaxis()->SetTitleOffset(ctauYOffset);
+
+	RooDataSet *dataSR=(RooDataSet *)ws->data(Form("data_rap%d_pt%d_SR",rapBin,ptBin));
+    RooAbsData* dataSRProj;
+    if(SpeedPlotting){
+    	dataSRProj = dataSR->reduce(EventRange(0,nSpeedPlotting));
+    }
+    else{
+    	dataSRProj = dataSR->reduce(EventRange(0,1e10));
+    }
+    cout<<"number of events in dataSR = "<<dataSR->numEntries()<<endl;
+    cout<<"number of events in dataSRProj = "<<dataSRProj->numEntries()<<endl;
+
+	cout<<"dataSR->numEntries: "<<dataSR->numEntries()<<endl;
+
+
+	//ploting signal region
+	dataSR->plotOn(ctauFrameSR,MarkerSize(onia::markerSize_ML), Name("myHist"));
+
+	maxY = ctauFrameSR->GetMaximum()*enlargeYby;
+	minY = 5e-1;
+	ctauFrameSR->GetYaxis()->SetRangeUser(minY,maxY);
+
+if(plotModels){
+	ModelLifeSR->plotOn(ctauFrameSR,
+			ProjWData(*JpsictErr, *dataSRProj),
+			LineWidth(2),
+			LineColor(JpsiFitColor),
+			NumCPU(1),
+			Name("myCurve"));
+
+
+	Prompt->plotOn(ctauFrameSR,
+			ProjWData(*JpsictErr, *dataSRProj),
+			Normalization(fPromptSR),
+			LineStyle(5),
+			LineColor(onia::ColorPRJpsi),
+			LineWidth(2), NumCPU(1));
+
+	nonPromptSSD->plotOn(ctauFrameSR,
+			ProjWData(*JpsictErr, *dataSRProj),
+			Normalization(fNonPromptSR),
+			LineStyle(2),
+			LineColor(onia::ColorNPJpsi),
+			LineWidth(2), NumCPU(1));
+
+	backgroundlifetimeSR->plotOn(ctauFrameSR,
+			ProjWData(*JpsictErr, *dataSRProj),
+			Normalization(fBkgSR),
+			LineStyle(7),
+			LineColor(onia::ColorMuMuBG),
+			LineWidth(2), NumCPU(1));
+}
+
+	Ymax = ctauFrameSR->GetMaximum();
+	cout<<"Ymax: "<<Ymax<<endl;
+	ctauFrameSR->SetMaximum(Ymax);
+	ctauFrameSR->SetMinimum(1.1);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	if(LinLog==1) ctauFrameSR->SetMinimum(0.5);
+	if(LinLog==1) ctauFrameLSB->SetMinimum(0.5);
+	if(LinLog==1) ctauFrameRSB->SetMinimum(0.5);
+	if(LinLog==1) ctauFrameSR->SetMaximum(ctauFrameSR->GetMaximum()*3.);
+	if(LinLog==1) ctauFrameLSB->SetMaximum(ctauFrameLSB->GetMaximum()*3.);
+	if(LinLog==1) ctauFrameRSB->SetMaximum(ctauFrameRSB->GetMaximum()*3.);
+
+	if(LinLog==1) massFrame->SetMinimum(massFrame->GetMaximum()*4e-3);
+	if(LinLog==1) massFrame->SetMaximum(massFrame->GetMaximum()*3.);
+
+	double left=0.5, top=0.9, textSize=0.03;
+	TLatex *latex=new TLatex();
+	latex->SetTextFont(42);
+	latex->SetNDC(kTRUE);
+	latex->SetTextSize(textSize);
+	double step=textSize*1.6;
+
+
+	TCanvas *c1;
+	TPad *pad1;
+	TPad *pad2;
+	TPad *pad3;
+	TPad *pad4;
+
+
+    c1=new TCanvas("c1","",1200,900);
+
+    c1->cd();
+    pad1 = new TPad("pad1","pad1",0.,0.5,1.,1.);
+    pad1->Draw();
+    c1->cd();
+    pad2 = new TPad("pad2","pad2",0.,0.,1./3.,0.5);
+    pad2->Draw();
+    c1->cd();
+    pad3 = new TPad("pad3","pad3",1./3.,0.,2./3.,0.5);
+    pad3->Draw();
+    c1->cd();
+    pad4 = new TPad("pad4","pad4",2./3.,0.,3./3.,0.5);
+    pad4->Draw();
+
+    double bottomMargin=0.08;
+    double leftMargin=0.05;
+    double rightMargin=0.01;
+    double topMargin=0.05;
+
+    pad1->SetBottomMargin(bottomMargin);
+    pad1->SetLeftMargin(leftMargin);
+    pad1->SetRightMargin(rightMargin);
+    pad1->SetTopMargin(topMargin);
+
+    pad2->SetBottomMargin(bottomMargin);
+    pad2->SetLeftMargin(leftMargin*3.);
+    pad2->SetRightMargin(rightMargin*3.);
+    pad2->SetTopMargin(topMargin);
+
+    pad3->SetBottomMargin(bottomMargin);
+    pad3->SetLeftMargin(leftMargin*3.);
+    pad3->SetRightMargin(rightMargin*3.);
+    pad3->SetTopMargin(topMargin);
+
+    pad4->SetBottomMargin(bottomMargin);
+    pad4->SetLeftMargin(leftMargin*3.);
+    pad4->SetRightMargin(rightMargin*3.);
+    pad4->SetTopMargin(topMargin);
+
+
+    pad1->cd(0);
+    if(LinLog==0) pad1->SetLogy(false);
+    if(LinLog==1) pad1->SetLogy(true);
+    pad2->cd(0);
+    if(LinLog==0) pad2->SetLogy(false);
+    if(LinLog==1) pad2->SetLogy(true);
+    pad3->cd(0);
+    if(LinLog==0) pad3->SetLogy(false);
+    if(LinLog==1) pad3->SetLogy(true);
+    pad4->cd(0);
+    if(LinLog==0) pad4->SetLogy(false);
+    if(LinLog==1) pad4->SetLogy(true);
+
+    pad1->cd(0);
+    massFrame->Draw();
+    MassLegend->Draw();
+    lineSBLow->Draw("same");
+    lineSBHigh->Draw("same");
+    lineSigLow->Draw("same");
+    lineSigHigh->Draw("same");
+
+    left=0.8; top=0.855; textSize=0.060; latex->SetTextSize(textSize);
+    if(rapBin==0) latex->DrawLatex(left,top,Form("|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[2]));
+    else if(rapBin==1) latex->DrawLatex(left,top,Form("|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[rapBin]));
+    else latex->DrawLatex(left,top,Form("%.1f < |y%s| < %.1f",onia::rapForPTRange[rapBin-1],onia::KinParticleChar,onia::rapForPTRange[rapBin]));
+    step=textSize*1.6;
+    top-=step;
+    if(ptBin==0)
+    	latex->DrawLatex(left,top,Form("%.0f < p%s_{T} < %.0f GeV",onia::pTRange[rapBin][ptBin],onia::KinParticleChar,onia::pTRange[rapBin][onia::kNbPTBins[rapBin]]));
+    else
+    	latex->DrawLatex(left,top,Form("%.0f < p%s_{T} < %.0f GeV",onia::pTRange[rapBin][ptBin-1],onia::KinParticleChar,onia::pTRange[rapBin][ptBin]));
+
+
+    pad2->cd(0);
+    ctauFrameLSB->Draw();
+
+    left=0.7; top=0.855; textSize=0.065; latex->SetTextSize(textSize);
+    latex->SetTextColor(kRed);
+    latex->DrawLatex(left,top,Form("J/#psi LSB"));
+
+    pad3->cd(0);
+    ctauFrameSR->Draw();
+
+    left=0.7; top=0.855; textSize=0.065; latex->SetTextSize(textSize);
+    latex->SetTextColor(kRed);
+    latex->DrawLatex(left,top,Form("J/#psi SR"));
+
+    pad4->cd(0);
+    ctauFrameRSB->Draw();
+
+    left=0.7; top=0.855; textSize=0.065; latex->SetTextSize(textSize);
+    latex->SetTextColor(kRed);
+    latex->DrawLatex(left,top,Form("J/#psi RSB"));
+
+
+    std::stringstream saveCtau;
+    if(!zoom){
+    	if(LinLog==0) saveCtau << "Fit/jpsiFit/pedagogical_lin_rap" << rapBin << "_pt" << ptBin << ".pdf";
+    	if(LinLog==1) saveCtau << "Fit/jpsiFit/pedagogical_log_rap" << rapBin << "_pt" << ptBin << ".pdf";
+    }
+    else{
+    	if(LinLog==0) saveCtau << "Fit/jpsiFit/pedagogical_zoom_lin_rap" << rapBin << "_pt" << ptBin << ".pdf";
+    	if(LinLog==1) saveCtau << "Fit/jpsiFit/pedagogical_zoom_log_rap" << rapBin << "_pt" << ptBin << ".pdf";
+    }
+
+    c1->SaveAs(saveCtau.str().c_str());
+
+
+	delete c1;
+	delete legendBlue;
+	delete legendBlueDash;
+	delete legendRed;
+	delete legendBlack;
+	delete legendGreen;
+	delete legendGreenDash;
+	delete legendPink;
+}
+
 void latexFloatingLifetimePars(RooWorkspace *ws, TLatex* latex, int region){
 
 
@@ -1410,27 +2014,27 @@ void latexFloatingLifetimePars(RooWorkspace *ws, TLatex* latex, int region){
 		top-=textSize*stepsizeTimes;
 		}
 		if(!ws->var("jpsi_ctResolution")->isConstant()){
-		latex->DrawLatex(left,top,Form("#sigma^{scale}_{c#tau}  =  %.3f #pm %.3f",ws->var("jpsi_ctResolution")->getVal(), ws->var("jpsi_ctResolution")->getError()));
+		latex->DrawLatex(left,top,Form("#sigma^{scale}_{l}  =  %.3f #pm %.3f",ws->var("jpsi_ctResolution")->getVal(), ws->var("jpsi_ctResolution")->getError()));
 		top-=textSize*stepsizeTimes;
 		}
 		if(!ws->var("jpsi_ctResolution2")->isConstant()){
-		latex->DrawLatex(left,top,Form("#sigma^{scale2}_{c#tau}  =  %.3f #pm %.3f",ws->var("jpsi_ctResolution2")->getVal(), ws->var("jpsi_ctResolution2")->getError()));
+		latex->DrawLatex(left,top,Form("#sigma^{scale2}_{l}  =  %.3f #pm %.3f",ws->var("jpsi_ctResolution2")->getVal(), ws->var("jpsi_ctResolution2")->getError()));
 		top-=textSize*stepsizeTimes;
 		}
 		if(!ws->var("jpsi_fracGauss2")->isConstant()){
-		latex->DrawLatex(left,top,Form("f_{G2}  =  %.3f #pm %.3f",ws->var("jpsi_fracGauss2")->getVal(), ws->var("jpsi_fracGauss2")->getError()));
+		latex->DrawLatex(left,top,Form("f_{G_{2}}  =  %.3f #pm %.3f",ws->var("jpsi_fracGauss2")->getVal(), ws->var("jpsi_fracGauss2")->getError()));
 		top-=textSize*stepsizeTimes;
 		}
 		if(!ws->var("jpsi_fPrompt")->isConstant()){
-		latex->DrawLatex(left,top,Form("f_{P}  =  %.3f #pm %.3f",ws->var("jpsi_fPrompt")->getVal(), ws->var("jpsi_fPrompt")->getError()));
+		latex->DrawLatex(left,top,Form("f^{#psiSR}_{PR}  =  %.3f #pm %.3f",ws->var("jpsi_fPrompt")->getVal(), ws->var("jpsi_fPrompt")->getError()));
 		top-=textSize*stepsizeTimes;
 		}
 		if(!ws->var("jpsi_fBkg")->isConstant()){
-		latex->DrawLatex(left,top,Form("f^{SR}_{BG}  =  %.3f #pm %.3f",ws->var("jpsi_fBkg")->getVal(), ws->var("jpsi_fBkg")->getError()));
+		latex->DrawLatex(left,top,Form("f^{#psiSR}_{BG}  =  %.3f #pm %.3f",ws->var("jpsi_fBkg")->getVal(), ws->var("jpsi_fBkg")->getError()));
 		top-=textSize*stepsizeTimes;
 		}
 		if(!ws->var("jpsi_nonPromptTau")->isConstant()){
-		latex->DrawLatex(left,top,Form("#tau_{NP}  =  %.3f #pm %.3f",ws->var("jpsi_nonPromptTau")->getVal(), ws->var("jpsi_nonPromptTau")->getError()));
+		latex->DrawLatex(left,top,Form("#tau_{NP}  =  %.3f #pm %.3f mm",ws->var("jpsi_nonPromptTau")->getVal(), ws->var("jpsi_nonPromptTau")->getError()));
 		top-=textSize*stepsizeTimes;
 		}
 		latex->DrawLatex(left,top,Form("f_{B}   =  %.3f ",(1.-ws->var("jpsi_fPrompt")->getVal()-ws->var("jpsi_fBkg")->getVal())/(1.-ws->var("jpsi_fBkg")->getVal())));
@@ -1446,15 +2050,15 @@ void latexFloatingLifetimePars(RooWorkspace *ws, TLatex* latex, int region){
 		top-=textSize*stepsizeTimes;
 		}
 		if(!ws->var("jpsi_bkgTauSSD")->isConstant()){
-		latex->DrawLatex(left,top,Form("#tau^{RS}_{BG}  =  %.3f #pm %.3f",ws->var("jpsi_bkgTauSSD")->getVal(), ws->var("jpsi_bkgTauSSD")->getError()));
+		latex->DrawLatex(left,top,Form("#tau^{RS}_{BG}  =  %.3f #pm %.3f mm",ws->var("jpsi_bkgTauSSD")->getVal(), ws->var("jpsi_bkgTauSSD")->getError()));
 		top-=textSize*stepsizeTimes;
 		}
 		if(!ws->var("jpsi_bkgTauDSD")->isConstant()){
-		latex->DrawLatex(left,top,Form("#tau^{DS}_{BG}  =  %.3f #pm %.3f",ws->var("jpsi_bkgTauDSD")->getVal(), ws->var("jpsi_bkgTauDSD")->getError()));
+		latex->DrawLatex(left,top,Form("#tau^{DS}_{BG}  =  %.3f #pm %.3f mm",ws->var("jpsi_bkgTauDSD")->getVal(), ws->var("jpsi_bkgTauDSD")->getError()));
 		top-=textSize*stepsizeTimes;
 		}
 		if(!ws->var("jpsi_bkgTauFD")->isConstant()){
-		latex->DrawLatex(left,top,Form("#tau^{LS}_{BG}  =  %.3f #pm %.3f",ws->var("jpsi_bkgTauFD")->getVal(), ws->var("jpsi_bkgTauFD")->getError()));
+		latex->DrawLatex(left,top,Form("#tau^{LS}_{BG}  =  %.3f #pm %.3f mm",ws->var("jpsi_bkgTauFD")->getVal(), ws->var("jpsi_bkgTauFD")->getError()));
 		top-=textSize*stepsizeTimes;
 		}
 

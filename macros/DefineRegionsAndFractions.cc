@@ -29,9 +29,11 @@ void DefineRegionsAndFractions(const std::string &infilename, int rapBin, int pt
 
     RooAbsPdf *fullPdf;
     RooAbsPdf *fullMassPdf;
+    RooAbsPdf *backgroundMassPdf;
 
     fullPdf = (RooAbsPdf*)ws->pdf("ML_fullModel");
     fullMassPdf = (RooAbsPdf*)ws->pdf("M_fullModel");
+
 	RooAbsPdf *Prompt = (RooAbsPdf*)ws->pdf("L_TotalPromptLifetime");
 
 
@@ -44,8 +46,8 @@ void DefineRegionsAndFractions(const std::string &infilename, int rapBin, int pt
 
     data->Print("v");
 
-    double ev = ws->var("NumEvE")->getVal();
-    //double ev = data_ev;
+    //double ev = ws->var("NumEvE")->getVal();
+    double ev = data_ev;
 
 
     //-------------------------------- Plotting -----------------------------------------
@@ -235,8 +237,77 @@ void DefineRegionsAndFractions(const std::string &infilename, int rapBin, int pt
     ws->var("chicMass")->setRange("LSB", lsbMinMass, lsbMaxMass);
     ws->var("chicMass")->setRange("RSB", rsbMinMass, rsbMaxMass);
 
+
+    //Calculate fLSBchi
+
+
+    double meanChiLSB;
+    double meanChiRSB;
+    double meanChiSR1;
+    double meanChiSR2;
+
+	RooAbsReal* real_fL_int;
+
+
+    double MassDist=0.0001;
+
+    mass->setRange("testregion", lsbMinMass, lsbMaxMass);
+	real_fL_int = ws->pdf("M_background")->createIntegral(RooArgSet(*mass), NormSet(RooArgSet(*mass)), Range("testregion"));
+    double IntLSB = real_fL_int->getVal();
+    for(int i=1;i<1000000;i++){
+		mass->setRange("testregion", lsbMinMass, lsbMinMass+i*MassDist);
+		real_fL_int = ws->pdf("M_background")->createIntegral(RooArgSet(*mass), NormSet(RooArgSet(*mass)), Range("testregion"));
+		if(real_fL_int->getVal()>IntLSB/2.) {meanChiLSB=lsbMinMass+i*MassDist; break;}
+    }
+    mass->setRange("testregion", rsbMinMass, rsbMaxMass);
+	real_fL_int = ws->pdf("M_background")->createIntegral(RooArgSet(*mass), NormSet(RooArgSet(*mass)), Range("testregion"));
+    double IntRSB = real_fL_int->getVal();
+    for(int i=1;i<1000000;i++){
+		mass->setRange("testregion", rsbMinMass, rsbMinMass+i*MassDist);
+		real_fL_int = ws->pdf("M_background")->createIntegral(RooArgSet(*mass), NormSet(RooArgSet(*mass)), Range("testregion"));
+		if(real_fL_int->getVal()>IntRSB/2.) {meanChiRSB=rsbMinMass+i*MassDist; break;}
+    }
+    mass->setRange("testregion", sig1MinMass, sig1MaxMass);
+	real_fL_int = ws->pdf("M_background")->createIntegral(RooArgSet(*mass), NormSet(RooArgSet(*mass)), Range("testregion"));
+    double IntSR1 = real_fL_int->getVal();
+    for(int i=1;i<1000000;i++){
+		mass->setRange("testregion", sig1MinMass, sig1MinMass+i*MassDist);
+		real_fL_int = ws->pdf("M_background")->createIntegral(RooArgSet(*mass), NormSet(RooArgSet(*mass)), Range("testregion"));
+		if(real_fL_int->getVal()>IntSR1/2.) {meanChiSR1=sig1MinMass+i*MassDist; break;}
+    }
+    mass->setRange("testregion", sig2MinMass, sig2MaxMass);
+	real_fL_int = ws->pdf("M_background")->createIntegral(RooArgSet(*mass), NormSet(RooArgSet(*mass)), Range("testregion"));
+    double IntSR2 = real_fL_int->getVal();
+    for(int i=1;i<1000000;i++){
+		mass->setRange("testregion", sig2MinMass, sig2MinMass+i*MassDist);
+		real_fL_int = ws->pdf("M_background")->createIntegral(RooArgSet(*mass), NormSet(RooArgSet(*mass)), Range("testregion"));
+		if(real_fL_int->getVal()>IntSR2/2.) {meanChiSR2=sig2MinMass+i*MassDist; break;}
+    }
+
+
+
+
+
+    double fLSBChic1=1-(meanChiSR1-meanChiLSB)/(meanChiRSB-meanChiLSB);
+    double fLSBChic2=1-(meanChiSR2-meanChiLSB)/(meanChiRSB-meanChiLSB);
+    cout<<"Median Chi LSB: "<<meanChiLSB<<endl;
+    cout<<"Median Chi RSB: "<<meanChiRSB<<endl;
+    cout<<"Median Chi SR1: "<<meanChiSR1<<endl;
+    cout<<"Median Chi SR2: "<<meanChiSR2<<endl;
+    cout<<"fLSBChic1: "<<fLSBChic1<<endl;
+    cout<<"fLSBChic2: "<<fLSBChic2<<endl;
+
+
+    RooRealVar var_fLSBChic1("var_fLSBChic1","var_fLSBChic1",fLSBChic1); var_fLSBChic1.setError(0.); if(!ws->var("var_fLSBChic1")) ws->import(var_fLSBChic1); else {ws->var("var_fLSBChic1")->setVal(fLSBChic1); ws->var("var_fLSBChic1")->setError(0.);}
+    RooRealVar var_fLSBChic2("var_fLSBChic2","var_fLSBChic2",fLSBChic2); var_fLSBChic2.setError(0.); if(!ws->var("var_fLSBChic2")) ws->import(var_fLSBChic2); else {ws->var("var_fLSBChic2")->setVal(fLSBChic2); ws->var("var_fLSBChic2")->setError(0.);}
+
+    RooRealVar var_meanChiLSB("var_meanChiLSB","var_meanChiLSB",meanChiLSB); var_meanChiLSB.setError(0.); if(!ws->var("var_meanChiLSB")) ws->import(var_meanChiLSB); else {ws->var("var_meanChiLSB")->setVal(meanChiLSB); ws->var("var_meanChiLSB")->setError(0.);}
+    RooRealVar var_meanChiRSB("var_meanChiRSB","var_meanChiRSB",meanChiRSB); var_meanChiRSB.setError(0.); if(!ws->var("var_meanChiRSB")) ws->import(var_meanChiRSB); else {ws->var("var_meanChiRSB")->setVal(meanChiRSB); ws->var("var_meanChiRSB")->setError(0.);}
+    RooRealVar var_meanChiSR1("var_meanChiSR1","var_meanChiSR1",meanChiSR1); var_meanChiSR1.setError(0.); if(!ws->var("var_meanChiSR1")) ws->import(var_meanChiSR1); else {ws->var("var_meanChiSR1")->setVal(meanChiSR1); ws->var("var_meanChiSR1")->setError(0.);}
+    RooRealVar var_meanChiSR2("var_meanChiSR2","var_meanChiSR2",meanChiSR2); var_meanChiSR2.setError(0.); if(!ws->var("var_meanChiSR2")) ws->import(var_meanChiSR2); else {ws->var("var_meanChiSR2")->setVal(meanChiSR2); ws->var("var_meanChiSR2")->setError(0.);}
+
+
     //DEFINE LIFETIME REGIONS
-    //TODO: define regions
 
     //Calculate sigma of ctau from resolution function
 
@@ -486,6 +557,18 @@ void DefineRegionsAndFractions(const std::string &infilename, int rapBin, int pt
     RooAbsData* dataLSB = data->reduce(Cut(cutLSB.str().c_str()));
     RooAbsData* dataRSB = data->reduce(Cut(cutRSB.str().c_str()));
 
+    std::stringstream cutPR, cutNP;
+    cutPR << "Jpsict > " << PRMin << " && Jpsict < " << PRMax;
+    cutNP << "Jpsict > " << NPMin << " && Jpsict < " << NPMax;
+
+    RooAbsData* dataPRSR1 = dataSR1->reduce(Cut(cutPR.str().c_str()));
+    RooAbsData* dataPRSR2 = dataSR2->reduce(Cut(cutPR.str().c_str()));
+    RooAbsData* dataPRLSB = dataLSB->reduce(Cut(cutPR.str().c_str()));
+    RooAbsData* dataPRRSB = dataRSB->reduce(Cut(cutPR.str().c_str()));
+    RooAbsData* dataNPSR1 = dataSR1->reduce(Cut(cutNP.str().c_str()));
+    RooAbsData* dataNPSR2 = dataSR2->reduce(Cut(cutNP.str().c_str()));
+    RooAbsData* dataNPLSB = dataLSB->reduce(Cut(cutNP.str().c_str()));
+    RooAbsData* dataNPRSB = dataRSB->reduce(Cut(cutNP.str().c_str()));
 
     double fJpsiBackground=ws->var("fracBackground")->getVal();
     double fCombBackground=ws->var("jpsi_fBkg")->getVal();
@@ -1103,9 +1186,375 @@ void DefineRegionsAndFractions(const std::string &infilename, int rapBin, int pt
 
 
 
+    double relerr_fracSignal_chic1 = ws->var("fracSignal_chic1")->getError()/ws->var("fracSignal_chic1")->getVal();
+    double relerr_fracNP_chic1 = ws->var("fracNP_chic1")->getError()/ws->var("fracNP_chic1")->getVal();
+    double relerr_fracPR_chic1 = relerr_fracNP_chic1;
+    double relerr_fracSignal_chic2 = relerr_fracSignal_chic1;
+    double relerr_fracNP_chic2 = relerr_fracNP_chic1;
+    double relerr_fracPR_chic2 = relerr_fracNP_chic2;
+
+    double relerr_fracSignal_chic1_times_relerr_fracNP_chic1 = TMath::Sqrt(relerr_fracSignal_chic1*relerr_fracSignal_chic1+relerr_fracNP_chic1*relerr_fracNP_chic1);
+    double relerr_fracSignal_chic1_times_relerr_fracPR_chic1 = TMath::Sqrt(relerr_fracSignal_chic1*relerr_fracSignal_chic1+relerr_fracPR_chic1*relerr_fracPR_chic1);
+    double relerr_fracSignal_chic2_times_relerr_fracNP_chic2 = TMath::Sqrt(relerr_fracSignal_chic2*relerr_fracSignal_chic2+relerr_fracNP_chic2*relerr_fracNP_chic2);
+    double relerr_fracSignal_chic2_times_relerr_fracPR_chic2 = TMath::Sqrt(relerr_fracSignal_chic2*relerr_fracSignal_chic2+relerr_fracPR_chic2*relerr_fracPR_chic2);
+
+    double relerr_ratio_PR_chic2_over_chic1 = TMath::Sqrt(relerr_fracSignal_chic2_times_relerr_fracPR_chic2*relerr_fracSignal_chic2_times_relerr_fracPR_chic2+relerr_fracSignal_chic1_times_relerr_fracPR_chic1*relerr_fracSignal_chic1_times_relerr_fracPR_chic1);
+    double relerr_ratio_NP_chic2_over_chic1 = TMath::Sqrt(relerr_fracSignal_chic2_times_relerr_fracNP_chic2*relerr_fracSignal_chic2_times_relerr_fracNP_chic2+relerr_fracSignal_chic1_times_relerr_fracNP_chic1*relerr_fracSignal_chic1_times_relerr_fracNP_chic1);
+
+    double ratio_PR_chic2_over_chic1;
+    double ratio_PR_chic2_over_chic1_Err=0;
+    ratio_PR_chic2_over_chic1 = (ws->function("fracSignal_chic2")->getVal()*(1.-ws->function("fracNP_chic2")->getVal())) / (ws->var("fracSignal_chic1")->getVal()*(1.-ws->var("fracNP_chic1")->getVal()));
+    ratio_PR_chic2_over_chic1_Err = ratio_PR_chic2_over_chic1*relerr_ratio_PR_chic2_over_chic1;
+    RooRealVar var_ratio_PR_chic2_over_chic1("var_ratio_PR_chic2_over_chic1","var_ratio_PR_chic2_over_chic1",ratio_PR_chic2_over_chic1); var_ratio_PR_chic2_over_chic1.setError(ratio_PR_chic2_over_chic1_Err); if(!ws->var("var_ratio_PR_chic2_over_chic1")) ws->import(var_ratio_PR_chic2_over_chic1); else {ws->var("var_ratio_PR_chic2_over_chic1")->setVal(ratio_PR_chic2_over_chic1); ws->var("var_ratio_PR_chic2_over_chic1")->setError(ratio_PR_chic2_over_chic1_Err);}
+
+    double ratio_NP_chic2_over_chic1;
+    double ratio_NP_chic2_over_chic1_Err=0;
+    ratio_NP_chic2_over_chic1 = (ws->function("fracSignal_chic2")->getVal()*ws->function("fracNP_chic2")->getVal()) / (ws->var("fracSignal_chic1")->getVal()*ws->var("fracNP_chic1")->getVal());
+    ratio_NP_chic2_over_chic1_Err = ratio_NP_chic2_over_chic1*relerr_ratio_NP_chic2_over_chic1;
+    RooRealVar var_ratio_NP_chic2_over_chic1("var_ratio_NP_chic2_over_chic1","var_ratio_NP_chic2_over_chic1",ratio_NP_chic2_over_chic1); var_ratio_NP_chic2_over_chic1.setError(ratio_NP_chic2_over_chic1_Err); if(!ws->var("var_ratio_NP_chic2_over_chic1")) ws->import(var_ratio_NP_chic2_over_chic1); else {ws->var("var_ratio_NP_chic2_over_chic1")->setVal(ratio_NP_chic2_over_chic1); ws->var("var_ratio_NP_chic2_over_chic1")->setError(ratio_NP_chic2_over_chic1_Err);}
 
 
-   //ws->var("var_sig1MaxMass")->setError(err_sig1MaxMass);
+    //Update mean pT/rap for chic and jpsi (before: Jpsi full region, now: Jpsi SR events)
+
+	// get the dataset for the fit
+    double chicMeanPt_JpsiSR;
+    double jpsiMeanPt_JpsiSR;
+    double chicMeanAbsRap_JpsiSR;
+    double jpsiMeanAbsRap_JpsiSR;
+
+    double chicMeanPt_ChicLSB;
+    double jpsiMeanPt_ChicLSB;
+    double chicMeanAbsRap_ChicLSB;
+    double jpsiMeanAbsRap_ChicLSB;
+    double chicMeanPt_ChicRSB;
+    double jpsiMeanPt_ChicRSB;
+    double chicMeanAbsRap_ChicRSB;
+    double jpsiMeanAbsRap_ChicRSB;
+    double chicMeanPt_ChicSR1;
+    double jpsiMeanPt_ChicSR1;
+    double chicMeanAbsRap_ChicSR1;
+    double jpsiMeanAbsRap_ChicSR1;
+    double chicMeanPt_ChicSR2;
+    double jpsiMeanPt_ChicSR2;
+    double chicMeanAbsRap_ChicSR2;
+    double jpsiMeanAbsRap_ChicSR2;
+
+    double chicMeanPt_ChicPRLSB;
+    double jpsiMeanPt_ChicPRLSB;
+    double chicMeanAbsRap_ChicPRLSB;
+    double jpsiMeanAbsRap_ChicPRLSB;
+    double chicMeanPt_ChicPRRSB;
+    double jpsiMeanPt_ChicPRRSB;
+    double chicMeanAbsRap_ChicPRRSB;
+    double jpsiMeanAbsRap_ChicPRRSB;
+    double chicMeanPt_ChicPRSR1;
+    double jpsiMeanPt_ChicPRSR1;
+    double chicMeanAbsRap_ChicPRSR1;
+    double jpsiMeanAbsRap_ChicPRSR1;
+    double chicMeanPt_ChicPRSR2;
+    double jpsiMeanPt_ChicPRSR2;
+    double chicMeanAbsRap_ChicPRSR2;
+    double jpsiMeanAbsRap_ChicPRSR2;
+
+    double chicMeanPt_ChicNPLSB;
+    double jpsiMeanPt_ChicNPLSB;
+    double chicMeanAbsRap_ChicNPLSB;
+    double jpsiMeanAbsRap_ChicNPLSB;
+    double chicMeanPt_ChicNPRSB;
+    double jpsiMeanPt_ChicNPRSB;
+    double chicMeanAbsRap_ChicNPRSB;
+    double jpsiMeanAbsRap_ChicNPRSB;
+    double chicMeanPt_ChicNPSR1;
+    double jpsiMeanPt_ChicNPSR1;
+    double chicMeanAbsRap_ChicNPSR1;
+    double jpsiMeanAbsRap_ChicNPSR1;
+    double chicMeanPt_ChicNPSR2;
+    double jpsiMeanPt_ChicNPSR2;
+    double chicMeanAbsRap_ChicNPSR2;
+    double jpsiMeanAbsRap_ChicNPSR2;
+
+    RooDataSet* binDataPosRapChic;
+    RooDataSet* binDataPosRapJpsi;
+	std::stringstream cutStringPosRapChic;
+	cutStringPosRapChic << "chicRap > 0";
+	std::stringstream cutStringPosRapJpsi;
+	cutStringPosRapJpsi << "JpsiRap > 0";
+
+	chicMeanPt_JpsiSR = data->mean(*ws->var("chicPt"));
+    RooRealVar var_chicMeanPt_JpsiSR("var_chicMeanPt_JpsiSR","var_chicMeanPt_JpsiSR",chicMeanPt_JpsiSR); if(!ws->var("var_chicMeanPt_JpsiSR")) ws->import(var_chicMeanPt_JpsiSR); else ws->var("var_chicMeanPt_JpsiSR")->setVal(chicMeanPt_JpsiSR);
+	cout << "chicMeanPt_JpsiSR = " << chicMeanPt_JpsiSR << endl;
+
+	jpsiMeanPt_JpsiSR = data->mean(*ws->var("JpsiPt"));
+    RooRealVar var_jpsiMeanPt_JpsiSR("var_jpsiMeanPt_JpsiSR","var_jpsiMeanPt_JpsiSR",jpsiMeanPt_JpsiSR); if(!ws->var("var_jpsiMeanPt_JpsiSR")) ws->import(var_jpsiMeanPt_JpsiSR); else ws->var("var_jpsiMeanPt_JpsiSR")->setVal(jpsiMeanPt_JpsiSR);
+	cout << "jpsiMeanPt_JpsiSR = " << jpsiMeanPt_JpsiSR << endl;
+
+	binDataPosRapChic = (RooDataSet*)data->reduce(cutStringPosRapChic.str().c_str());
+	chicMeanAbsRap_JpsiSR = binDataPosRapChic->mean(*ws->var("chicRap"));
+	cout << "chicMeanAbsRap_JpsiSR = " << chicMeanAbsRap_JpsiSR << endl;
+    RooRealVar var_chicMeanAbsRap_JpsiSR("var_chicMeanAbsRap_JpsiSR","var_chicMeanAbsRap_JpsiSR",chicMeanAbsRap_JpsiSR); if(!ws->var("var_chicMeanAbsRap_JpsiSR")) ws->import(var_chicMeanAbsRap_JpsiSR); else ws->var("var_chicMeanAbsRap_JpsiSR")->setVal(chicMeanAbsRap_JpsiSR);
+
+	binDataPosRapJpsi = (RooDataSet*)data->reduce(cutStringPosRapJpsi.str().c_str());
+	jpsiMeanAbsRap_JpsiSR = binDataPosRapJpsi->mean(*ws->var("JpsiRap"));
+	cout << "jpsiMeanAbsRap_JpsiSR = " << jpsiMeanAbsRap_JpsiSR << endl;
+    RooRealVar var_jpsiMeanAbsRap_JpsiSR("var_jpsiMeanAbsRap_JpsiSR","var_jpsiMeanAbsRap_JpsiSR",jpsiMeanAbsRap_JpsiSR); if(!ws->var("var_jpsiMeanAbsRap_JpsiSR")) ws->import(var_jpsiMeanAbsRap_JpsiSR); else ws->var("var_jpsiMeanAbsRap_JpsiSR")->setVal(jpsiMeanAbsRap_JpsiSR);
+
+
+
+	chicMeanPt_ChicLSB = dataLSB->mean(*ws->var("chicPt"));
+    RooRealVar var_chicMeanPt_ChicLSB("var_chicMeanPt_ChicLSB","var_chicMeanPt_ChicLSB",chicMeanPt_ChicLSB); if(!ws->var("var_chicMeanPt_ChicLSB")) ws->import(var_chicMeanPt_ChicLSB); else ws->var("var_chicMeanPt_ChicLSB")->setVal(chicMeanPt_ChicLSB);
+	cout << "chicMeanPt_ChicLSB = " << chicMeanPt_ChicLSB << endl;
+
+	jpsiMeanPt_ChicLSB = dataLSB->mean(*ws->var("JpsiPt"));
+    RooRealVar var_jpsiMeanPt_ChicLSB("var_jpsiMeanPt_ChicLSB","var_jpsiMeanPt_ChicLSB",jpsiMeanPt_ChicLSB); if(!ws->var("var_jpsiMeanPt_ChicLSB")) ws->import(var_jpsiMeanPt_ChicLSB); else ws->var("var_jpsiMeanPt_ChicLSB")->setVal(jpsiMeanPt_ChicLSB);
+	cout << "jpsiMeanPt_ChicLSB = " << jpsiMeanPt_ChicLSB << endl;
+
+	binDataPosRapChic = (RooDataSet*)dataLSB->reduce(cutStringPosRapChic.str().c_str());
+	chicMeanAbsRap_ChicLSB = binDataPosRapChic->mean(*ws->var("chicRap"));
+	cout << "chicMeanAbsRap_ChicLSB = " << chicMeanAbsRap_ChicLSB << endl;
+    RooRealVar var_chicMeanAbsRap_ChicLSB("var_chicMeanAbsRap_ChicLSB","var_chicMeanAbsRap_ChicLSB",chicMeanAbsRap_ChicLSB); if(!ws->var("var_chicMeanAbsRap_ChicLSB")) ws->import(var_chicMeanAbsRap_ChicLSB); else ws->var("var_chicMeanAbsRap_ChicLSB")->setVal(chicMeanAbsRap_ChicLSB);
+
+	binDataPosRapJpsi = (RooDataSet*)dataLSB->reduce(cutStringPosRapJpsi.str().c_str());
+	jpsiMeanAbsRap_ChicLSB = binDataPosRapJpsi->mean(*ws->var("JpsiRap"));
+	cout << "jpsiMeanAbsRap_ChicLSB = " << jpsiMeanAbsRap_ChicLSB << endl;
+    RooRealVar var_jpsiMeanAbsRap_ChicLSB("var_jpsiMeanAbsRap_ChicLSB","var_jpsiMeanAbsRap_ChicLSB",jpsiMeanAbsRap_ChicLSB); if(!ws->var("var_jpsiMeanAbsRap_ChicLSB")) ws->import(var_jpsiMeanAbsRap_ChicLSB); else ws->var("var_jpsiMeanAbsRap_ChicLSB")->setVal(jpsiMeanAbsRap_ChicLSB);
+
+
+
+	chicMeanPt_ChicRSB = dataRSB->mean(*ws->var("chicPt"));
+    RooRealVar var_chicMeanPt_ChicRSB("var_chicMeanPt_ChicRSB","var_chicMeanPt_ChicRSB",chicMeanPt_ChicRSB); if(!ws->var("var_chicMeanPt_ChicRSB")) ws->import(var_chicMeanPt_ChicRSB); else ws->var("var_chicMeanPt_ChicRSB")->setVal(chicMeanPt_ChicRSB);
+	cout << "chicMeanPt_ChicRSB = " << chicMeanPt_ChicRSB << endl;
+
+	jpsiMeanPt_ChicRSB = dataRSB->mean(*ws->var("JpsiPt"));
+    RooRealVar var_jpsiMeanPt_ChicRSB("var_jpsiMeanPt_ChicRSB","var_jpsiMeanPt_ChicRSB",jpsiMeanPt_ChicRSB); if(!ws->var("var_jpsiMeanPt_ChicRSB")) ws->import(var_jpsiMeanPt_ChicRSB); else ws->var("var_jpsiMeanPt_ChicRSB")->setVal(jpsiMeanPt_ChicRSB);
+	cout << "jpsiMeanPt_ChicRSB = " << jpsiMeanPt_ChicRSB << endl;
+
+	binDataPosRapChic = (RooDataSet*)dataRSB->reduce(cutStringPosRapChic.str().c_str());
+	chicMeanAbsRap_ChicRSB = binDataPosRapChic->mean(*ws->var("chicRap"));
+	cout << "chicMeanAbsRap_ChicRSB = " << chicMeanAbsRap_ChicRSB << endl;
+    RooRealVar var_chicMeanAbsRap_ChicRSB("var_chicMeanAbsRap_ChicRSB","var_chicMeanAbsRap_ChicRSB",chicMeanAbsRap_ChicRSB); if(!ws->var("var_chicMeanAbsRap_ChicRSB")) ws->import(var_chicMeanAbsRap_ChicRSB); else ws->var("var_chicMeanAbsRap_ChicRSB")->setVal(chicMeanAbsRap_ChicRSB);
+
+	binDataPosRapJpsi = (RooDataSet*)dataRSB->reduce(cutStringPosRapJpsi.str().c_str());
+	jpsiMeanAbsRap_ChicRSB = binDataPosRapJpsi->mean(*ws->var("JpsiRap"));
+	cout << "jpsiMeanAbsRap_ChicRSB = " << jpsiMeanAbsRap_ChicRSB << endl;
+    RooRealVar var_jpsiMeanAbsRap_ChicRSB("var_jpsiMeanAbsRap_ChicRSB","var_jpsiMeanAbsRap_ChicRSB",jpsiMeanAbsRap_ChicRSB); if(!ws->var("var_jpsiMeanAbsRap_ChicRSB")) ws->import(var_jpsiMeanAbsRap_ChicRSB); else ws->var("var_jpsiMeanAbsRap_ChicRSB")->setVal(jpsiMeanAbsRap_ChicRSB);
+
+
+
+	chicMeanPt_ChicSR1 = dataSR1->mean(*ws->var("chicPt"));
+    RooRealVar var_chicMeanPt_ChicSR1("var_chicMeanPt_ChicSR1","var_chicMeanPt_ChicSR1",chicMeanPt_ChicSR1); if(!ws->var("var_chicMeanPt_ChicSR1")) ws->import(var_chicMeanPt_ChicSR1); else ws->var("var_chicMeanPt_ChicSR1")->setVal(chicMeanPt_ChicSR1);
+	cout << "chicMeanPt_ChicSR1 = " << chicMeanPt_ChicSR1 << endl;
+
+	jpsiMeanPt_ChicSR1 = dataSR1->mean(*ws->var("JpsiPt"));
+    RooRealVar var_jpsiMeanPt_ChicSR1("var_jpsiMeanPt_ChicSR1","var_jpsiMeanPt_ChicSR1",jpsiMeanPt_ChicSR1); if(!ws->var("var_jpsiMeanPt_ChicSR1")) ws->import(var_jpsiMeanPt_ChicSR1); else ws->var("var_jpsiMeanPt_ChicSR1")->setVal(jpsiMeanPt_ChicSR1);
+	cout << "jpsiMeanPt_ChicSR1 = " << jpsiMeanPt_ChicSR1 << endl;
+
+	binDataPosRapChic = (RooDataSet*)dataSR1->reduce(cutStringPosRapChic.str().c_str());
+	chicMeanAbsRap_ChicSR1 = binDataPosRapChic->mean(*ws->var("chicRap"));
+	cout << "chicMeanAbsRap_ChicSR1 = " << chicMeanAbsRap_ChicSR1 << endl;
+    RooRealVar var_chicMeanAbsRap_ChicSR1("var_chicMeanAbsRap_ChicSR1","var_chicMeanAbsRap_ChicSR1",chicMeanAbsRap_ChicSR1); if(!ws->var("var_chicMeanAbsRap_ChicSR1")) ws->import(var_chicMeanAbsRap_ChicSR1); else ws->var("var_chicMeanAbsRap_ChicSR1")->setVal(chicMeanAbsRap_ChicSR1);
+
+	binDataPosRapJpsi = (RooDataSet*)dataSR1->reduce(cutStringPosRapJpsi.str().c_str());
+	jpsiMeanAbsRap_ChicSR1 = binDataPosRapJpsi->mean(*ws->var("JpsiRap"));
+	cout << "jpsiMeanAbsRap_ChicSR1 = " << jpsiMeanAbsRap_ChicSR1 << endl;
+    RooRealVar var_jpsiMeanAbsRap_ChicSR1("var_jpsiMeanAbsRap_ChicSR1","var_jpsiMeanAbsRap_ChicSR1",jpsiMeanAbsRap_ChicSR1); if(!ws->var("var_jpsiMeanAbsRap_ChicSR1")) ws->import(var_jpsiMeanAbsRap_ChicSR1); else ws->var("var_jpsiMeanAbsRap_ChicSR1")->setVal(jpsiMeanAbsRap_ChicSR1);
+
+
+
+	chicMeanPt_ChicSR2 = dataSR2->mean(*ws->var("chicPt"));
+    RooRealVar var_chicMeanPt_ChicSR2("var_chicMeanPt_ChicSR2","var_chicMeanPt_ChicSR2",chicMeanPt_ChicSR2); if(!ws->var("var_chicMeanPt_ChicSR2")) ws->import(var_chicMeanPt_ChicSR2); else ws->var("var_chicMeanPt_ChicSR2")->setVal(chicMeanPt_ChicSR2);
+	cout << "chicMeanPt_ChicSR2 = " << chicMeanPt_ChicSR2 << endl;
+
+	jpsiMeanPt_ChicSR2 = dataSR2->mean(*ws->var("JpsiPt"));
+    RooRealVar var_jpsiMeanPt_ChicSR2("var_jpsiMeanPt_ChicSR2","var_jpsiMeanPt_ChicSR2",jpsiMeanPt_ChicSR2); if(!ws->var("var_jpsiMeanPt_ChicSR2")) ws->import(var_jpsiMeanPt_ChicSR2); else ws->var("var_jpsiMeanPt_ChicSR2")->setVal(jpsiMeanPt_ChicSR2);
+	cout << "jpsiMeanPt_ChicSR2 = " << jpsiMeanPt_ChicSR2 << endl;
+
+	binDataPosRapChic = (RooDataSet*)dataSR2->reduce(cutStringPosRapChic.str().c_str());
+	chicMeanAbsRap_ChicSR2 = binDataPosRapChic->mean(*ws->var("chicRap"));
+	cout << "chicMeanAbsRap_ChicSR2 = " << chicMeanAbsRap_ChicSR2 << endl;
+    RooRealVar var_chicMeanAbsRap_ChicSR2("var_chicMeanAbsRap_ChicSR2","var_chicMeanAbsRap_ChicSR2",chicMeanAbsRap_ChicSR2); if(!ws->var("var_chicMeanAbsRap_ChicSR2")) ws->import(var_chicMeanAbsRap_ChicSR2); else ws->var("var_chicMeanAbsRap_ChicSR2")->setVal(chicMeanAbsRap_ChicSR2);
+
+	binDataPosRapJpsi = (RooDataSet*)dataSR2->reduce(cutStringPosRapJpsi.str().c_str());
+	jpsiMeanAbsRap_ChicSR2 = binDataPosRapJpsi->mean(*ws->var("JpsiRap"));
+	cout << "jpsiMeanAbsRap_ChicSR2 = " << jpsiMeanAbsRap_ChicSR2 << endl;
+    RooRealVar var_jpsiMeanAbsRap_ChicSR2("var_jpsiMeanAbsRap_ChicSR2","var_jpsiMeanAbsRap_ChicSR2",jpsiMeanAbsRap_ChicSR2); if(!ws->var("var_jpsiMeanAbsRap_ChicSR2")) ws->import(var_jpsiMeanAbsRap_ChicSR2); else ws->var("var_jpsiMeanAbsRap_ChicSR2")->setVal(jpsiMeanAbsRap_ChicSR2);
+
+
+
+
+
+
+
+
+	chicMeanPt_ChicPRLSB = dataLSB->mean(*ws->var("chicPt"));
+    RooRealVar var_chicMeanPt_ChicPRLSB("var_chicMeanPt_ChicPRLSB","var_chicMeanPt_ChicPRLSB",chicMeanPt_ChicPRLSB); if(!ws->var("var_chicMeanPt_ChicPRLSB")) ws->import(var_chicMeanPt_ChicPRLSB); else ws->var("var_chicMeanPt_ChicPRLSB")->setVal(chicMeanPt_ChicPRLSB);
+	cout << "chicMeanPt_ChicPRLSB = " << chicMeanPt_ChicPRLSB << endl;
+
+	jpsiMeanPt_ChicPRLSB = dataLSB->mean(*ws->var("JpsiPt"));
+    RooRealVar var_jpsiMeanPt_ChicPRLSB("var_jpsiMeanPt_ChicPRLSB","var_jpsiMeanPt_ChicPRLSB",jpsiMeanPt_ChicPRLSB); if(!ws->var("var_jpsiMeanPt_ChicPRLSB")) ws->import(var_jpsiMeanPt_ChicPRLSB); else ws->var("var_jpsiMeanPt_ChicPRLSB")->setVal(jpsiMeanPt_ChicPRLSB);
+	cout << "jpsiMeanPt_ChicPRLSB = " << jpsiMeanPt_ChicPRLSB << endl;
+
+	binDataPosRapChic = (RooDataSet*)dataLSB->reduce(cutStringPosRapChic.str().c_str());
+	chicMeanAbsRap_ChicPRLSB = binDataPosRapChic->mean(*ws->var("chicRap"));
+	cout << "chicMeanAbsRap_ChicPRLSB = " << chicMeanAbsRap_ChicPRLSB << endl;
+    RooRealVar var_chicMeanAbsRap_ChicPRLSB("var_chicMeanAbsRap_ChicPRLSB","var_chicMeanAbsRap_ChicPRLSB",chicMeanAbsRap_ChicPRLSB); if(!ws->var("var_chicMeanAbsRap_ChicPRLSB")) ws->import(var_chicMeanAbsRap_ChicPRLSB); else ws->var("var_chicMeanAbsRap_ChicPRLSB")->setVal(chicMeanAbsRap_ChicPRLSB);
+
+	binDataPosRapJpsi = (RooDataSet*)dataLSB->reduce(cutStringPosRapJpsi.str().c_str());
+	jpsiMeanAbsRap_ChicPRLSB = binDataPosRapJpsi->mean(*ws->var("JpsiRap"));
+	cout << "jpsiMeanAbsRap_ChicPRLSB = " << jpsiMeanAbsRap_ChicPRLSB << endl;
+    RooRealVar var_jpsiMeanAbsRap_ChicPRLSB("var_jpsiMeanAbsRap_ChicPRLSB","var_jpsiMeanAbsRap_ChicPRLSB",jpsiMeanAbsRap_ChicPRLSB); if(!ws->var("var_jpsiMeanAbsRap_ChicPRLSB")) ws->import(var_jpsiMeanAbsRap_ChicPRLSB); else ws->var("var_jpsiMeanAbsRap_ChicPRLSB")->setVal(jpsiMeanAbsRap_ChicPRLSB);
+
+
+
+	chicMeanPt_ChicPRRSB = dataRSB->mean(*ws->var("chicPt"));
+    RooRealVar var_chicMeanPt_ChicPRRSB("var_chicMeanPt_ChicPRRSB","var_chicMeanPt_ChicPRRSB",chicMeanPt_ChicPRRSB); if(!ws->var("var_chicMeanPt_ChicPRRSB")) ws->import(var_chicMeanPt_ChicPRRSB); else ws->var("var_chicMeanPt_ChicPRRSB")->setVal(chicMeanPt_ChicPRRSB);
+	cout << "chicMeanPt_ChicPRRSB = " << chicMeanPt_ChicPRRSB << endl;
+
+	jpsiMeanPt_ChicPRRSB = dataRSB->mean(*ws->var("JpsiPt"));
+    RooRealVar var_jpsiMeanPt_ChicPRRSB("var_jpsiMeanPt_ChicPRRSB","var_jpsiMeanPt_ChicPRRSB",jpsiMeanPt_ChicPRRSB); if(!ws->var("var_jpsiMeanPt_ChicPRRSB")) ws->import(var_jpsiMeanPt_ChicPRRSB); else ws->var("var_jpsiMeanPt_ChicPRRSB")->setVal(jpsiMeanPt_ChicPRRSB);
+	cout << "jpsiMeanPt_ChicPRRSB = " << jpsiMeanPt_ChicPRRSB << endl;
+
+	binDataPosRapChic = (RooDataSet*)dataRSB->reduce(cutStringPosRapChic.str().c_str());
+	chicMeanAbsRap_ChicPRRSB = binDataPosRapChic->mean(*ws->var("chicRap"));
+	cout << "chicMeanAbsRap_ChicPRRSB = " << chicMeanAbsRap_ChicPRRSB << endl;
+    RooRealVar var_chicMeanAbsRap_ChicPRRSB("var_chicMeanAbsRap_ChicPRRSB","var_chicMeanAbsRap_ChicPRRSB",chicMeanAbsRap_ChicPRRSB); if(!ws->var("var_chicMeanAbsRap_ChicPRRSB")) ws->import(var_chicMeanAbsRap_ChicPRRSB); else ws->var("var_chicMeanAbsRap_ChicPRRSB")->setVal(chicMeanAbsRap_ChicPRRSB);
+
+	binDataPosRapJpsi = (RooDataSet*)dataRSB->reduce(cutStringPosRapJpsi.str().c_str());
+	jpsiMeanAbsRap_ChicPRRSB = binDataPosRapJpsi->mean(*ws->var("JpsiRap"));
+	cout << "jpsiMeanAbsRap_ChicPRRSB = " << jpsiMeanAbsRap_ChicPRRSB << endl;
+    RooRealVar var_jpsiMeanAbsRap_ChicPRRSB("var_jpsiMeanAbsRap_ChicPRRSB","var_jpsiMeanAbsRap_ChicPRRSB",jpsiMeanAbsRap_ChicPRRSB); if(!ws->var("var_jpsiMeanAbsRap_ChicPRRSB")) ws->import(var_jpsiMeanAbsRap_ChicPRRSB); else ws->var("var_jpsiMeanAbsRap_ChicPRRSB")->setVal(jpsiMeanAbsRap_ChicPRRSB);
+
+
+
+	chicMeanPt_ChicPRSR1 = dataSR1->mean(*ws->var("chicPt"));
+    RooRealVar var_chicMeanPt_ChicPRSR1("var_chicMeanPt_ChicPRSR1","var_chicMeanPt_ChicPRSR1",chicMeanPt_ChicPRSR1); if(!ws->var("var_chicMeanPt_ChicPRSR1")) ws->import(var_chicMeanPt_ChicPRSR1); else ws->var("var_chicMeanPt_ChicPRSR1")->setVal(chicMeanPt_ChicPRSR1);
+	cout << "chicMeanPt_ChicPRSR1 = " << chicMeanPt_ChicPRSR1 << endl;
+
+	jpsiMeanPt_ChicPRSR1 = dataSR1->mean(*ws->var("JpsiPt"));
+    RooRealVar var_jpsiMeanPt_ChicPRSR1("var_jpsiMeanPt_ChicPRSR1","var_jpsiMeanPt_ChicPRSR1",jpsiMeanPt_ChicPRSR1); if(!ws->var("var_jpsiMeanPt_ChicPRSR1")) ws->import(var_jpsiMeanPt_ChicPRSR1); else ws->var("var_jpsiMeanPt_ChicPRSR1")->setVal(jpsiMeanPt_ChicPRSR1);
+	cout << "jpsiMeanPt_ChicPRSR1 = " << jpsiMeanPt_ChicPRSR1 << endl;
+
+	binDataPosRapChic = (RooDataSet*)dataSR1->reduce(cutStringPosRapChic.str().c_str());
+	chicMeanAbsRap_ChicPRSR1 = binDataPosRapChic->mean(*ws->var("chicRap"));
+	cout << "chicMeanAbsRap_ChicPRSR1 = " << chicMeanAbsRap_ChicPRSR1 << endl;
+    RooRealVar var_chicMeanAbsRap_ChicPRSR1("var_chicMeanAbsRap_ChicPRSR1","var_chicMeanAbsRap_ChicPRSR1",chicMeanAbsRap_ChicPRSR1); if(!ws->var("var_chicMeanAbsRap_ChicPRSR1")) ws->import(var_chicMeanAbsRap_ChicPRSR1); else ws->var("var_chicMeanAbsRap_ChicPRSR1")->setVal(chicMeanAbsRap_ChicPRSR1);
+
+	binDataPosRapJpsi = (RooDataSet*)dataSR1->reduce(cutStringPosRapJpsi.str().c_str());
+	jpsiMeanAbsRap_ChicPRSR1 = binDataPosRapJpsi->mean(*ws->var("JpsiRap"));
+	cout << "jpsiMeanAbsRap_ChicPRSR1 = " << jpsiMeanAbsRap_ChicPRSR1 << endl;
+    RooRealVar var_jpsiMeanAbsRap_ChicPRSR1("var_jpsiMeanAbsRap_ChicPRSR1","var_jpsiMeanAbsRap_ChicPRSR1",jpsiMeanAbsRap_ChicPRSR1); if(!ws->var("var_jpsiMeanAbsRap_ChicPRSR1")) ws->import(var_jpsiMeanAbsRap_ChicPRSR1); else ws->var("var_jpsiMeanAbsRap_ChicPRSR1")->setVal(jpsiMeanAbsRap_ChicPRSR1);
+
+
+
+	chicMeanPt_ChicPRSR2 = dataSR2->mean(*ws->var("chicPt"));
+    RooRealVar var_chicMeanPt_ChicPRSR2("var_chicMeanPt_ChicPRSR2","var_chicMeanPt_ChicPRSR2",chicMeanPt_ChicPRSR2); if(!ws->var("var_chicMeanPt_ChicPRSR2")) ws->import(var_chicMeanPt_ChicPRSR2); else ws->var("var_chicMeanPt_ChicPRSR2")->setVal(chicMeanPt_ChicPRSR2);
+	cout << "chicMeanPt_ChicPRSR2 = " << chicMeanPt_ChicPRSR2 << endl;
+
+	jpsiMeanPt_ChicPRSR2 = dataSR2->mean(*ws->var("JpsiPt"));
+    RooRealVar var_jpsiMeanPt_ChicPRSR2("var_jpsiMeanPt_ChicPRSR2","var_jpsiMeanPt_ChicPRSR2",jpsiMeanPt_ChicPRSR2); if(!ws->var("var_jpsiMeanPt_ChicPRSR2")) ws->import(var_jpsiMeanPt_ChicPRSR2); else ws->var("var_jpsiMeanPt_ChicPRSR2")->setVal(jpsiMeanPt_ChicPRSR2);
+	cout << "jpsiMeanPt_ChicPRSR2 = " << jpsiMeanPt_ChicPRSR2 << endl;
+
+	binDataPosRapChic = (RooDataSet*)dataSR2->reduce(cutStringPosRapChic.str().c_str());
+	chicMeanAbsRap_ChicPRSR2 = binDataPosRapChic->mean(*ws->var("chicRap"));
+	cout << "chicMeanAbsRap_ChicPRSR2 = " << chicMeanAbsRap_ChicPRSR2 << endl;
+    RooRealVar var_chicMeanAbsRap_ChicPRSR2("var_chicMeanAbsRap_ChicPRSR2","var_chicMeanAbsRap_ChicPRSR2",chicMeanAbsRap_ChicPRSR2); if(!ws->var("var_chicMeanAbsRap_ChicPRSR2")) ws->import(var_chicMeanAbsRap_ChicPRSR2); else ws->var("var_chicMeanAbsRap_ChicPRSR2")->setVal(chicMeanAbsRap_ChicPRSR2);
+
+	binDataPosRapJpsi = (RooDataSet*)dataSR2->reduce(cutStringPosRapJpsi.str().c_str());
+	jpsiMeanAbsRap_ChicPRSR2 = binDataPosRapJpsi->mean(*ws->var("JpsiRap"));
+	cout << "jpsiMeanAbsRap_ChicPRSR2 = " << jpsiMeanAbsRap_ChicPRSR2 << endl;
+    RooRealVar var_jpsiMeanAbsRap_ChicPRSR2("var_jpsiMeanAbsRap_ChicPRSR2","var_jpsiMeanAbsRap_ChicPRSR2",jpsiMeanAbsRap_ChicPRSR2); if(!ws->var("var_jpsiMeanAbsRap_ChicPRSR2")) ws->import(var_jpsiMeanAbsRap_ChicPRSR2); else ws->var("var_jpsiMeanAbsRap_ChicPRSR2")->setVal(jpsiMeanAbsRap_ChicPRSR2);
+
+
+
+
+
+
+
+
+
+
+
+	chicMeanPt_ChicNPLSB = dataLSB->mean(*ws->var("chicPt"));
+    RooRealVar var_chicMeanPt_ChicNPLSB("var_chicMeanPt_ChicNPLSB","var_chicMeanPt_ChicNPLSB",chicMeanPt_ChicNPLSB); if(!ws->var("var_chicMeanPt_ChicNPLSB")) ws->import(var_chicMeanPt_ChicNPLSB); else ws->var("var_chicMeanPt_ChicNPLSB")->setVal(chicMeanPt_ChicNPLSB);
+	cout << "chicMeanPt_ChicNPLSB = " << chicMeanPt_ChicNPLSB << endl;
+
+	jpsiMeanPt_ChicNPLSB = dataLSB->mean(*ws->var("JpsiPt"));
+    RooRealVar var_jpsiMeanPt_ChicNPLSB("var_jpsiMeanPt_ChicNPLSB","var_jpsiMeanPt_ChicNPLSB",jpsiMeanPt_ChicNPLSB); if(!ws->var("var_jpsiMeanPt_ChicNPLSB")) ws->import(var_jpsiMeanPt_ChicNPLSB); else ws->var("var_jpsiMeanPt_ChicNPLSB")->setVal(jpsiMeanPt_ChicNPLSB);
+	cout << "jpsiMeanPt_ChicNPLSB = " << jpsiMeanPt_ChicNPLSB << endl;
+
+	binDataPosRapChic = (RooDataSet*)dataLSB->reduce(cutStringPosRapChic.str().c_str());
+	chicMeanAbsRap_ChicNPLSB = binDataPosRapChic->mean(*ws->var("chicRap"));
+	cout << "chicMeanAbsRap_ChicNPLSB = " << chicMeanAbsRap_ChicNPLSB << endl;
+    RooRealVar var_chicMeanAbsRap_ChicNPLSB("var_chicMeanAbsRap_ChicNPLSB","var_chicMeanAbsRap_ChicNPLSB",chicMeanAbsRap_ChicNPLSB); if(!ws->var("var_chicMeanAbsRap_ChicNPLSB")) ws->import(var_chicMeanAbsRap_ChicNPLSB); else ws->var("var_chicMeanAbsRap_ChicNPLSB")->setVal(chicMeanAbsRap_ChicNPLSB);
+
+	binDataPosRapJpsi = (RooDataSet*)dataLSB->reduce(cutStringPosRapJpsi.str().c_str());
+	jpsiMeanAbsRap_ChicNPLSB = binDataPosRapJpsi->mean(*ws->var("JpsiRap"));
+	cout << "jpsiMeanAbsRap_ChicNPLSB = " << jpsiMeanAbsRap_ChicNPLSB << endl;
+    RooRealVar var_jpsiMeanAbsRap_ChicNPLSB("var_jpsiMeanAbsRap_ChicNPLSB","var_jpsiMeanAbsRap_ChicNPLSB",jpsiMeanAbsRap_ChicNPLSB); if(!ws->var("var_jpsiMeanAbsRap_ChicNPLSB")) ws->import(var_jpsiMeanAbsRap_ChicNPLSB); else ws->var("var_jpsiMeanAbsRap_ChicNPLSB")->setVal(jpsiMeanAbsRap_ChicNPLSB);
+
+
+
+	chicMeanPt_ChicNPRSB = dataRSB->mean(*ws->var("chicPt"));
+    RooRealVar var_chicMeanPt_ChicNPRSB("var_chicMeanPt_ChicNPRSB","var_chicMeanPt_ChicNPRSB",chicMeanPt_ChicNPRSB); if(!ws->var("var_chicMeanPt_ChicNPRSB")) ws->import(var_chicMeanPt_ChicNPRSB); else ws->var("var_chicMeanPt_ChicNPRSB")->setVal(chicMeanPt_ChicNPRSB);
+	cout << "chicMeanPt_ChicNPRSB = " << chicMeanPt_ChicNPRSB << endl;
+
+	jpsiMeanPt_ChicNPRSB = dataRSB->mean(*ws->var("JpsiPt"));
+    RooRealVar var_jpsiMeanPt_ChicNPRSB("var_jpsiMeanPt_ChicNPRSB","var_jpsiMeanPt_ChicNPRSB",jpsiMeanPt_ChicNPRSB); if(!ws->var("var_jpsiMeanPt_ChicNPRSB")) ws->import(var_jpsiMeanPt_ChicNPRSB); else ws->var("var_jpsiMeanPt_ChicNPRSB")->setVal(jpsiMeanPt_ChicNPRSB);
+	cout << "jpsiMeanPt_ChicNPRSB = " << jpsiMeanPt_ChicNPRSB << endl;
+
+	binDataPosRapChic = (RooDataSet*)dataRSB->reduce(cutStringPosRapChic.str().c_str());
+	chicMeanAbsRap_ChicNPRSB = binDataPosRapChic->mean(*ws->var("chicRap"));
+	cout << "chicMeanAbsRap_ChicNPRSB = " << chicMeanAbsRap_ChicNPRSB << endl;
+    RooRealVar var_chicMeanAbsRap_ChicNPRSB("var_chicMeanAbsRap_ChicNPRSB","var_chicMeanAbsRap_ChicNPRSB",chicMeanAbsRap_ChicNPRSB); if(!ws->var("var_chicMeanAbsRap_ChicNPRSB")) ws->import(var_chicMeanAbsRap_ChicNPRSB); else ws->var("var_chicMeanAbsRap_ChicNPRSB")->setVal(chicMeanAbsRap_ChicNPRSB);
+
+	binDataPosRapJpsi = (RooDataSet*)dataRSB->reduce(cutStringPosRapJpsi.str().c_str());
+	jpsiMeanAbsRap_ChicNPRSB = binDataPosRapJpsi->mean(*ws->var("JpsiRap"));
+	cout << "jpsiMeanAbsRap_ChicNPRSB = " << jpsiMeanAbsRap_ChicNPRSB << endl;
+    RooRealVar var_jpsiMeanAbsRap_ChicNPRSB("var_jpsiMeanAbsRap_ChicNPRSB","var_jpsiMeanAbsRap_ChicNPRSB",jpsiMeanAbsRap_ChicNPRSB); if(!ws->var("var_jpsiMeanAbsRap_ChicNPRSB")) ws->import(var_jpsiMeanAbsRap_ChicNPRSB); else ws->var("var_jpsiMeanAbsRap_ChicNPRSB")->setVal(jpsiMeanAbsRap_ChicNPRSB);
+
+
+
+	chicMeanPt_ChicNPSR1 = dataSR1->mean(*ws->var("chicPt"));
+    RooRealVar var_chicMeanPt_ChicNPSR1("var_chicMeanPt_ChicNPSR1","var_chicMeanPt_ChicNPSR1",chicMeanPt_ChicNPSR1); if(!ws->var("var_chicMeanPt_ChicNPSR1")) ws->import(var_chicMeanPt_ChicNPSR1); else ws->var("var_chicMeanPt_ChicNPSR1")->setVal(chicMeanPt_ChicNPSR1);
+	cout << "chicMeanPt_ChicNPSR1 = " << chicMeanPt_ChicNPSR1 << endl;
+
+	jpsiMeanPt_ChicNPSR1 = dataSR1->mean(*ws->var("JpsiPt"));
+    RooRealVar var_jpsiMeanPt_ChicNPSR1("var_jpsiMeanPt_ChicNPSR1","var_jpsiMeanPt_ChicNPSR1",jpsiMeanPt_ChicNPSR1); if(!ws->var("var_jpsiMeanPt_ChicNPSR1")) ws->import(var_jpsiMeanPt_ChicNPSR1); else ws->var("var_jpsiMeanPt_ChicNPSR1")->setVal(jpsiMeanPt_ChicNPSR1);
+	cout << "jpsiMeanPt_ChicNPSR1 = " << jpsiMeanPt_ChicNPSR1 << endl;
+
+	binDataPosRapChic = (RooDataSet*)dataSR1->reduce(cutStringPosRapChic.str().c_str());
+	chicMeanAbsRap_ChicNPSR1 = binDataPosRapChic->mean(*ws->var("chicRap"));
+	cout << "chicMeanAbsRap_ChicNPSR1 = " << chicMeanAbsRap_ChicNPSR1 << endl;
+    RooRealVar var_chicMeanAbsRap_ChicNPSR1("var_chicMeanAbsRap_ChicNPSR1","var_chicMeanAbsRap_ChicNPSR1",chicMeanAbsRap_ChicNPSR1); if(!ws->var("var_chicMeanAbsRap_ChicNPSR1")) ws->import(var_chicMeanAbsRap_ChicNPSR1); else ws->var("var_chicMeanAbsRap_ChicNPSR1")->setVal(chicMeanAbsRap_ChicNPSR1);
+
+	binDataPosRapJpsi = (RooDataSet*)dataSR1->reduce(cutStringPosRapJpsi.str().c_str());
+	jpsiMeanAbsRap_ChicNPSR1 = binDataPosRapJpsi->mean(*ws->var("JpsiRap"));
+	cout << "jpsiMeanAbsRap_ChicNPSR1 = " << jpsiMeanAbsRap_ChicNPSR1 << endl;
+    RooRealVar var_jpsiMeanAbsRap_ChicNPSR1("var_jpsiMeanAbsRap_ChicNPSR1","var_jpsiMeanAbsRap_ChicNPSR1",jpsiMeanAbsRap_ChicNPSR1); if(!ws->var("var_jpsiMeanAbsRap_ChicNPSR1")) ws->import(var_jpsiMeanAbsRap_ChicNPSR1); else ws->var("var_jpsiMeanAbsRap_ChicNPSR1")->setVal(jpsiMeanAbsRap_ChicNPSR1);
+
+
+
+	chicMeanPt_ChicNPSR2 = dataSR2->mean(*ws->var("chicPt"));
+    RooRealVar var_chicMeanPt_ChicNPSR2("var_chicMeanPt_ChicNPSR2","var_chicMeanPt_ChicNPSR2",chicMeanPt_ChicNPSR2); if(!ws->var("var_chicMeanPt_ChicNPSR2")) ws->import(var_chicMeanPt_ChicNPSR2); else ws->var("var_chicMeanPt_ChicNPSR2")->setVal(chicMeanPt_ChicNPSR2);
+	cout << "chicMeanPt_ChicNPSR2 = " << chicMeanPt_ChicNPSR2 << endl;
+
+	jpsiMeanPt_ChicNPSR2 = dataSR2->mean(*ws->var("JpsiPt"));
+    RooRealVar var_jpsiMeanPt_ChicNPSR2("var_jpsiMeanPt_ChicNPSR2","var_jpsiMeanPt_ChicNPSR2",jpsiMeanPt_ChicNPSR2); if(!ws->var("var_jpsiMeanPt_ChicNPSR2")) ws->import(var_jpsiMeanPt_ChicNPSR2); else ws->var("var_jpsiMeanPt_ChicNPSR2")->setVal(jpsiMeanPt_ChicNPSR2);
+	cout << "jpsiMeanPt_ChicNPSR2 = " << jpsiMeanPt_ChicNPSR2 << endl;
+
+	binDataPosRapChic = (RooDataSet*)dataSR2->reduce(cutStringPosRapChic.str().c_str());
+	chicMeanAbsRap_ChicNPSR2 = binDataPosRapChic->mean(*ws->var("chicRap"));
+	cout << "chicMeanAbsRap_ChicNPSR2 = " << chicMeanAbsRap_ChicNPSR2 << endl;
+    RooRealVar var_chicMeanAbsRap_ChicNPSR2("var_chicMeanAbsRap_ChicNPSR2","var_chicMeanAbsRap_ChicNPSR2",chicMeanAbsRap_ChicNPSR2); if(!ws->var("var_chicMeanAbsRap_ChicNPSR2")) ws->import(var_chicMeanAbsRap_ChicNPSR2); else ws->var("var_chicMeanAbsRap_ChicNPSR2")->setVal(chicMeanAbsRap_ChicNPSR2);
+
+	binDataPosRapJpsi = (RooDataSet*)dataSR2->reduce(cutStringPosRapJpsi.str().c_str());
+	jpsiMeanAbsRap_ChicNPSR2 = binDataPosRapJpsi->mean(*ws->var("JpsiRap"));
+	cout << "jpsiMeanAbsRap_ChicNPSR2 = " << jpsiMeanAbsRap_ChicNPSR2 << endl;
+    RooRealVar var_jpsiMeanAbsRap_ChicNPSR2("var_jpsiMeanAbsRap_ChicNPSR2","var_jpsiMeanAbsRap_ChicNPSR2",jpsiMeanAbsRap_ChicNPSR2); if(!ws->var("var_jpsiMeanAbsRap_ChicNPSR2")) ws->import(var_jpsiMeanAbsRap_ChicNPSR2); else ws->var("var_jpsiMeanAbsRap_ChicNPSR2")->setVal(jpsiMeanAbsRap_ChicNPSR2);
+
+	RooFormulaVar jpsi_bfraction("jpsi_bfraction","@0/(@1+@0)",RooArgList(*ws->function("jpsi_fNonPrompt"),*ws->var("jpsi_fPrompt")));
+	ws->import(jpsi_bfraction);
+
+
 
 
     std::cout<< "write ws" <<std::endl;

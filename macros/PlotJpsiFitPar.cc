@@ -15,7 +15,7 @@ using namespace std;
 using namespace RooFit;
 using namespace onia;
 
-void PlotJpsiFitPar(int  nState=4, int rapMin=0, int rapMax=0, int ptMin=0, int ptMax=0, int rapFixTo=0, int ptFixTo=0, bool AddInclusiveResult=false, double Ymin=0., double Ymax=0., char ParName[200]="default", char ParTitle[200]="default", char Folder[200]="default", char SaveName[200]="default", bool logY=false);
+void PlotJpsiFitPar(int  nState=4, int rapMin=0, int rapMax=0, int ptMin=0, int ptMax=0, int rapFixTo=0, int ptFixTo=0, bool AddInclusiveResult=false, double Ymin=0., double Ymax=0., char ParName[200]="default", char ParTitle[200]="default", char Folder[200]="default", char SaveName[200]="default", bool logY=false, int WhatKindOfParIndex=5);
 void PlotJpsiRegionFracs(int  nState=4, int rapBin=0, int ptMin=0, int ptMax=0, double Ymin=0., double Ymax=0., char Folder[200]="default", char SaveName[200]="default", bool logY=false, int RegionCode=999);
 
 double legendsize=0.035;
@@ -127,69 +127,80 @@ int main(int argc, char* argv[]){
 	}
 
 
+	int WhatKindOfParIndex=999;
 
-	sprintf(SaveName, "CBmass_p0_jpsi"); sprintf(ParName, "CBmass_p0_jpsi"); sprintf(ParTitle,"#mu_{p0} [GeV]"); sprintf(Folder, "jpsi_mass");  Ymin = 3.093; Ymax = 3.0945; logY=false;
-	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "CBmass_p1_jpsi"); sprintf(ParName, "CBmass_p1_jpsi"); sprintf(ParTitle,"#mu_{p1} [GeV]"); sprintf(Folder, "jpsi_mass");  Ymin = -0.01; Ymax = 0.01; logY=false;
-	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "CBmass_p2_jpsi"); sprintf(ParName, "CBmass_p2_jpsi"); sprintf(ParTitle,"#mu_{p2} [GeV]"); sprintf(Folder, "jpsi_mass");  Ymin = -0.01; Ymax = 0.01; logY=false;
-	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
+	WhatKindOfParIndex=0; sprintf(SaveName, "CBmass_p0_jpsi"); sprintf(ParName, "CBmass_p0_jpsi"); sprintf(ParTitle,"#mu_{#psi} [GeV]"); sprintf(Folder, "jpsi_mass");  Ymin = 3.093; Ymax = 3.0945; logY=false;
+	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
+	WhatKindOfParIndex=0; sprintf(SaveName, "CBmass_p1_jpsi"); sprintf(ParName, "CBmass_p1_jpsi"); sprintf(ParTitle,"#mu_{p1} [GeV]"); sprintf(Folder, "jpsi_mass");  Ymin = -0.01; Ymax = 0.01; logY=false;
+	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
+	WhatKindOfParIndex=0; sprintf(SaveName, "CBmass_p2_jpsi"); sprintf(ParName, "CBmass_p2_jpsi"); sprintf(ParTitle,"#mu_{p2} [GeV]"); sprintf(Folder, "jpsi_mass");  Ymin = -0.01; Ymax = 0.01; logY=false;
+	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
 
-	sprintf(SaveName, "CBsigma_p0_jpsi"); sprintf(ParName, "CBsigma_p0_jpsi"); sprintf(ParTitle,"#sigma_{p0} [GeV]"); sprintf(Folder, "jpsi_mass");  Ymin = 0.017; Ymax = 0.024; logY=false;
-	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "CBsigma_p1_jpsi"); sprintf(ParName, "CBsigma_p1_jpsi"); sprintf(ParTitle,"#sigma_{p1} [GeV]"); sprintf(Folder, "jpsi_mass");  Ymin = -0.015; Ymax = 0.015; logY=false;
-	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "CBsigma_p2_jpsi"); sprintf(ParName, "CBsigma_p2_jpsi"); sprintf(ParTitle,"#sigma_{p2} [GeV]"); sprintf(Folder, "jpsi_mass");  Ymin = 0.005; Ymax = 0.02; logY=false;
-	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
+	WhatKindOfParIndex=0; sprintf(SaveName, "CBsigma_p0_jpsi"); sprintf(ParName, "CBsigma_p0_jpsi"); sprintf(ParTitle,"#sigma^{p0}_{#psi} [GeV]"); sprintf(Folder, "jpsi_mass");  Ymin = 0.017; Ymax = 0.024; logY=false;
+	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
+	WhatKindOfParIndex=0; sprintf(SaveName, "CBsigma_p1_jpsi"); sprintf(ParName, "CBsigma_p1_jpsi"); sprintf(ParTitle,"#sigma^{p1}_{#psi} [GeV]"); sprintf(Folder, "jpsi_mass");  Ymin = -0.015; Ymax = 0.015; logY=false;
+	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
+	WhatKindOfParIndex=0; sprintf(SaveName, "CBsigma_p2_jpsi"); sprintf(ParName, "CBsigma_p2_jpsi"); sprintf(ParTitle,"#sigma^{p2}_{#psi} [GeV]"); sprintf(Folder, "jpsi_mass");  Ymin = 0.005; Ymax = 0.02; logY=false;
+	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
 
-	sprintf(SaveName, "CBalpha_p0_jpsi"); sprintf(ParName, "CBalpha_p0_jpsi"); sprintf(ParTitle,"#alpha_{p0}"); sprintf(Folder, "jpsi_mass");  Ymin = 1.4; Ymax = 2.0; logY=false;
-	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "CBalpha_p1_jpsi"); sprintf(ParName, "CBalpha_p1_jpsi"); sprintf(ParTitle,"#alpha_{p1}"); sprintf(Folder, "jpsi_mass");  Ymin = 0.; Ymax = 0.8; logY=false;
-	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-
-	sprintf(SaveName, "bkgLambda_jpsi"); sprintf(ParName, "bkgLambda_jpsi"); sprintf(ParTitle,"#lambda_{BG}"); sprintf(Folder, "jpsi_mass");  Ymin = -3.; Ymax = -1.; logY=false;
-	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "fracBkg_jpsi"); sprintf(ParName, "fracBkg_jpsi"); sprintf(ParTitle,"f_{BG}"); sprintf(Folder, "jpsi_mass");  Ymin = 0.05; Ymax = 0.12; logY=false;
-	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "CBn_jpsi"); sprintf(ParName, "CBn_jpsi"); sprintf(ParTitle,"n_{CB}"); sprintf(Folder, "jpsi_mass");  Ymin = 2.49; Ymax = 2.51; logY=false;
-	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "var_massres"); sprintf(ParName, "var_massres"); sprintf(ParTitle,"#sigma^{eff.}_{#mu#mu} [GeV]"); sprintf(Folder, "jpsi_mass");  Ymin = 0.022; Ymax = 0.032; logY=false;
-	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
+	WhatKindOfParIndex=0; sprintf(SaveName, "CBalpha_p0_jpsi"); sprintf(ParName, "CBalpha_p0_jpsi"); sprintf(ParTitle,"#alpha^{CB}_{#psi}"); sprintf(Folder, "jpsi_mass");  Ymin = 1.4; Ymax = 2.0; logY=false;
+	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
+	WhatKindOfParIndex=0; sprintf(SaveName, "CBalpha_p1_jpsi"); sprintf(ParName, "CBalpha_p1_jpsi"); sprintf(ParTitle,"#alpha_{p1}"); sprintf(Folder, "jpsi_mass");  Ymin = 0.; Ymax = 0.8; logY=false;
+	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
 
 
-	sprintf(SaveName, "Chi2ndf_Lifetime_RSB"); sprintf(ParName, "var_chi2ndf_Lifetime_RSB"); sprintf(ParTitle,"#chi^{2} / ndf (lifetime RSB)"); sprintf(Folder, "jpsi_fitqual");  Ymin = 0.; Ymax = 3.; logY=false;
-	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "Chi2ndf_Lifetime_LSB"); sprintf(ParName, "var_chi2ndf_Lifetime_LSB"); sprintf(ParTitle,"#chi^{2} / ndf (lifetime LSB)"); sprintf(Folder, "jpsi_fitqual");  Ymin = 0.; Ymax = 3.; logY=false;
-	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "Chi2ndf_Lifetime_SR"); sprintf(ParName, "var_chi2ndf_Lifetime_SR"); sprintf(ParTitle,"#chi^{2} / ndf (lifetime SR)"); sprintf(Folder, "jpsi_fitqual");  Ymin = 0.; Ymax = 3.; logY=false;
-	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "Chi2ndf_Mass"); sprintf(ParName, "var_jpsi_chi2ndf_mass"); sprintf(ParTitle,"#chi^{2} / ndf (mass)"); sprintf(Folder, "jpsi_fitqual");  Ymin = 0.; Ymax = 7.; logY=false;
-	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
+
+	WhatKindOfParIndex=0; sprintf(SaveName, "bkgLambda_jpsi"); sprintf(ParName, "bkgLambda_jpsi"); sprintf(ParTitle,"#lambda_{BG} [GeV^{-1}]"); sprintf(Folder, "jpsi_mass");  Ymin = -5.; Ymax = 0.; logY=false;
+	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
+	WhatKindOfParIndex=0; sprintf(SaveName, "fracBkg_jpsi"); sprintf(ParName, "fracBkg_jpsi"); sprintf(ParTitle,"f^{#psi}_{#mu#muBG}"); sprintf(Folder, "jpsi_mass");  Ymin = 0.05; Ymax = 0.12; logY=false;
+	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
+	WhatKindOfParIndex=0; sprintf(SaveName, "CBn_jpsi"); sprintf(ParName, "CBn_jpsi"); sprintf(ParTitle,"n^{CB}_{#psi}"); sprintf(Folder, "jpsi_mass");  Ymin = 1.4; Ymax = 3.6; logY=false;
+	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
+	WhatKindOfParIndex=3; sprintf(SaveName, "var_massres"); sprintf(ParName, "var_massres"); sprintf(ParTitle,"#sigma^{eff.}_{#mu#mu} [GeV]"); sprintf(Folder, "jpsi_mass");  Ymin = 0.022; Ymax = 0.032; logY=false;
+	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
 
 
-	sprintf(SaveName, "Sig_ctResolution"); sprintf(ParName, "jpsi_ctResolution"); sprintf(ParTitle,"#sigma^{scale}_{c#tau}"); sprintf(Folder, "jpsi_lifetime");  Ymin = 0.7; Ymax = 1.1; logY=false;
-	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "Sig_ctResolution2"); sprintf(ParName, "jpsi_ctResolution2"); sprintf(ParTitle,"#sigma^{scale2}_{c#tau}"); sprintf(Folder, "jpsi_lifetime");  Ymin = 0.8; Ymax = 2.5; logY=false;
-	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "Sig_fracGauss2"); sprintf(ParName, "jpsi_fracGauss2"); sprintf(ParTitle,"f_{G2}"); sprintf(Folder, "jpsi_lifetime");  Ymin = 0.; Ymax = 0.45; logY=false;
-	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "Sig_fPrompt"); sprintf(ParName, "jpsi_fPrompt"); sprintf(ParTitle,"f_{PR}"); sprintf(Folder, "jpsi_lifetime");  Ymin = 0.; Ymax = 1.; logY=false;
-	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "Sig_nonPromptTau"); sprintf(ParName, "jpsi_nonPromptTau"); sprintf(ParTitle,"#tau_{NP}"); sprintf(Folder, "jpsi_lifetime");  Ymin = 0.36; Ymax = 0.4; logY=false;
-	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
+	WhatKindOfParIndex=4; sprintf(SaveName, "Chi2ndf_Lifetime_RSB"); sprintf(ParName, "var_chi2ndf_Lifetime_RSB"); sprintf(ParTitle,"#chi^{2} / ndf (lifetime RSB)"); sprintf(Folder, "jpsi_fitqual");  Ymin = 0.; Ymax = 3.; logY=false;
+	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
+	WhatKindOfParIndex=4; sprintf(SaveName, "Chi2ndf_Lifetime_LSB"); sprintf(ParName, "var_chi2ndf_Lifetime_LSB"); sprintf(ParTitle,"#chi^{2} / ndf (lifetime LSB)"); sprintf(Folder, "jpsi_fitqual");  Ymin = 0.; Ymax = 3.; logY=false;
+	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
+	WhatKindOfParIndex=4; sprintf(SaveName, "Chi2ndf_Lifetime_SR"); sprintf(ParName, "var_chi2ndf_Lifetime_SR"); sprintf(ParTitle,"#chi^{2} / ndf (lifetime SR)"); sprintf(Folder, "jpsi_fitqual");  Ymin = 0.; Ymax = 3.; logY=false;
+	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
+	WhatKindOfParIndex=4; sprintf(SaveName, "Chi2ndf_Mass"); sprintf(ParName, "var_jpsi_chi2ndf_mass"); sprintf(ParTitle,"#chi^{2} / ndf (mass)"); sprintf(Folder, "jpsi_fitqual");  Ymin = 0.; Ymax = 7.; logY=false;
+	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
 
-	sprintf(SaveName, "BK_fracBkg_jpsi"); sprintf(ParName, "jpsi_fBkg"); sprintf(ParTitle,"f^{SR}_{BG}"); sprintf(Folder, "jpsi_lifetime");  Ymin = 0.; Ymax = 0.07; logY=false;
-	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "BK_DSD_TauBkg"); sprintf(ParName, "jpsi_bkgTauDSD"); sprintf(ParTitle,"#tau^{DS}_{Bg}"); sprintf(Folder, "jpsi_lifetime");  Ymin = 0.; Ymax = 0.06; logY=false;
-	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "BK_FD_TauBkg"); sprintf(ParName, "jpsi_bkgTauFD"); sprintf(ParTitle,"#tau^{LS}_{Bg}"); sprintf(Folder, "jpsi_lifetime");  Ymin = 0.; Ymax = 0.4; logY=false;
-	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "BK_NP_TauBkg"); sprintf(ParName, "jpsi_bkgTauSSD"); sprintf(ParTitle,"#tau^{RS}_{Bg}"); sprintf(Folder, "jpsi_lifetime");  Ymin = 0.3; Ymax = 0.45; logY=false;
-	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "BK_fBkgDS"); sprintf(ParName, "jpsi_fBkgDSD"); sprintf(ParTitle,"f_{Bg}^{DS}"); sprintf(Folder, "jpsi_lifetime");  Ymin = 0.; Ymax = 0.4; logY=false;
-	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
-	sprintf(SaveName, "BK_fBkgRS"); sprintf(ParName, "jpsi_fBkgSSDR"); sprintf(ParTitle,"f_{Bg}^{RS}"); sprintf(Folder, "jpsi_lifetime");  Ymin = 0.5; Ymax = 0.9; logY=false;
-	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY);
+
+	WhatKindOfParIndex=0; sprintf(SaveName, "Sig_ctResolution"); sprintf(ParName, "jpsi_ctResolution"); sprintf(ParTitle,"#sigma^{scale}_{l}"); sprintf(Folder, "jpsi_lifetime");  Ymin = 0.7; Ymax = 1.1; logY=false;
+	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
+	WhatKindOfParIndex=0; sprintf(SaveName, "Sig_ctResolution2"); sprintf(ParName, "jpsi_ctResolution2"); sprintf(ParTitle,"#sigma^{scale2}_{l}"); sprintf(Folder, "jpsi_lifetime");  Ymin = 0.8; Ymax = 2.5; logY=false;
+	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
+	WhatKindOfParIndex=0; sprintf(SaveName, "Sig_fracGauss2"); sprintf(ParName, "jpsi_fracGauss2"); sprintf(ParTitle,"f_{G_{2}}"); sprintf(Folder, "jpsi_lifetime");  Ymin = 0.; Ymax = 0.45; logY=false;
+	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
+	WhatKindOfParIndex=0; sprintf(SaveName, "Sig_fPrompt"); sprintf(ParName, "jpsi_fPrompt"); sprintf(ParTitle,"f^{#psiSR}_{PR}"); sprintf(Folder, "jpsi_lifetime");  Ymin = 0.; Ymax = 1.; logY=false;
+	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
+	WhatKindOfParIndex=3; sprintf(SaveName, "Sig_fNonPrompt"); sprintf(ParName, "jpsi_fNonPrompt"); sprintf(ParTitle,"f^{#psiSR}_{NP}"); sprintf(Folder, "jpsi_lifetime");  Ymin = 0.; Ymax = 1.; logY=false;
+	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
+	WhatKindOfParIndex=0; sprintf(SaveName, "Sig_nonPromptTau"); sprintf(ParName, "jpsi_nonPromptTau"); sprintf(ParTitle,"#tau_{NP} [mm]"); sprintf(Folder, "jpsi_lifetime");  Ymin = 0.25; Ymax = 0.5; logY=false;
+	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
+
+	WhatKindOfParIndex=2; sprintf(SaveName, "BK_fracBkg_jpsi"); sprintf(ParName, "jpsi_fBkg"); sprintf(ParTitle,"f^{#psiSR}_{BG}"); sprintf(Folder, "jpsi_lifetime");  Ymin = 0.; Ymax = 0.07; logY=false;
+	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
+	WhatKindOfParIndex=0; sprintf(SaveName, "BK_DSD_TauBkg"); sprintf(ParName, "jpsi_bkgTauDSD"); sprintf(ParTitle,"#tau^{DS}_{BG} [mm]"); sprintf(Folder, "jpsi_lifetime");  Ymin = 0.; Ymax = 0.06; logY=false;
+	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
+	WhatKindOfParIndex=0; sprintf(SaveName, "BK_FD_TauBkg"); sprintf(ParName, "jpsi_bkgTauFD"); sprintf(ParTitle,"#tau^{LS}_{BG} [mm]"); sprintf(Folder, "jpsi_lifetime");  Ymin = 0.; Ymax = 0.4; logY=false;
+	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
+	WhatKindOfParIndex=0; sprintf(SaveName, "BK_NP_TauBkg"); sprintf(ParName, "jpsi_bkgTauSSD"); sprintf(ParTitle,"#tau^{RS}_{BG} [mm]"); sprintf(Folder, "jpsi_lifetime");  Ymin = 0.3; Ymax = 0.45; logY=false;
+	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
+	WhatKindOfParIndex=0; sprintf(SaveName, "BK_fBkgDS"); sprintf(ParName, "jpsi_fBkgDSD"); sprintf(ParTitle,"f_{BG}^{DS}"); sprintf(Folder, "jpsi_lifetime");  Ymin = 0.; Ymax = 0.4; logY=false;
+	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
+	WhatKindOfParIndex=0; sprintf(SaveName, "BK_fBkgRS"); sprintf(ParName, "jpsi_fBkgSSDR"); sprintf(ParTitle,"f_{BG}^{RS}"); sprintf(Folder, "jpsi_lifetime");  Ymin = 0.5; Ymax = 0.9; logY=false;
+	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
+	WhatKindOfParIndex=3; sprintf(SaveName, "BK_fBkgLS"); sprintf(ParName, "jpsi_fBkgSSDL"); sprintf(ParTitle,"f_{BG}^{LS}"); sprintf(Folder, "jpsi_lifetime");  Ymin = 0.; Ymax = 0.1; logY=false;
+	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
+
+	//jpsi_fNonPrompt
+	//jpsi_fNonPromptLSB
+	//jpsi_fNonPromptRSB
 
 
 	return 0;
@@ -197,7 +208,7 @@ int main(int argc, char* argv[]){
 
 
 //=============================================
-void PlotJpsiFitPar(int  nState, int rapMin, int rapMax, int ptMin, int ptMax, int rapFixTo, int ptFixTo, bool AddInclusiveResult, double Ymin, double Ymax, char ParName[200], char ParTitle[200], char Folder[200], char SaveName[200], bool logY){
+void PlotJpsiFitPar(int  nState, int rapMin, int rapMax, int ptMin, int ptMax, int rapFixTo, int ptFixTo, bool AddInclusiveResult, double Ymin, double Ymax, char ParName[200], char ParTitle[200], char Folder[200], char SaveName[200], bool logY, int WhatKindOfParIndex){
 	int RapBins = rapMax-rapMin+1,
 			PtBins  = ptMax-ptMin+1;
 
@@ -317,6 +328,12 @@ void PlotJpsiFitPar(int  nState, int rapMin, int rapMax, int ptMin, int ptMax, i
 				Par_Err[rapArrayIndex][ptArrayIndex] = 0.;
 			}
 
+			if(WhatKindOfParIndex==0){
+				if(!functionVar)
+					if(ws->var(ParName)->isConstant()) WhatKindOfParIndex=1;
+				if(functionVar)
+					WhatKindOfParIndex=1;
+			}
 
 			cout<<"pTmean: "<<pTmean[rapArrayIndex][ptArrayIndex]<<" +-"<<pTmean_Err[rapArrayIndex][ptArrayIndex]<<endl;
 			cout<<ParName<<": "<<Par[rapArrayIndex][ptArrayIndex]<<" +-"<<Par_Err[rapArrayIndex][ptArrayIndex]<<endl;
@@ -450,6 +467,21 @@ void PlotJpsiFitPar(int  nState, int rapMin, int rapMax, int ptMin, int ptMax, i
 		graph_Par[rapArrayIndex]->Draw("Psame");
 	}
 
+
+
+	char WhatKindOfPar[200];
+	if(WhatKindOfParIndex==0) sprintf(WhatKindOfPar,"Floating par.");
+	if(WhatKindOfParIndex==1) sprintf(WhatKindOfPar,"Fixed par.");
+	if(WhatKindOfParIndex==2) sprintf(WhatKindOfPar,"Constrained par.");
+	if(WhatKindOfParIndex==3) sprintf(WhatKindOfPar,"Derived par.");
+
+	left=0.65; top=2*bottomMarg;
+    latex->SetTextColor(kRed);
+    if(WhatKindOfParIndex<4) latex->DrawLatex(left,top,Form(WhatKindOfPar));
+
+
+
+
 	legend->Draw();
 
 	if(logY) c1->SetLogy(true);
@@ -473,7 +505,7 @@ void PlotJpsiFitPar(int  nState, int rapMin, int rapMax, int ptMin, int ptMax, i
 
 void PlotJpsiRegionFracs(int  nState, int rapBin, int ptMin, int ptMax, double Ymin, double Ymax, char Folder[200], char SaveName[200], bool logY, int RegionCode){
 
-	const int nContributions = 2;
+	const int nContributions = 4;
 	const int PtBins = ptMax-ptMin+1;
 
 	std::stringstream savePath;
@@ -506,6 +538,10 @@ void PlotJpsiRegionFracs(int  nState, int rapBin, int ptMin, int ptMax, double Y
 	double Frac_BG_Err[PtBins];
 	double Frac_Jpsi[PtBins];
 	double Frac_Jpsi_Err[PtBins];
+	double Frac_PRJpsi[PtBins];
+	double Frac_PRJpsi_Err[PtBins];
+	double Frac_NPJpsi[PtBins];
+	double Frac_NPJpsi_Err[PtBins];
 
 
 	TFile *inFile;
@@ -544,6 +580,15 @@ void PlotJpsiRegionFracs(int  nState, int rapBin, int ptMin, int ptMax, double Y
 			Frac_Jpsi[ptArrayIndex] = ws->var(ParName)->getVal();
 			Frac_Jpsi_Err[ptArrayIndex] = ws->var(ParName)->getError();
 
+			if(RegionCode==2) sprintf(ParName,"jpsi_fPrompt");
+			else sprintf(ParName,"jpsi_fPrompt%s",RegName);
+			Frac_PRJpsi[ptArrayIndex] = ws->function(ParName)->getVal();
+			Frac_PRJpsi_Err[ptArrayIndex] = 0.;
+			if(RegionCode==2) sprintf(ParName,"jpsi_fNonPrompt");
+			else sprintf(ParName,"jpsi_fNonPrompt%s",RegName);
+			Frac_NPJpsi[ptArrayIndex] = ws->function(ParName)->getVal();
+			Frac_NPJpsi_Err[ptArrayIndex] = 0.;
+
 		}
 
 
@@ -551,18 +596,20 @@ void PlotJpsiRegionFracs(int  nState, int rapBin, int ptMin, int ptMax, double Y
 
 
 
-	TGraphErrors *graph_Frac_BG, *graph_Frac_Jpsi;
+	TGraphErrors *graph_Frac_BG, *graph_Frac_Jpsi, *graph_Frac_PRJpsi, *graph_Frac_NPJpsi;
 
 	graph_Frac_BG = new TGraphErrors(PtBins, pTmean, Frac_BG, pTmean_Err, Frac_BG_Err);
 	graph_Frac_Jpsi = new TGraphErrors(PtBins, pTmean, Frac_Jpsi, pTmean_Err, Frac_Jpsi_Err);
+	graph_Frac_PRJpsi = new TGraphErrors(PtBins, pTmean, Frac_PRJpsi, pTmean_Err, Frac_PRJpsi_Err);
+	graph_Frac_NPJpsi = new TGraphErrors(PtBins, pTmean, Frac_NPJpsi, pTmean_Err, Frac_NPJpsi_Err);
 
-	double markersize[nContributions]={1., 1.};
-	int markerstyle[nContributions]={25, 20};
-	int markercolor[nContributions]={1, onia::colorJpsi};
+	double markersize[nContributions]={1., 1., 1., 1.};
+	int markerstyle[nContributions]={25, 20, 24, 24};
+	int markercolor[nContributions]={onia::ColorMuMuBG, onia::ColorSumJpsiSignal, onia::ColorPRJpsi, onia::ColorNPJpsi};
 
 
-	if(RegionCode==1 || RegionCode==3 ) markersize[0]*=1.5;
-	if(RegionCode==2) markersize[1]*=1.5;
+	//if(RegionCode==1 || RegionCode==3 ) markersize[0]*=1.5;
+	//if(RegionCode==2) markersize[1]*=1.5;
 
 
 	graph_Frac_BG->SetMarkerStyle(markerstyle[0]);
@@ -574,6 +621,16 @@ void PlotJpsiRegionFracs(int  nState, int rapBin, int ptMin, int ptMax, double Y
 	graph_Frac_Jpsi->SetMarkerSize(markersize[1]);
 	graph_Frac_Jpsi->SetMarkerColor(markercolor[1]);
 	graph_Frac_Jpsi->SetLineColor(markercolor[1]);
+
+	graph_Frac_PRJpsi->SetMarkerStyle(markerstyle[2]);
+	graph_Frac_PRJpsi->SetMarkerSize(markersize[2]);
+	graph_Frac_PRJpsi->SetMarkerColor(markercolor[2]);
+	graph_Frac_PRJpsi->SetLineColor(markercolor[2]);
+
+	graph_Frac_NPJpsi->SetMarkerStyle(markerstyle[3]);
+	graph_Frac_NPJpsi->SetMarkerSize(markersize[3]);
+	graph_Frac_NPJpsi->SetMarkerColor(markercolor[3]);
+	graph_Frac_NPJpsi->SetLineColor(markercolor[3]);
 
 
 	double bottomMarg=0.11;
@@ -596,7 +653,9 @@ void PlotJpsiRegionFracs(int  nState, int rapBin, int ptMin, int ptMax, double Y
 	legend->SetBorderSize(0.);
 
 	legend->AddEntry(graph_Frac_BG,"Bkg","lp");
-	legend->AddEntry(graph_Frac_Jpsi,"J/#psi","lp");
+	legend->AddEntry(graph_Frac_Jpsi,"PR+NP J/#psi","lp");
+	legend->AddEntry(graph_Frac_PRJpsi,"PR J/#psi","lp");
+	legend->AddEntry(graph_Frac_NPJpsi,"NP J/#psi","lp");
 
 
 
@@ -646,6 +705,8 @@ void PlotJpsiRegionFracs(int  nState, int rapBin, int ptMin, int ptMax, double Y
 
 	graph_Frac_BG->Draw("AP");
 	graph_Frac_Jpsi->Draw("Psame");
+	graph_Frac_PRJpsi->Draw("Psame");
+	graph_Frac_NPJpsi->Draw("Psame");
 
 
 	legend->Draw();

@@ -90,8 +90,8 @@ void massFit(const std::string &infilename, int rapBin, int ptBin, int nState, b
 
 
 		//ws->var("CBsigma_p0_jpsi")->setMax(0.06);
-        //ws->var("CBsigma_p1_jpsi")->setVal(0.);
-        //ws->var("CBsigma_p1_jpsi")->setConstant(kTRUE);
+        ws->var("CBsigma_p1_jpsi")->setVal(0.);
+        ws->var("CBsigma_p1_jpsi")->setConstant(kTRUE);
         //ws->var("CBsigma_p2_jpsi")->setVal(0.);
         //ws->var("CBsigma_p2_jpsi")->setConstant(kTRUE);
 
@@ -100,8 +100,8 @@ void massFit(const std::string &infilename, int rapBin, int ptBin, int nState, b
 		ws->var("CBmass_p2_jpsi")->setVal(0.);
 		ws->var("CBmass_p2_jpsi")->setConstant(kTRUE);
 
-		//ws->var("CBalpha_p1_jpsi")->setVal(0.);
-		//ws->var("CBalpha_p1_jpsi")->setConstant(kTRUE);
+		ws->var("CBalpha_p1_jpsi")->setVal(0.);
+		ws->var("CBalpha_p1_jpsi")->setConstant(kTRUE);
 
 
 

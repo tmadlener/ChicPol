@@ -42,11 +42,11 @@ void createWorkspace(const std::string &infilename, int nState, bool correctCtau
 
 	// define variables necessary for J/Psi(Psi(2S)) mass,lifetime fit
 	RooRealVar* JpsiMass =
-		new RooRealVar("JpsiMass", "M^{J/#psi} [GeV]", onia::massMin, onia::massMax);
+		new RooRealVar("JpsiMass", "M^{#psi} [GeV]", onia::massMin, onia::massMax);
 	RooRealVar* JpsiPt =
-		new RooRealVar("JpsiPt", "p^{J/#psi}_{T} [GeV]", 0. ,1000.);
+		new RooRealVar("JpsiPt", "p^{#psi}_{T} [GeV]", 0. ,1000.);
 	RooRealVar* JpsiRap =
-		new RooRealVar("JpsiRap", "y^{J/#psi}", -2., 2.);
+		new RooRealVar("JpsiRap", "y^{#psi}", -2., 2.);
 	RooRealVar* chicMass =
 		new RooRealVar("chicMass", "M^{#chi} [GeV]", onia::chimassMin, onia::chimassMax);
 	RooRealVar* chicRap =
@@ -245,13 +245,29 @@ void createWorkspace(const std::string &infilename, int nState, bool correctCtau
 			name << "jpsi_data_rap" << iRap << "_pt" << iPT;
 			binData->SetNameTitle(name.str().c_str(), "Data For Fitting");    
 
+			cout << "numEvents = " << binData->sumEntries() << endl;
+
 			double chicMeanPt = binData->mean(*chicPt);
 		    RooRealVar var_chicMeanPt("var_chicMeanPt","var_chicMeanPt",chicMeanPt); if(!ws->var("var_chicMeanPt")) ws->import(var_chicMeanPt); else ws->var("var_chicMeanPt")->setVal(chicMeanPt);
-			cout << "numEvents = " << binData->sumEntries() << endl;
 			cout << "chicMeanPt = " << chicMeanPt << endl;
 
-			double JpsiMeanRap = binData->mean(*JpsiRap);
-			cout << "JpsiMeanRap = " << JpsiMeanRap << endl;
+			double jpsiMeanPt = binData->mean(*JpsiPt);
+		    RooRealVar var_jpsiMeanPt("var_jpsiMeanPt","var_jpsiMeanPt",jpsiMeanPt); if(!ws->var("var_jpsiMeanPt")) ws->import(var_jpsiMeanPt); else ws->var("var_jpsiMeanPt")->setVal(jpsiMeanPt);
+			cout << "jpsiMeanPt = " << jpsiMeanPt << endl;
+
+			std::stringstream cutStringPosRapChic;
+			cutStringPosRapChic << "chicRap > 0";
+			RooDataSet* binDataPosRapChic = (RooDataSet*)binData->reduce(cutStringPosRapChic.str().c_str());
+			double chicMeanAbsRap = binDataPosRapChic->mean(*chicRap);
+			cout << "chicMeanAbsRap = " << chicMeanAbsRap << endl;
+		    RooRealVar var_chicMeanAbsRap("var_chicMeanAbsRap","var_chicMeanAbsRap",chicMeanAbsRap); if(!ws->var("var_chicMeanAbsRap")) ws->import(var_chicMeanAbsRap); else ws->var("var_chicMeanAbsRap")->setVal(chicMeanAbsRap);
+
+			std::stringstream cutStringPosRapJpsi;
+			cutStringPosRapJpsi << "JpsiRap > 0";
+			RooDataSet* binDataPosRapJpsi = (RooDataSet*)binData->reduce(cutStringPosRapJpsi.str().c_str());
+			double jpsiMeanAbsRap = binDataPosRapJpsi->mean(*JpsiRap);
+			cout << "jpsiMeanAbsRap = " << jpsiMeanAbsRap << endl;
+		    RooRealVar var_jpsiMeanAbsRap("var_jpsiMeanAbsRap","var_jpsiMeanAbsRap",jpsiMeanAbsRap); if(!ws->var("var_jpsiMeanAbsRap")) ws->import(var_jpsiMeanAbsRap); else ws->var("var_jpsiMeanAbsRap")->setVal(jpsiMeanAbsRap);
 
 			// Import variables to workspace
 			ws->import(*binData);
@@ -360,7 +376,7 @@ void createWorkspace(const std::string &infilename, int nState, bool correctCtau
 		}
 
 		char savename[200];
-		sprintf(savename,"Fit/rapPt_Chi.pdf");
+		sprintf(savename,"Figures/rapPt_Chi.pdf");
 		c2->SaveAs(savename);
 
 		TCanvas* c3 = new TCanvas("c3","c3",1500,1200);
@@ -370,7 +386,7 @@ void createWorkspace(const std::string &infilename, int nState, bool correctCtau
 		rap1p2->SetStats(0);
 		rap1p2->GetYaxis()->SetTitleOffset(1.2);
 		rap1p2->Draw();
-		sprintf(savename,"Fit/rap_Chi_1p2.pdf");
+		sprintf(savename,"Figures/rap_Chi_1p2.pdf");
 		c3->SaveAs(savename);
 	}
 
