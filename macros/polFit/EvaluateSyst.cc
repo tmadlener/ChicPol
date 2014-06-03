@@ -282,8 +282,8 @@ int main(int argc, char* argv[]) {
 
 			graphSyst->SetMarkerColor(ToyMC::MarkerColor[nFrame]);
 			graphSyst->SetLineColor(ToyMC::MarkerColor[nFrame]);
-			graphSyst->SetMarkerStyle(ToyMC::MarkerStyle[nState][rapBin]);
-			graphSyst->SetMarkerSize(ToyMC::MarkerSize[nState][rapBin]);
+			graphSyst->SetMarkerStyle(ToyMC::MarkerStyle[nState]);
+			graphSyst->SetMarkerSize(ToyMC::MarkerSize[nState]);
 			graphSyst->SetName(graphName.str().c_str());
 
 			outfile->cd();
