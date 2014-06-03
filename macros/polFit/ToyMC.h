@@ -13,11 +13,15 @@ int MarkerColor[3] = {0, 601, 632};
 int MarkerColor2[3] = {0, 632, 632};
 int MarkerColor3[3] = {0, 418, 632};
 */
-int MarkerStyle[6][4]={{0,0,0,0},{0,33,27,34},{0,20,24,29},{0,21,25,22},
-	{0,33,27,34},{0,20,24,29}}; // for each state, rapBin (1= closed, 2=open)
-int MarkerColor[6] = {0,1,1,1,1,1};//{0,600,632,418}; // for each frame
-double MarkerSize[6][4]={{0,0,0},{0,2.75,2.75,2.75},{0,1.65,1.65,1.65},{0,1.65,1.65,1.65},
-	{0,2.75,2.75,2.75},{0,1.65,1.65,1.65}};// for each state, rapBin
+//int MarkerStyle[6][4]={{0,0,0,0},{0,33,27,34},{0,20,24,29},{0,21,25,22},
+//	{0,33,27,34},{0,20,24,29}}; // for each state, rapBin (1= closed, 2=open)
+//int MarkerColor[6] = {0,1,1,1,1,1};//{0,600,632,418}; // for each frame
+//double MarkerSize[6][4]={{0,0,0},{0,2.75,2.75,2.75},{0,1.65,1.65,1.65},{0,1.65,1.65,1.65},
+//	{0,2.75,2.75,2.75},{0,1.65,1.65,1.65}};// for each state, rapBin
+
+int MarkerStyle[8]={0,33,27,34,20,20,20,20}; // for each state, rapBin (1= closed, 2=open)
+int MarkerColor[4] = {0,600,632,418}; // for each frame
+double MarkerSize[8]={1.,1.,1.,1.,1.,1.,1.,1.};// for each state, rapBin
 
 
 

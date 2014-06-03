@@ -35,11 +35,11 @@ ptBinMin=1
 ptBinMax=5
 fi
 
-frameSig=1
-for polScenSig in 3;do
+frameSig=3
+for polScenSig in 4;do
 
-frameBkg=1
-for polScenBkg in 3;do
+frameBkg=3
+for polScenBkg in 2;do
 
 nGenerations=15
 

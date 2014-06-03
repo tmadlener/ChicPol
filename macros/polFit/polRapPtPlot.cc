@@ -194,8 +194,8 @@ void PlotRapPt(int ptBinMin, int ptBinMax, int rapBin, double yMin, double yMax,
 	TGraphAsymmErrors *plotGraph = new TGraphAsymmErrors(nBinspT,ptCentre_,lmean,ptCentreErr_low,ptCentreErr_high,lmeanerr_low,lmeanerr_high);
 	plotGraph->SetMarkerColor(ToyMC::MarkerColor[nFrame]);
 	plotGraph->SetLineColor(ToyMC::MarkerColor[nFrame]);
-	plotGraph->SetMarkerStyle(ToyMC::MarkerStyle[nState][rapBin]);
-	plotGraph->SetMarkerSize(ToyMC::MarkerSize[nState][rapBin]);
+	plotGraph->SetMarkerStyle(ToyMC::MarkerStyle[nState]);
+	plotGraph->SetMarkerSize(ToyMC::MarkerSize[nState]);
 	plotGraph->SetName(GraphName);
 	plotGraph->Draw("P");
 	plotGraph->Write();
@@ -203,9 +203,7 @@ void PlotRapPt(int ptBinMin, int ptBinMax, int rapBin, double yMin, double yMax,
 
 
 	char texTex[200];
-	if(rapBin==1) sprintf(texTex,"      |y| < 0.6");
-	if(rapBin==2) sprintf(texTex,"0.6 < |y| < 1.2");
-	if(rapBin==3) sprintf(texTex,"1.2 < |y| < 1.5");
+	sprintf(texTex,"      |y^{#chi}| < 1.2");
 	TLatex *text = new TLatex(onia::pTRange[rapBin][ptBinMax]*0.22,yMin+(yMax-yMin)*0.1,texTex);
 	text->SetTextSize(0.035);
 	text->Draw( "same" );
@@ -309,8 +307,8 @@ void PlotComparisonRapPt(int ptBinMin, int ptBinMax, int rapBin, double yMin, do
 	TGraphAsymmErrors *plotGraph = new TGraphAsymmErrors(nBinspT,ptCentre_,lmean1,ptCentreErr_low,ptCentreErr_high,lmean1err_low,lmean1err_high);
 	plotGraph->SetMarkerColor(ToyMC::MarkerColor[1]);
 	plotGraph->SetLineColor(ToyMC::MarkerColor[1]);
-	plotGraph->SetMarkerStyle(ToyMC::MarkerStyle[nState][rapBin]);
-	plotGraph->SetMarkerSize(ToyMC::MarkerSize[nState][rapBin]);
+	plotGraph->SetMarkerStyle(ToyMC::MarkerStyle[nState]);
+	plotGraph->SetMarkerSize(ToyMC::MarkerSize[nState]);
 	plotGraph->Draw("P");
 	sprintf(legendentry,"CS");
 	plotLegend->AddEntry(plotGraph,legendentry,"ple");
@@ -326,8 +324,8 @@ void PlotComparisonRapPt(int ptBinMin, int ptBinMax, int rapBin, double yMin, do
 	plotGraph = new TGraphAsymmErrors(nBinspT,ptCentre_,lmean2,ptCentreErr_low,ptCentreErr_high,lmean2err_low,lmean2err_high);
 	plotGraph->SetMarkerColor(ToyMC::MarkerColor[2]);
 	plotGraph->SetLineColor(ToyMC::MarkerColor[2]);
-	plotGraph->SetMarkerStyle(ToyMC::MarkerStyle[nState][rapBin]);
-	plotGraph->SetMarkerSize(ToyMC::MarkerSize[nState][rapBin]);
+	plotGraph->SetMarkerStyle(ToyMC::MarkerStyle[nState]);
+	plotGraph->SetMarkerSize(ToyMC::MarkerSize[nState]);
 	plotGraph->Draw("P");
 	sprintf(legendentry,"HX");
 	plotLegend->AddEntry(plotGraph,legendentry,"ple");
@@ -343,16 +341,14 @@ void PlotComparisonRapPt(int ptBinMin, int ptBinMax, int rapBin, double yMin, do
 	plotGraph = new TGraphAsymmErrors(nBinspT,ptCentre_,lmean3,ptCentreErr_low,ptCentreErr_high,lmean3err_low,lmean3err_high);
 	plotGraph->SetMarkerColor(ToyMC::MarkerColor[3]);
 	plotGraph->SetLineColor(ToyMC::MarkerColor[3]);
-	plotGraph->SetMarkerStyle(ToyMC::MarkerStyle[nState][rapBin]);
-	plotGraph->SetMarkerSize(ToyMC::MarkerSize[nState][rapBin]);
+	plotGraph->SetMarkerStyle(ToyMC::MarkerStyle[nState]);
+	plotGraph->SetMarkerSize(ToyMC::MarkerSize[nState]);
 	plotGraph->Draw("P");
 	sprintf(legendentry,"PX");
 	plotLegend->AddEntry(plotGraph,legendentry,"ple");
 
 	char texTex[200];
-	if(rapBin==1) sprintf(texTex,"      |y| < 0.6");
-	if(rapBin==2) sprintf(texTex,"0.6 < |y| < 1.2");
-	if(rapBin==3) sprintf(texTex,"1.2 < |y| < 1.5");
+	sprintf(texTex,"      |y^{#chi}| < 1.2");
 	TLatex *text = new TLatex(onia::pTRange[rapBin][ptBinMax]*0.22,yMin+(yMax-yMin)*0.1,texTex);
 	text->SetTextSize(0.035);
 	text->Draw( "same" );
