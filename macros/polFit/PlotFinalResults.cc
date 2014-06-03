@@ -1055,8 +1055,8 @@ int main(int argc, char** argv) {
 			if(!PlotBrazilian&&!SBmSigPlots&&!BGratioFits&&!SteerIndividuals&&!PlotMatt&&!PlotVsComp) graphSyst->Draw("2");//Comment if PlotBG0plots Low
 			graphDefaultRes->SetMarkerColor(ToyMC::MarkerColor[nFrame]);
 			graphDefaultRes->SetLineColor(ToyMC::MarkerColor[nFrame]);
-			graphDefaultRes->SetMarkerStyle(ToyMC::MarkerStyle[nState][rapBin]);
-			graphDefaultRes->SetMarkerSize(ToyMC::MarkerSize[nState][rapBin]);
+			graphDefaultRes->SetMarkerStyle(ToyMC::MarkerStyle[nState]);
+			graphDefaultRes->SetMarkerSize(ToyMC::MarkerSize[nState]);
 			if(PlotBG0plots){
 				graphDefaultRes->SetMarkerStyle(20);
 				graphDefaultRes->SetMarkerSize(BG0MarkerSize);
@@ -1110,8 +1110,8 @@ int main(int argc, char** argv) {
 				graphSyst->SetLineColor(kBlack);
 				graphSyst->SetMarkerColor(ToyMC::MarkerColor[nFrame]);
 				graphSyst->SetLineColor(ToyMC::MarkerColor[nFrame]);
-				graphSyst->SetMarkerStyle(ToyMC::MarkerStyle[nState][rapBin]);
-				graphSyst->SetMarkerSize(ToyMC::MarkerSize[nState][rapBin]);
+				graphSyst->SetMarkerStyle(ToyMC::MarkerStyle[nState]);
+				graphSyst->SetMarkerSize(ToyMC::MarkerSize[nState]);
 
 				ptOriginal=0;
 				for(int ptBinOriginal=ptBinMin;ptBinOriginal<ptBinMax+1;ptBinOriginal++){
@@ -1130,8 +1130,8 @@ int main(int argc, char** argv) {
 				graphDefaultStat->SetLineColor(kBlack);
 				graphDefaultStat->SetMarkerColor(ToyMC::MarkerColor[nFrame]);
 				graphDefaultStat->SetLineColor(ToyMC::MarkerColor[nFrame]);
-				graphDefaultStat->SetMarkerStyle(ToyMC::MarkerStyle[nState][rapBin]);
-				graphDefaultStat->SetMarkerSize(ToyMC::MarkerSize[nState][rapBin]);
+				graphDefaultStat->SetMarkerStyle(ToyMC::MarkerStyle[nState]);
+				graphDefaultStat->SetMarkerSize(ToyMC::MarkerSize[nState]);
 
 				ptOriginal=0;
 				for(int ptBinOriginal=ptBinMin;ptBinOriginal<ptBinMax+1;ptBinOriginal++){
@@ -1457,8 +1457,8 @@ int main(int argc, char** argv) {
 				graphDefaultStat->SetLineColor(kBlack);
 				graphDefaultStat->SetMarkerColor(ToyMC::MarkerColor[nFrame]);
 				graphDefaultStat->SetLineColor(ToyMC::MarkerColor[nFrame]);
-				graphDefaultStat->SetMarkerStyle(ToyMC::MarkerStyle[nState][rapBin]);
-				graphDefaultStat->SetMarkerSize(ToyMC::MarkerSize[nState][rapBin]);
+				graphDefaultStat->SetMarkerStyle(ToyMC::MarkerStyle[nState]);
+				graphDefaultStat->SetMarkerSize(ToyMC::MarkerSize[nState]);
 
 				graphDefaultRes->SetFillColor(kGreen);
 				graphDefaultRes->SetLineColor(kGreen);
