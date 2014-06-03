@@ -100,7 +100,7 @@ void buildLifetimePDF(RooWorkspace *ws){
 
 	//----prompt
 	//resolution function
-	ws->factory("RooGaussModel::jpsi_promptLifetime(Jpsict,jpsi_promptMean[0.],jpsi_ctResolution[0.8,0.5,1.15],JpsictErr)");
+	ws->factory("RooGaussModel::jpsi_promptLifetime(Jpsict,jpsi_promptMean[0.,-0.1, 0.1],jpsi_ctResolution[0.8,0.5,1.15],JpsictErr)");
 	//ws->factory("RooGaussModel::jpsi_promptLifetime(Jpsict,jpsi_promptMean[0.],jpsi_ctResolution_param,JpsictErr)");
 	((RooGaussModel*)ws->pdf("jpsi_promptLifetime"))->advertiseFlatScaleFactorIntegral(true);
 
@@ -263,11 +263,11 @@ void doFit(RooWorkspace *ws, int nState, double BkgRatio3Sig, double fracBkgInLS
 	//ws->var("jpsi_nonPromptTau")->setConstant(kTRUE);
 
 	//ws->var("jpsi_ctResolution")->setVal(0.848*1.0525);
-	ws->var("jpsi_ctResolution2")->setVal(1.55);
 	//ws->var("jpsi_ctResolution")->setConstant(kTRUE);
-	ws->var("jpsi_ctResolution2")->setConstant(kTRUE);
 	//ws->var("jpsi_fracGauss2")->setConstant(kTRUE);
 
+	//ws->var("jpsi_ctResolution2")->setVal(1.55);
+	//ws->var("jpsi_ctResolution2")->setConstant(kTRUE);
 
 	//RooAbsPdf *ModelLifeSR = (RooAbsPdf*)ws->pdf("jpsi_fulllifetimeSR");
 	//RooAbsPdf *ModelLifeLSB = (RooAbsPdf*)ws->pdf("jpsi_backgroundlifetimeL");

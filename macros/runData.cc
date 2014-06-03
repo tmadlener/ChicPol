@@ -191,9 +191,13 @@ void BookHistosReco(int nState){
   lepP = new TLorentzVector();
   lepN = new TLorentzVector();
   jpsi = new TLorentzVector();
+  chic = new TLorentzVector();
+  chic_rf = new TLorentzVector();
   treeOut->Branch("lepP", "TLorentzVector", &lepP);
   treeOut->Branch("lepN", "TLorentzVector", &lepN);
-  treeOut->Branch("JpsiP", "TLorentzVector", &jpsi);
+  treeOut->Branch("jpsi", "TLorentzVector", &jpsi);
+  treeOut->Branch("chic", "TLorentzVector", &chic);
+  treeOut->Branch("chic_rf", "TLorentzVector", &chic_rf);
 
 }
 

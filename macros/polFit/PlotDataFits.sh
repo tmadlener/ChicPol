@@ -5,8 +5,8 @@ cd ..
 cd ..
 basedir=$PWD
 cd macros/polFit
-#storagedir=`more storagedir`/Data #please define the directory storagedir in the file macros/polFit/storagedir
-storagedir=$basedir/Psi/Data
+storagedir=`more storagedir`/Data #please define the directory storagedir in the file macros/polFit/storagedir
+#storagedir=$basedir/Psi/Data
 datadir_Start=${basedir}/macros/DataFiles
 
 ########## INPUTS ##########

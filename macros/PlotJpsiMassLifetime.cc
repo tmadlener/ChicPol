@@ -715,6 +715,8 @@ double plotLifeSig(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool Spe
 
 	double binWidth=(PlotMax-PlotMin)/double(nbins)*1000;
 
+	//ws->var("jpsi_promptMean")->setMin(-10.);
+	//ws->var("jpsi_promptMean")->setVal(-1.);
 
 	RooRealVar JpsiMass(*ws->var("JpsiMass"));
 	RooRealVar Jpsict(*ws->var("Jpsict"));

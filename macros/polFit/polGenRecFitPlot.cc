@@ -148,6 +148,8 @@ int main(int argc, char** argv) {
 	if(nState == 5 && rapBinMin==2) mass_signal_sigma=0.038;
 	if(nState == 5 && rapBinMin==3) mass_signal_sigma=0.048;
 
+	if(nState == 6) mass_signal_sigma=0.025;
+	if(nState == 7) mass_signal_sigma=0.025;
 
 	double lambda_theta_sig_;
 	double lambda_phi_sig_;
@@ -281,6 +283,8 @@ int main(int argc, char** argv) {
 	if(nState==3) mass_signal_peak=10.4;
 	if(nState==4) mass_signal_peak=3.097;
 	if(nState==5) mass_signal_peak=3.686;
+	if(nState==6) mass_signal_peak=3.097;
+	if(nState==7) mass_signal_peak=3.097;
 
 	if(!UseDifferingEff) {nRecEff=nEff; nRecDileptonEff=nDileptonEff; MCReceff=MCeff; MCDileptonReceff=MCDileptoneff; nRecRhoFactor=nRhoFactor;}
 

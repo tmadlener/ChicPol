@@ -80,11 +80,50 @@ void createWorkspace(const std::string &infilename, int nState, bool correctCtau
 	int numEntriesInAnalysis=0;
 	int numEntriesNotInAnalysis=0;
 
-	TFile* infile = new TFile("/afs/hephy.at/scratch/k/knuenz/tmp/ChicPol/JpsictErr2011_15_20.root", "READ");
+
+
+
+	/// Read in 2011 data ctauErr-histos
+
+	char saveDir[200];
+	char PlotID[200];
+	char savename[200];
+	sprintf(saveDir,"/afs/hephy.at/scratch/k/knuenz/ChicPol/macros/polFit/Figures/CtauErrModel");
+	gSystem->mkdir(saveDir);
+	sprintf(PlotID,"2014May26_MoreLbins");
+	sprintf(saveDir,"%s/%s",saveDir,PlotID);
+	gSystem->mkdir(saveDir);
+	sprintf(savename,"%s/CtauErrModel_histograms.root",saveDir);
+
+	TFile *infile = new TFile(savename,"READ");
 	cout<<"opened file"<<endl;
-	TH1F* h_JpsictErr=(TH1F*)infile->Get("h");
-	h_JpsictErr->Print();
-	cout<<"opened hist"<<endl;
+
+	const int nPT=5;
+	const int nRAP=2;
+	const int nL=15;
+
+	const double bordersPT[nPT+1] = {0., 12., 16., 20., 30., 100.};
+	const double bordersRAP[nRAP+1] = {0., 0.6, 2.};
+	const double bordersL[nL+1] = {onia::ctVarMin, -0.05, -0.03, -0.02, -0.015, -0.01, -0.005,  0., 0.005, 0.01, 0.015, 0.02, 0.03, 0.05, 0.1, onia::ctVarMax};
+
+	TH1D* h_ctauerr_2011[nRAP+1][nPT+1][nL+1];
+	TH1D* h_ctauerr_2012[nRAP+1][nPT+1][nL+1];
+
+	for(int iRAP = 0; iRAP < nRAP+1; iRAP++){
+		for(int iPT = 0; iPT < nPT+1; iPT++){
+			for(int iL = 0; iL < nL+1; iL++){
+
+				h_ctauerr_2011[iRAP][iPT][iL] = (TH1D*)infile->Get(Form("h_ctauerr_2011_rap%d_pt%d_l%d",iRAP, iPT, iL));
+				h_ctauerr_2012[iRAP][iPT][iL] = (TH1D*)infile->Get(Form("h_ctauerr_2012_rap%d_pt%d_l%d",iRAP, iPT, iL));
+
+			}
+		}
+	}
+	cout<<"opened hists"<<endl;
+
+	/// Finished reading in 2011 data ctauErr-histos
+
+
 
 	// loop through events in tree and save them to dataset
 	for (int ientries = 0; ientries < entries; ientries++) {
@@ -129,9 +168,44 @@ void createWorkspace(const std::string &infilename, int nState, bool correctCtau
 		//}
         //
 
-		double resCorrFactor=1.08;
-		if(lifetime<0)
-			lifetimeErr/=resCorrFactor;
+		//double resCorrFactor=1.08;
+		//if(lifetime<0)
+		//	lifetimeErr/=resCorrFactor;
+
+
+
+		int iRAPindex=0;
+		int iPTindex=0;
+		int iLindex=0;
+
+		for(int iRAP = 1; iRAP < nRAP+1; iRAP++){
+			for(int iPT = 1; iPT < nPT+1; iPT++){
+				for(int iL = 1; iL < nL+1; iL++){
+
+					Double_t ptMin = bordersPT[iPT-1];;
+					Double_t ptMax = bordersPT[iPT];;
+					Double_t rapMin = bordersRAP[iRAP-1];;
+					Double_t rapMax = bordersRAP[iRAP];  ;
+					Double_t lMin = bordersL[iL-1];;
+					Double_t lMax = bordersL[iL];  ;
+
+					if(pt_jpsi>ptMin && pt_jpsi<ptMax && TMath::Abs(y_jpsi)>rapMin && TMath::Abs(y_jpsi)<rapMax && lifetime>lMin && lifetime<lMax){
+						iRAPindex=iRAP;
+						iPTindex=iPT;
+						iLindex=iL;
+					}
+
+				}
+
+			}
+		}
+
+		double lifetimeErrRand = h_ctauerr_2011[iRAPindex][iPTindex][iLindex]->GetRandom();
+
+		lifetimeErr = lifetimeErrRand;
+		if (ientries%10000==0){
+			std::cout << "Test output: lifetimeErr " << lifetimeErr << " randomly drawn from from " << h_ctauerr_2011[iRAPindex][iPTindex][iLindex]->GetName() <<  std::endl;
+		}
 
 
 

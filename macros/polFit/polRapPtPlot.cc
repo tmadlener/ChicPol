@@ -210,7 +210,7 @@ void PlotRapPt(int ptBinMin, int ptBinMax, int rapBin, double yMin, double yMax,
 	text->SetTextSize(0.035);
 	text->Draw( "same" );
 
-	plotCanvas->SetLogx(true);
+	plotCanvas->SetLogx(false);
 	plotCanvas->SaveAs(filename);
 	plotCanvas->Close();
 
@@ -218,7 +218,7 @@ void PlotRapPt(int ptBinMin, int ptBinMax, int rapBin, double yMin, double yMax,
 
 	if(SaveGraph){
 		char outfilename[200];
-		sprintf(outfilename,"%s/TGraphResults_Psi%dS_temp.root",GraphFolder,nState-3);cout<<outfilename<<endl;
+		sprintf(outfilename,"%s/TGraphResults_Chic%d_temp.root",GraphFolder,nState-5);cout<<outfilename<<endl;
 		TFile *outfile = new TFile(outfilename,"UPDATE");
 
 		outfile->cd();
@@ -359,7 +359,7 @@ void PlotComparisonRapPt(int ptBinMin, int ptBinMax, int rapBin, double yMin, do
 
 	plotLegend->Draw();
 
-	plotCanvas->SetLogx(true);
+	plotCanvas->SetLogx(false);
 	plotCanvas->SaveAs(filename);
 	plotCanvas->Close();
 

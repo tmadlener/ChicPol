@@ -18,7 +18,7 @@ TH1F *Reco_Onia_pt[onia::kNbRapForPTBins+1];
 TH1F *Reco_Onia_rap[onia::kNbPTMaxBins+1];
 
 TTree *treeOut;
-TLorentzVector *lepP, *lepN, *jpsi;
+TLorentzVector *lepP, *lepN, *jpsi, *chic, *chic_rf;
 
 
 void PolData::Loop(int nState, bool rejectCowboys, int FidCuts, bool MC, bool RequestTrigger, bool removeEta0p2_0p3, bool cutDeltaREllDpt) {
@@ -45,6 +45,8 @@ void PolData::Loop(int nState, bool rejectCowboys, int FidCuts, bool MC, bool Re
 
   //double rndNumber;
   //ifstream rndFile; rndFile.open("/afs/ihep.ac.cn/users/z/zhangll/fs/work/polarization/PsiPol2011/macros/random.txt");
+
+	nentries = 10000000;
 
 	//loop over the events
 	for (Long64_t jentry=0; jentry<nentries; jentry++) {
@@ -292,6 +294,8 @@ void PolData::Loop(int nState, bool rejectCowboys, int FidCuts, bool MC, bool Re
 		jpsictErr = JpsictErr;
 		jpsiMassErr = JpsiMassErr;
 		jpsiVprob = JpsiVprob;
+		chic = onia;
+		chic_rf = onia;
 		treeOut->Fill();
 
 		//remaining of the events will be used for the analysis

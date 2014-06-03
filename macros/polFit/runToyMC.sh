@@ -2,41 +2,37 @@
 
 ########## INPUTS ##########
 
-nState=4
+nState=6
 
-JobID=ToyMC_Psi$[nState-3]S_13Dec2012
+JobID=JohannesTest
 
 #nGenerations=50
-nGenerations=1
+nGenerations=10
 
 rapBinMin=1
 rapBinMax=1
 ptBinMin=1
 ptBinMax=1
 
-polScenSig=3
-polScenBkg=3
-frameSig=1
-frameBkg=1
+polScenSig=4
+polScenBkg=2
+frameSig=3
+frameBkg=3
 
 nEff=105 #MC-truth
 UseMCeff=true
 nDileptonEff=1
 UseMCDileptoneff=true
 nRhoFactor=1
-
-useAmapApproach=false       #if false, the next two lines do not matter
-nAmap=32104                 #frame/state/sigma/ID ( ID= 2 digits )
-nDenominatorAmap=105 		    #the number here corresponds to the same notation as nEff
  
 FidCuts=11
 
-nSample=10000
+nSample=6000		#default:10000, includes burn-in
 nSkipGen=0
 
 #GENERATION SETTINGS
-ConstEvents=50000
-UseConstEv=false #if false, the number of events is taken from ToyMC.h
+ConstEvents=4000
+UseConstEv=true #if false, the number of events is taken from ToyMC.h
 
 UseDifferingEff=false #if false, the next five lines do not matter
 nEffRec=1060 #1101
@@ -49,7 +45,7 @@ gen=true
 rec=true
 fit=true
 plot=false
-deletePseudoData=true
+deletePseudoData=false
 
 MPValgo=3 		#1...mean,2...gauss,3...gauss-loop with chi2<2
 nSigma=1
@@ -58,14 +54,18 @@ NewAccCalc=false
 
 ########################################
 
-homedir=/afs/cern.ch/user/z/zhlinl/work/polarization/Psi/PsiPol2011/macros/polFit
+useAmapApproach=false       #if false, the next two lines do not matter
+nAmap=32104                 #frame/state/sigma/ID ( ID= 2 digits )
+nDenominatorAmap=105 		    #the number here corresponds to the same notation as nEff
+
+homedir=$PWD
 cd ${homedir}
 cd ..
 cd ..
 basedir=$PWD
 cd macros/polFit
-#storagedir=`more storagedir`/ToyMC #please define the directory storagedir in the file macros/polFit/storagedir
-storagedir=${basedir}/Psi/ToyMC
+storagedir=`more storagedir`/ToyMC #please define the directory storagedir in the file macros/polFit/storagedir
+#storagedir=${basedir}/Psi/ToyMC
 
 ScenDir=Sig_frame${frameSig}scen${polScenSig}_Bkg_frame${frameBkg}scen${polScenBkg}
 
@@ -81,9 +81,9 @@ cp ${basedir}/macros/polFit/polFit.C ${storagedir}/${JobID}/${ScenDir}/polFit.C
 cp ${basedir}/macros/polFit/polPlot.C ${storagedir}/${JobID}/${ScenDir}/polPlot.C
 
 cp ../../interface/rootIncludes.inc ${storagedir}/${JobID}/${ScenDir}/rootIncludes.inc
-cp ../../interface/commonVar_Psi$[nState-3]S.h ${storagedir}/${JobID}/${ScenDir}/commonVar.h
-cp ../../interface/ToyMC_Psi$[nState-3]S.h ${storagedir}/${JobID}/${ScenDir}/ToyMC.h
-cp ../../interface/effsAndCuts_Psi$[nState-3]S.h ${storagedir}/${JobID}/${ScenDir}/effsAndCuts.h
+cp ../../interface/commonVar.h ${storagedir}/${JobID}/${ScenDir}/commonVar.h
+cp ../../macros/polFit/ToyMC.h ${storagedir}/${JobID}/${ScenDir}/ToyMC.h
+cp ../../interface/effsAndCuts.h ${storagedir}/${JobID}/${ScenDir}/effsAndCuts.h
 
 cd ${storagedir}/${JobID}/${ScenDir}
 cp ${basedir}/macros/polFit/runToyMC.sh .
