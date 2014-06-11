@@ -33,6 +33,7 @@ namespace onia{
   //chi mass ranges
   const double chimassMin = 3.325;
   const double chimassMax = 3.725;
+  //When running on 2011 Jpsi data:
   //const double chimassMin = 2.;
   //const double chimassMax = 4.;
   const double massChiSBMin = chimassMin;

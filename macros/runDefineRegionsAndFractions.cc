@@ -70,12 +70,14 @@ int main(int argc, char* argv[]){
 
 				 	 bool runChiMassFitOnly = false;
 				 	 bool FixRegionsToInclusiveFit = false;
+				 	 bool doFractionUncer=false;
 
     // Loop over argument list
     for (int i=1; i < argc; i++)
       {
 	std::string arg = argv[i];
 	fromSplit("runChiMassFitOnly", arg, runChiMassFitOnly);
+	fromSplit("doFractionUncer", arg, doFractionUncer);
 	fromSplit("FixRegionsToInclusiveFit", arg, FixRegionsToInclusiveFit);
         fromSplit("rapMin", arg, rapMin);
         fromSplit("rapMax", arg, rapMax);
@@ -106,7 +108,7 @@ int main(int argc, char* argv[]){
 			gSystem->CopyFile(infilenameFrom.c_str(),infilenameTo.c_str(),kTRUE);
 
 			if(FixRegionsToInclusiveFit&&iRap==rapFixTo&&iPT==ptFixTo) FixRegionsToInclusiveFit=false;
-			DefineRegionsAndFractions(infilenameTo.c_str(), iRap, iPT, nState, runChiMassFitOnly, FixRegionsToInclusiveFit, rapFixTo, ptFixTo);
+			DefineRegionsAndFractions(infilenameTo.c_str(), iRap, iPT, nState, runChiMassFitOnly, FixRegionsToInclusiveFit, rapFixTo, ptFixTo, doFractionUncer);
 
       }
     }

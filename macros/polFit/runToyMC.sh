@@ -2,7 +2,7 @@
 
 ########## INPUTS ##########
 
-nState=6
+nState=6	#6...chic1, 7...chic2
 
 JobID=JohannesTest
 
@@ -14,8 +14,8 @@ rapBinMax=1
 ptBinMin=1
 ptBinMax=1
 
-polScenSig=4
-polScenBkg=2
+polScenSig=3
+polScenBkg=3
 frameSig=3
 frameBkg=3
 
@@ -27,7 +27,7 @@ nRhoFactor=1
  
 FidCuts=11
 
-nSample=6000		#default:10000, includes burn-in
+nSample=10000		#default:10000, includes burn-in
 nSkipGen=0
 
 #GENERATION SETTINGS

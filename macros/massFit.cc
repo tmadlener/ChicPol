@@ -103,6 +103,13 @@ void massFit(const std::string &infilename, int rapBin, int ptBin, int nState, b
 		ws->var("CBalpha_p1_jpsi")->setVal(0.);
 		ws->var("CBalpha_p1_jpsi")->setConstant(kTRUE);
 
+        ws->var("CBsigma_p2_jpsi")->setVal(0.0125);
+		ws->var("CBsigma_p2_jpsi")->setConstant(kTRUE);
+
+		if(ptBin==5){
+	        ws->var("bkgLambda_jpsi")->setVal(-2.0);
+			ws->var("bkgLambda_jpsi")->setConstant(kTRUE);
+		}
 
 
 		//ws->var("CBsigma")->setMax(0.07);
@@ -364,7 +371,69 @@ void massFit(const std::string &infilename, int rapBin, int ptBin, int nState, b
 
     RooRealVar var_massres("var_massres","var_massres",massres);  var_massres.setError(err_massres); if(!ws->var("var_massres")) ws->import(var_massres); else {ws->var("var_massres")->setVal(massres); ws->var("var_massres")->setError(err_massres);}
 
+	// caculating median of the mass background function in the three regions, to define fLSBpsi
 
-	ws->Write();
-	infile->Close();
+	  double medianLSBpsi;
+	  double medianRSBpsi;
+	  double medianSRpsi;
+
+	  double eff_massMinPsiSR=ws->var("CBmass_p0_jpsi")->getVal()-ws->var("var_massres")->getVal()*onia::nSigMass;
+	  double eff_massMaxPsiSR=ws->var("CBmass_p0_jpsi")->getVal()+ws->var("var_massres")->getVal()*onia::nSigMass;
+	  double eff_massMaxPsiLSB=ws->var("CBmass_p0_jpsi")->getVal()-ws->var("var_massres")->getVal()*onia::nSigBkgLow;
+	  double eff_massMinPsiRSB=ws->var("CBmass_p0_jpsi")->getVal()+ws->var("var_massres")->getVal()*onia::nSigBkgHigh;
+
+	  RooAbsReal* real_massBG_int;
+	  double MassDist=0.001;
+
+	  double massMinThisRegion;
+	  double massMaxThisRegion;
+	  double Integral;
+
+	  massMinThisRegion=onia::massMin; massMaxThisRegion=eff_massMaxPsiLSB;
+	  JpsiMass->setRange("testregion", massMinThisRegion, massMinThisRegion);
+	  real_massBG_int = ws->pdf("bkgMassShape_jpsi")->createIntegral(RooArgSet(*JpsiMass), NormSet(RooArgSet(*JpsiMass)), Range("testregion"));
+	  Integral = real_massBG_int->getVal();
+	  for(int i=1;i<1000000;i++){
+		  JpsiMass->setRange("testregion", massMinThisRegion, massMinThisRegion+i*MassDist);
+		  real_massBG_int = ws->pdf("bkgMassShape_jpsi")->createIntegral(RooArgSet(*JpsiMass), NormSet(RooArgSet(*JpsiMass)), Range("testregion"));
+		  if(real_massBG_int->getVal()>Integral/2.) {medianLSBpsi=massMinThisRegion+i*MassDist; break;}
+	  }
+
+	  massMinThisRegion=eff_massMinPsiRSB; massMaxThisRegion=onia::massMax;
+	  JpsiMass->setRange("testregion", massMinThisRegion, massMinThisRegion);
+	  real_massBG_int = ws->pdf("bkgMassShape_jpsi")->createIntegral(RooArgSet(*JpsiMass), NormSet(RooArgSet(*JpsiMass)), Range("testregion"));
+	  Integral = real_massBG_int->getVal();
+	  for(int i=1;i<1000000;i++){
+		  JpsiMass->setRange("testregion", massMinThisRegion, massMinThisRegion+i*MassDist);
+		  real_massBG_int = ws->pdf("bkgMassShape_jpsi")->createIntegral(RooArgSet(*JpsiMass), NormSet(RooArgSet(*JpsiMass)), Range("testregion"));
+		  if(real_massBG_int->getVal()>Integral/2.) {medianRSBpsi=massMinThisRegion+i*MassDist; break;}
+	  }
+
+	  massMinThisRegion=eff_massMinPsiSR; massMaxThisRegion=eff_massMaxPsiSR;
+	  JpsiMass->setRange("testregion", massMinThisRegion, massMinThisRegion);
+	  real_massBG_int = ws->pdf("bkgMassShape_jpsi")->createIntegral(RooArgSet(*JpsiMass), NormSet(RooArgSet(*JpsiMass)), Range("testregion"));
+	  Integral = real_massBG_int->getVal();
+	  for(int i=1;i<1000000;i++){
+		  JpsiMass->setRange("testregion", massMinThisRegion, massMinThisRegion+i*MassDist);
+		  real_massBG_int = ws->pdf("bkgMassShape_jpsi")->createIntegral(RooArgSet(*JpsiMass), NormSet(RooArgSet(*JpsiMass)), Range("testregion"));
+		  if(real_massBG_int->getVal()>Integral/2.) {medianSRpsi=massMinThisRegion+i*MassDist; break;}
+	  }
+
+	  double fLSBpsi=1-(medianSRpsi-medianLSBpsi)/(medianRSBpsi-medianLSBpsi);
+
+	  cout<<"Median LSB psi: "<<medianLSBpsi<<endl;
+	  cout<<"Median RSB psi: "<<medianRSBpsi<<endl;
+	  cout<<"Median SR psi: "<<medianSRpsi<<endl;
+	  cout<<"fLSBpsi: "<<fLSBpsi<<endl;
+
+
+	  RooRealVar* var_medianSRpsi = new RooRealVar("var_medianSRpsi","var_medianSRpsi",medianSRpsi);
+	  RooRealVar* var_medianLSBpsi = new RooRealVar("var_medianLSBpsi","var_medianLSBpsi",medianLSBpsi);
+	  RooRealVar* var_medianRSBpsi = new RooRealVar("var_medianRSBpsi","var_medianRSBpsi",medianRSBpsi);
+	  RooRealVar* var_fLSBpsi = new RooRealVar("var_fLSBpsi","var_fLSBpsi",fLSBpsi);
+	  ws->import(RooArgList(*var_medianSRpsi, *var_medianLSBpsi, *var_medianRSBpsi, *var_fLSBpsi));
+
+	  ws->Write();
+	  infile->Close();
+
 }

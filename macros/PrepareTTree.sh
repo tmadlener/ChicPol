@@ -20,15 +20,15 @@ COPY_AND_COMPILE=1
 
 rapMin=1     #takes bins, not actual values
 rapMax=1     #if you only want to process 1 y bin, rapMax = rapMin
-ptMin=2      #takes bins, not acutal values
-ptMax=2      #if you only want to process 1 pt bin, ptMax = ptMin
+ptMin=6      #takes bins, not acutal values
+ptMax=6      #if you only want to process 1 pt bin, ptMax = ptMin
 
 Plotting=1   #plotting macro: 1 = plot all, 2 = plot mass, 3 = plot lifetime
 			 #plotting macro: 4 = plot lifetimeSR1, 5 = plot lifetimeSR2, 6 = plot lifetimeLSB, 7 = plot lifetimeRSB, 8 = plot lifetimeFullRegion
 
-PlottingJpsi=4   #plotting macro: 1 = plot all, 2 = plot mass, 3 = plot lifetimeSBs, 4= lifetimeSR, 5= PlotMassRap, 6= plot lifetime, 7=pedagogical
+PlottingJpsi=1   #plotting macro: 1 = plot all, 2 = plot mass, 3 = plot lifetimeSBs, 4= lifetimeSR, 5= PlotMassRap, 6= plot lifetime, 7=pedagogical
 
-PlottingDataDists=0 #0...all, 1...1D plots, 2...2D plots
+PlottingDataDists=2 #0...all, 1...1D plots, 2...2D plots
 
 runChiMassFitOnly=false
 correctCtau=false   #correct pseudo-proper lifetime
@@ -39,6 +39,7 @@ drawRapPt2D=false  #draw Rap-Pt 2D map of Psi
 FixRegionsToInclusiveFit=false
 rapFixTo=1
 ptFixTo=1
+doFractionUncer=true
 
 #PlotFitPar:::
 AddInclusiveResult=false #Inclusive defined by rapFixTo, ptFixTo
@@ -76,7 +77,9 @@ polDataPath=${basedir}/Psi/Data/${DataID}
 #JobID=May5_WorkshopFollowUp_PlotsOldSolution
 #JobID=May7_WorkshopFollowUp_DeformCtauErr
 #JobID=MeetingFollowUp_May11_freeCBnPsi
-JobID=DebugCtau_ModelCtauErr2011_May26
+#JobID=DebugCtau_ModelCtauErr2011_May26
+#JobID=DebugCtau_June4_PunziCheck
+JobID=LastFitImprovments_June7_ConstrainBGl_ConstrainHighPt
 
 
 ################ EXECUTABLES #################
@@ -84,16 +87,16 @@ JobID=DebugCtau_ModelCtauErr2011_May26
 #following flags decide if the step is executed (1) or not (0):
 #IMPORTANT: for MC set execute_runWorkspace, execute_MassFit and execute_runLifetimeFit to 0
 execute_runChiData=0			           		#independent of rapMin, rapMax, ptMin, ptMax
-execute_runWorkspace=1	    					#independent of rapMin, rapMax, ptMin, ptMax
-execute_runMassFit=1				    	    #can be executed for different pt and y bins
-execute_runLifetimeFit=1    				    #can be executed for different pt and y bins
-execute_runPlotJpsiMassLifetime=1    			#can be executed for different pt and y bins
+execute_runWorkspace=0	    					#independent of rapMin, rapMax, ptMin, ptMax
+execute_runMassFit=0				    	    #can be executed for different pt and y bins
+execute_runLifetimeFit=0    				    #can be executed for different pt and y bins
+execute_runPlotJpsiMassLifetime=0    			#can be executed for different pt and y bins
 execut_PlotJpsiFitPar=0              			#can be executed for different pt and y bins
 execute_runChiMassLifetimeFit=0		  	    	#can be executed for different pt and y bins
 execute_runDefineRegionsAndFractions=0			#can be executed for different pt and y bins
 execute_runPlotMassLifetime=0    				#can be executed for different pt and y bins
 execut_PlotFitPar=0              				#can be executed for different pt and y bins
-execute_runPlotDataDistributions=0 		 		#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
+execute_runPlotDataDistributions=1 		 		#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
 
 execute_runBkgHistos=0           				#can be executed for different pt and y bins
 execute_PlotCosThetaPhiBG=0 		 			#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
@@ -279,7 +282,7 @@ then
 rootfile=fit_Chi_rap${rapMin}_pt${ptMin}.root
 #cp tmpFiles/backupWorkSpace/ws_MassLifetimeFit_Chi_rap${rapMin}_pt${ptMin}.root tmpFiles/backupWorkSpace/ws_DefineRegionsAndFractions_Chi_rap${rapMin}_pt${ptMin}.root
 cp runDefineRegionsAndFractions runDefineRegionsAndFractions_rap${rapMin}_pt${ptMin}
-./runDefineRegionsAndFractions_rap${rapMin}_pt${ptMin} runChiMassFitOnly=${runChiMassFitOnly} rapMin=${rapMin} rapMax=${rapMax} ptMin=${ptMin} ptMax=${ptMax} nState=${nState} FixRegionsToInclusiveFit=${FixRegionsToInclusiveFit} rapFixTo=${rapFixTo} ptFixTo=${ptFixTo}
+./runDefineRegionsAndFractions_rap${rapMin}_pt${ptMin} runChiMassFitOnly=${runChiMassFitOnly} doFractionUncer=${doFractionUncer} rapMin=${rapMin} rapMax=${rapMax} ptMin=${ptMin} ptMax=${ptMax} nState=${nState} FixRegionsToInclusiveFit=${FixRegionsToInclusiveFit} rapFixTo=${rapFixTo} ptFixTo=${ptFixTo}
 rm runDefineRegionsAndFractions_rap${rapMin}_pt${ptMin}
 fi
 

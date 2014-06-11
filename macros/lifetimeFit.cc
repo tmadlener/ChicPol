@@ -1,6 +1,9 @@
 #include "calculatePar.cc"
+#include "RooHistPdf.h"
+#include "RooDataHist.h"
 
-void buildLifetimePDF(RooWorkspace *ws);
+
+void buildLifetimePDF(RooWorkspace *ws, int rapBin, int ptBin);
 void doFit(RooWorkspace *ws, int nState, double BkgRatio3Sig, double fracBkgInLSB, double fracBkgInRSB, int rapBin, int ptBin);
 
 //=================================================================================
@@ -44,30 +47,12 @@ void lifetimeFit(const std::string &infilename, int rapBin, int ptBin, int nStat
 		<< "events in RSB: " << dataRSB->numEntries() << "\n"
 		<< "----------------------------" << std::endl;
 
-	// caculating median of different regions by filling events into histogram and getting the mean
-	TH1* histSR =  dataSR->createHistogram("histSR", *JpsiMass,  Binning(120));
-	TH1* histLSB = dataLSB->createHistogram("histLSB", *JpsiMass, Binning(120));
-	TH1* histRSB = dataRSB->createHistogram("histRSB", *JpsiMass, Binning(120));
 
-	double meanSR = histSR->GetMean();
-	double meanLSB = histLSB->GetMean();
-	double meanRSB = histRSB->GetMean();
-
-	RooRealVar* MeanSR = new RooRealVar("MeanJpsiSR","MeanJpsiSR",meanSR);
-	RooRealVar* MeanLSB = new RooRealVar("MeanJpsiLSB","MeanJpsiLSB",meanLSB);
-	RooRealVar* MeanRSB = new RooRealVar("MeanJpsiRSB","MeanJpsiRSB",meanRSB);
-	ws->import(RooArgList(*MeanSR, *MeanLSB, *MeanRSB));
-
-	std::cout << "----------------------------" << "\n"
-		<< "meanSR: " << meanSR << "\n"
-		<< "meanLSB: " << meanLSB << "\n"
-		<< "meanRSB: " << meanRSB
-		<< "----------------------------" << std::endl;
 
 
 	// building lifetime pdf
 	std::cout << ">>>Building Mass and LifeTime PDF" << std::endl;
-	buildLifetimePDF(ws);
+	buildLifetimePDF(ws, rapBin, ptBin);
 
 	// fitting
 	std::cout << ">>>Fitting" << std::endl;
@@ -80,7 +65,204 @@ void lifetimeFit(const std::string &infilename, int rapBin, int ptBin, int nStat
 
 //=================================================================================
 
-void buildLifetimePDF(RooWorkspace *ws){
+void buildLifetimePDF(RooWorkspace *ws, int rapBin, int ptBin){
+
+
+
+	///////////    PUNZI    ///////////////////////////
+
+
+	stringstream binNameSR, binNameLSB, binNameRSB;
+	binNameSR  << "data_rap" << rapBin << "_pt" << ptBin <<"_SR";
+	binNameLSB << "data_rap" << rapBin << "_pt" << ptBin <<"_LSB";
+	binNameRSB << "data_rap" << rapBin << "_pt" << ptBin <<"_RSB";
+	RooDataSet *dataSR = (RooDataSet*)ws->data(binNameSR.str().c_str());
+	RooDataSet *dataLSB = (RooDataSet*)ws->data(binNameLSB.str().c_str());
+	RooDataSet *dataRSB = (RooDataSet*)ws->data(binNameRSB.str().c_str());
+
+	std::stringstream cutStringPR;
+	std::stringstream cutStringNP;
+
+	double ctauPRmin_forCtauErrModel=-0.1;
+	double ctauPRmax_forCtauErrModel=-0.005;
+	double ctauNPmin_forCtauErrModel=0.1;
+
+	cutStringPR << "Jpsict > " << ctauPRmin_forCtauErrModel << " && Jpsict <  " << ctauPRmax_forCtauErrModel;
+	cutStringNP << "Jpsict > " << ctauNPmin_forCtauErrModel;
+
+	//cutStringPR << "TMath::Abs(Jpsict) < 1.1";
+	//cutStringNP << "JpsictErr < 0.02";
+
+	RooDataSet* dataSR_PR = (RooDataSet*)dataSR->reduce(cutStringPR.str().c_str());
+	RooDataSet* dataSR_NP = (RooDataSet*)dataSR->reduce(cutStringNP.str().c_str());
+
+	std:: cout << "----------------------------" << "\n"
+			<< "events in SR: " << dataSR->numEntries() << "\n"
+			<< "events in PR SR: " << dataSR_PR->numEntries() << "\n"
+			<< "events in NP SR: " << dataSR_NP->numEntries() << "\n"
+		<< "events in LSB: " << dataLSB->numEntries() << "\n"
+		<< "events in RSB: " << dataRSB->numEntries() << "\n"
+		<< "----------------------------" << std::endl;
+
+	double ctauerrModelMin=0.0001;
+	double ctauerrModelMax=1.;
+	int nbinsHistsPR=1000;
+	int nbinsHistsNP=1000;
+	int nbinsHistsBG=500;
+	int smoothHists=2;
+
+	if(ptBin>2.5){
+		nbinsHistsPR=500;
+		nbinsHistsNP=500;
+		nbinsHistsBG=250;
+	}
+
+	if(ptBin>5.5){
+		smoothHists=1;
+	}
+
+	//nbinsHistsPR=1000;
+	//nbinsHistsNP=1000;
+	//nbinsHistsBG=1000;
+	//smoothHists=1;
+
+	bool noPunzi=false;
+	if(noPunzi){
+		nbinsHistsPR=1;
+		nbinsHistsNP=1;
+		nbinsHistsBG=1;
+		smoothHists=0;
+	}
+
+	bool ctauerrmodelBGuseAllData=false;
+	bool ctauerrmodelAlluseSameData=false;
+
+	double ceiling=1e-7;//1e-10
+
+	TH1F* h_ctauerrModelPR = new TH1F("h_ctauerrModelPR","h_ctauerrModelPR", nbinsHistsPR, ctauerrModelMin, ctauerrModelMax);
+	if(!ctauerrmodelAlluseSameData) dataSR_PR->fillHistogram(h_ctauerrModelPR,RooArgList(*ws->var("JpsictErr")));
+	else dataSR->fillHistogram(h_ctauerrModelPR,RooArgList(*ws->var("JpsictErr")));
+    for(int iX=0;iX<h_ctauerrModelPR->GetNbinsX()+1;iX++){ if(h_ctauerrModelPR->GetBinContent(iX)<ceiling) h_ctauerrModelPR->SetBinContent(iX,ceiling); }
+	RooDataHist* rdh_ctauerrModelPR = new RooDataHist("rdh_ctauerrModelPR","rdh_ctauerrModelPR", RooArgList(*ws->var("JpsictErr")), h_ctauerrModelPR);
+	RooHistPdf* pdf_ctauerrModelPR = new RooHistPdf("pdf_ctauerrModelPR","pdf_ctauerrModelPR", RooArgSet(*ws->var("JpsictErr")), *rdh_ctauerrModelPR, smoothHists);
+    ws->import(*pdf_ctauerrModelPR);
+
+	TH1F* h_ctauerrModelNP = new TH1F("h_ctauerrModelNP","h_ctauerrModelNP", nbinsHistsNP, ctauerrModelMin, ctauerrModelMax);
+	if(!ctauerrmodelAlluseSameData) dataSR_NP->fillHistogram(h_ctauerrModelNP,RooArgList(*ws->var("JpsictErr")));
+	else dataSR->fillHistogram(h_ctauerrModelNP,RooArgList(*ws->var("JpsictErr")));
+    for(int iX=0;iX<h_ctauerrModelNP->GetNbinsX()+1;iX++){ if(h_ctauerrModelNP->GetBinContent(iX)<ceiling) h_ctauerrModelNP->SetBinContent(iX,ceiling); }
+	RooDataHist* rdh_ctauerrModelNP = new RooDataHist("rdh_ctauerrModelNP","rdh_ctauerrModelNP", RooArgList(*ws->var("JpsictErr")), h_ctauerrModelNP);
+	RooHistPdf* pdf_ctauerrModelNP = new RooHistPdf("pdf_ctauerrModelNP","pdf_ctauerrModelNP", RooArgSet(*ws->var("JpsictErr")), *rdh_ctauerrModelNP, smoothHists);
+    ws->import(*pdf_ctauerrModelNP);
+
+	TH1F* h_ctauerrModelBG1 = new TH1F("h_ctauerrModelBG1","h_ctauerrModelBG1", nbinsHistsBG, ctauerrModelMin, ctauerrModelMax);
+	if(!ctauerrmodelAlluseSameData) dataLSB->fillHistogram(h_ctauerrModelBG1,RooArgList(*ws->var("JpsictErr")));
+	else dataSR->fillHistogram(h_ctauerrModelBG1,RooArgList(*ws->var("JpsictErr")));
+	TH1F* h_ctauerrModelBG2 = new TH1F("h_ctauerrModelBG2","h_ctauerrModelBG2", nbinsHistsBG, ctauerrModelMin, ctauerrModelMax);
+	if(!ctauerrmodelAlluseSameData) dataRSB->fillHistogram(h_ctauerrModelBG2,RooArgList(*ws->var("JpsictErr")));
+	else dataSR->fillHistogram(h_ctauerrModelBG2,RooArgList(*ws->var("JpsictErr")));
+	TH1F* h_ctauerrModelBG;
+	if(!ctauerrmodelBGuseAllData){
+		cout<<"fLSBpsi = "<<ws->var("var_fLSBpsi")->getVal()<<endl;
+		h_ctauerrModelBG=(TH1F*)h_ctauerrModelBG1->Clone("h_ctauerrModelBG");
+		h_ctauerrModelBG->Scale(ws->var("var_fLSBpsi")->getVal()/h_ctauerrModelBG->Integral());
+		//h_ctauerrModelBG->Print("all");
+		h_ctauerrModelBG2->Scale((1.-ws->var("var_fLSBpsi")->getVal())/h_ctauerrModelBG2->Integral());
+		//h_ctauerrModelBG2->Print("all");
+		h_ctauerrModelBG->Add(h_ctauerrModelBG2);
+		//h_ctauerrModelBG->Print("all");
+	}
+	else{
+		h_ctauerrModelBG = new TH1F("h_ctauerrModelBG","h_ctauerrModelBG", nbinsHistsPR, ctauerrModelMin, ctauerrModelMax);
+		dataSR->fillHistogram(h_ctauerrModelBG,RooArgList(*ws->var("JpsictErr")));
+	}
+    for(int iX=0;iX<h_ctauerrModelBG->GetNbinsX()+1;iX++){ if(h_ctauerrModelBG->GetBinContent(iX)<ceiling) h_ctauerrModelBG->SetBinContent(iX,ceiling); }
+	RooDataHist* rdh_ctauerrModelBG = new RooDataHist("rdh_ctauerrModelBG","rdh_ctauerrModelBG", RooArgList(*ws->var("JpsictErr")), h_ctauerrModelBG);
+	RooHistPdf* pdf_ctauerrModelBG = new RooHistPdf("pdf_ctauerrModelBG","pdf_ctauerrModelBG", RooArgSet(*ws->var("JpsictErr")), *rdh_ctauerrModelBG, smoothHists);
+    ws->import(*pdf_ctauerrModelBG);
+
+
+
+
+
+    ///// Plot ctauerr pdfs
+
+	RooPlot *ctauerrFrame=((RooRealVar*)ws->var("JpsictErr"))->frame(Range(ctauerrModelMin, 0.05));
+	ctauerrFrame->GetYaxis()->SetTitle(Form("PDF"));
+	ctauerrFrame->SetTitle("");
+	ctauerrFrame->GetYaxis()->SetTitleOffset(1.3);
+
+	double minY = 0.;
+	double maxY = 0.;
+	double enlargeYby=onia::enlargeYby_ML;
+
+	pdf_ctauerrModelPR->plotOn(ctauerrFrame,
+			LineWidth(2),
+			LineColor(onia::ColorPRJpsi),
+			NumCPU(1));
+
+	maxY = ctauerrFrame->GetMaximum()*enlargeYby;
+	minY = 5e-2;
+	//ctauerrFrame->GetYaxis()->SetRangeUser(minY,maxY);
+
+	pdf_ctauerrModelNP->plotOn(ctauerrFrame,
+			LineWidth(2),
+			LineColor(onia::ColorNPJpsi),
+			NumCPU(1));
+
+	pdf_ctauerrModelBG->plotOn(ctauerrFrame,
+			LineWidth(2),
+			LineColor(onia::ColorMuMuBG),
+			NumCPU(1));
+
+
+	TH1* legendPR = dataSR->createHistogram("legendPR",*ws->var("JpsictErr"),Binning(50)) ; legendPR->SetLineColor(onia::ColorPRJpsi) ; legendPR->SetLineStyle(kSolid) ; legendPR->SetLineWidth(2) ;
+	TH1* legendNP = dataSR->createHistogram("legendNP",*ws->var("JpsictErr"),Binning(50)) ; legendNP->SetLineColor(onia::ColorNPJpsi) ; legendNP->SetLineStyle(kSolid) ; legendNP->SetLineWidth(2) ;
+	TH1* legendBG = dataSR->createHistogram("legendBG",*ws->var("JpsictErr"),Binning(50)) ; legendBG->SetLineColor(onia::ColorMuMuBG) ; legendBG->SetLineStyle(kSolid) ; legendBG->SetLineWidth(2) ;
+
+
+	TLegend* LifetimeLegendSig=new TLegend(0.73,0.65,0.83,0.81);
+	LifetimeLegendSig->SetFillColor(kWhite);
+	LifetimeLegendSig->SetTextFont(42);
+	LifetimeLegendSig->SetTextSize(0.035);
+	LifetimeLegendSig->SetBorderSize(0.);
+	LifetimeLegendSig->AddEntry(legendPR,"PR","l");
+	LifetimeLegendSig->AddEntry(legendNP,"NP","l");
+	LifetimeLegendSig->AddEntry(legendBG,"BG","l");
+
+	TCanvas *c1;
+
+	gSystem->mkdir("Fit/jpsiFit",kTRUE);
+
+	for(int LinLog=0; LinLog<2; LinLog++){
+		cout<<"LinLog "<<LinLog<<endl;
+
+		c1=new TCanvas("c1","",1400,900);
+
+		if(LinLog==0) c1->SetLogy(false);
+		if(LinLog==1) c1->SetLogy(true);
+
+		ctauerrFrame->Draw();
+		LifetimeLegendSig->Draw();
+
+
+		std::stringstream saveCtau;
+			if(LinLog==0) saveCtau << "Fit/jpsiFit/ctauerr_lin_rap" << rapBin << "_pt" << ptBin << ".pdf";
+			if(LinLog==1) saveCtau << "Fit/jpsiFit/ctauerr_log_rap" << rapBin << "_pt" << ptBin << ".pdf";
+
+		c1->SaveAs(saveCtau.str().c_str());
+
+	}
+
+	delete c1;
+	delete legendPR;
+	delete legendNP;
+	delete legendBG;
+
+
+
+
+	/////////////////////////////////////////////
 
 
 	RooRealVar ResDeformation("ResDeformation","ResDeformation",1.);
@@ -100,7 +282,8 @@ void buildLifetimePDF(RooWorkspace *ws){
 
 	//----prompt
 	//resolution function
-	ws->factory("RooGaussModel::jpsi_promptLifetime(Jpsict,jpsi_promptMean[0.,-0.1, 0.1],jpsi_ctResolution[0.8,0.5,1.15],JpsictErr)");
+	ws->factory("RooGaussModel::jpsi_promptLifetime(Jpsict,jpsi_promptMean[0.],jpsi_ctResolution[0.8,0.5,1.15],JpsictErr)");
+	//ws->factory("RooGaussModel::jpsi_promptLifetime(Jpsict,jpsi_promptMean[0.,-0.1, 0.1],jpsi_ctResolution[0.8,0.5,1.15],JpsictErr)");
 	//ws->factory("RooGaussModel::jpsi_promptLifetime(Jpsict,jpsi_promptMean[0.],jpsi_ctResolution_param,JpsictErr)");
 	((RooGaussModel*)ws->pdf("jpsi_promptLifetime"))->advertiseFlatScaleFactorIntegral(true);
 
@@ -116,13 +299,14 @@ void buildLifetimePDF(RooWorkspace *ws){
 	RooRealVar jpsi_fracGauss2("jpsi_fracGauss2","jpsi_fracGauss2",0.219,0.,0.45);
 	RooRealVar jpsi_fracGauss3("jpsi_fracGauss3","jpsi_fracGauss3",0.1,0.,0.45);
 	//RooAddModel jpsi_TotalPromptLifetime("jpsi_TotalPromptLifetime","jpsi_TotalPromptLifetime", RooArgList(*jpsi_promptLifetime3,*jpsi_promptLifetime2,*jpsi_promptLifetime),RooArgList(jpsi_fracGauss3,jpsi_fracGauss2));
-	RooAddModel jpsi_TotalPromptLifetime("jpsi_TotalPromptLifetime","jpsi_TotalPromptLifetime", RooArgList(*jpsi_promptLifetime2,*jpsi_promptLifetime),RooArgList(jpsi_fracGauss2));
+	RooAddModel jpsi_TotalPromptLifetime_punzi("jpsi_TotalPromptLifetime_punzi","jpsi_TotalPromptLifetime_punzi", RooArgList(*jpsi_promptLifetime2,*jpsi_promptLifetime),RooArgList(jpsi_fracGauss2));
 	ws->import(jpsi_fracGauss2);
 	ws->import(jpsi_fracGauss3);
-	ws->import(jpsi_TotalPromptLifetime);
-	jpsi_TotalPromptLifetime.Print();
+	ws->import(jpsi_TotalPromptLifetime_punzi);
+	jpsi_TotalPromptLifetime_punzi.Print();
+	ws->factory("PROD::jpsi_TotalPromptLifetime(jpsi_TotalPromptLifetime_punzi|JpsictErr, pdf_ctauerrModelPR)");
 
-	//ws->factory("RooDecay::jpsi_promptSignalDSD(Jpsict,jpsi_signalTauDSD[.016,0.001,0.2],jpsi_TotalPromptLifetime,RooDecay::DoubleSided)");
+	//ws->factory("RooDecay::jpsi_promptSignalDSD(Jpsict,jpsi_signalTauDSD[.016,0.001,0.2],jpsi_TotalPromptLifetime_punzi,RooDecay::DoubleSided)");
 
 	//RooAddModel jpsi_TotalPromptLifetime("jpsi_TotalPromptLifetime","jpsi_TotalPromptLifetime", RooArgList(*jpsi_promptGauss1,*jpsi_promptGauss2),RooArgList(jpsi_fracGauss2));
 
@@ -145,23 +329,26 @@ void buildLifetimePDF(RooWorkspace *ws){
 
 
 	//----noprompt
-	ws->factory("RooDecay::jpsi_nonPromptSSD(Jpsict,jpsi_nonPromptTau[.377,.15,0.6],jpsi_TotalPromptLifetime,RooDecay::SingleSided)");
+	ws->factory("RooDecay::jpsi_nonPromptSSD_punzi(Jpsict,jpsi_nonPromptTau[.377,.15,0.6],jpsi_TotalPromptLifetime_punzi,RooDecay::SingleSided)");
+	ws->factory("PROD::jpsi_nonPromptSSD(jpsi_nonPromptSSD_punzi|JpsictErr, pdf_ctauerrModelNP)");
 
 	//----background
 	//LSB
-	ws->factory("RooDecay::jpsi_backgroundSSD(Jpsict,jpsi_bkgTauSSD[.355,0.1,0.6],jpsi_TotalPromptLifetime,RooDecay::SingleSided)");
-	ws->factory("RooDecay::jpsi_backgroundFD(Jpsict,jpsi_bkgTauFD[.11,.01,0.3],jpsi_TotalPromptLifetime,RooDecay::Flipped)");
-	ws->factory("RooDecay::jpsi_backgroundDSD(Jpsict,jpsi_bkgTauDSD[.016,0.001,0.05],jpsi_TotalPromptLifetime,RooDecay::DoubleSided)");
+	ws->factory("RooDecay::jpsi_backgroundSSD(Jpsict,jpsi_bkgTauSSD[.355,0.1,0.6],jpsi_TotalPromptLifetime_punzi,RooDecay::SingleSided)");
+	ws->factory("RooDecay::jpsi_backgroundFD(Jpsict,jpsi_bkgTauFD[.11,.01,0.3],jpsi_TotalPromptLifetime_punzi,RooDecay::Flipped)");
+	ws->factory("RooDecay::jpsi_backgroundDSD(Jpsict,jpsi_bkgTauDSD[.016,0.001,0.05],jpsi_TotalPromptLifetime_punzi,RooDecay::DoubleSided)");
 	//ws->factory("SUM::jpsi_backgroundlifetimeLpre(jpsi_fBkgSSDR_LSB[.4,0,1.]*jpsi_backgroundSSD,jpsi_fBkgDSD_LSB[.2,0,1.]*jpsi_backgroundDSD,jpsi_backgroundFD)");
-	ws->factory("SUM::jpsi_backgroundlifetimeLpre(jpsi_fBkgSSDR[.7,0.45,0.95]*jpsi_backgroundSSD,jpsi_fBkgDSD[.25,0.05,0.35]*jpsi_backgroundDSD,jpsi_backgroundFD)");
+	ws->factory("SUM::jpsi_backgroundlifetimeLpre_punzi(jpsi_fBkgSSDR[.7,0.45,0.95]*jpsi_backgroundSSD,jpsi_fBkgSSDL[.05,0.,0.1]*jpsi_backgroundFD,jpsi_backgroundDSD)");
+	ws->factory("PROD::jpsi_backgroundlifetimeLpre(jpsi_backgroundlifetimeLpre_punzi|JpsictErr, pdf_ctauerrModelBG)");
 
-	RooFormulaVar jpsi_fBkgSSDL("jpsi_fBkgSSDL","1-@0-@1",RooArgList(*ws->var("jpsi_fBkgSSDR"),*ws->var("jpsi_fBkgDSD")));
-	ws->import(jpsi_fBkgSSDL);
+	RooFormulaVar jpsi_fBkgDSD("jpsi_fBkgDSD","1-@0-@1",RooArgList(*ws->var("jpsi_fBkgSSDR"),*ws->var("jpsi_fBkgSSDL")));
+	ws->import(jpsi_fBkgDSD);
 
 	////RSB
-	//ws->factory("RooDecay::jpsi_backgroundSSD_RSB(Jpsict,jpsi_bkgTauSSD_RSB[.4,0,3],jpsi_TotalPromptLifetime,RooDecay::SingleSided)");
+	//ws->factory("RooDecay::jpsi_backgroundSSD_RSB(Jpsict,jpsi_bkgTauSSD_RSB[.4,0,3],jpsi_TotalPromptLifetime_punzi,RooDecay::SingleSided)");
 	//ws->factory("SUM::jpsi_backgroundlifetimeRpre(jpsi_fBkgSSDR_RSB[.4,0,1.]*jpsi_backgroundSSD,jpsi_fBkgDSD_RSB[.2,0,1.]*jpsi_backgroundDSD,jpsi_backgroundFD)");
-	ws->factory("SUM::jpsi_backgroundlifetimeRpre(jpsi_fBkgSSDR*jpsi_backgroundSSD,jpsi_fBkgDSD*jpsi_backgroundDSD,jpsi_backgroundFD)");
+	ws->factory("SUM::jpsi_backgroundlifetimeRpre_punzi(jpsi_fBkgSSDR*jpsi_backgroundSSD,jpsi_fBkgSSDL*jpsi_backgroundFD,jpsi_backgroundDSD)");
+	ws->factory("PROD::jpsi_backgroundlifetimeRpre(jpsi_backgroundlifetimeRpre_punzi|JpsictErr, pdf_ctauerrModelBG)");
 
 	//Signal region
 	//interpolation
@@ -169,8 +356,17 @@ void buildLifetimePDF(RooWorkspace *ws){
 	//ws->factory("expr::jpsi_fBkgDSD('@0+(@2-@3)*(@1-@0)/(@4-@3)',jpsi_fBkgDSD_LSB,jpsi_fBkgDSD_RSB,MeanSR,MeanLSB,MeanRSB)");
 	//ws->factory("expr::bkgTauSSD('@0+(@2-@3)*(@1-@0)/(@4-@3)',bkgTauSSD_LSB,bkgTauSSD_RSB,MeanSR,MeanLSB,MeanRSB)");
 
-	//ws->factory("RooDecay::jpsi_backgroundSSD(Jpsict,jpsi_bkgTauSSD,jpsi_TotalPromptLifetime,RooDecay::SingleSided)");
-	ws->factory("SUM::jpsi_backgroundlifetime(jpsi_fBkgSSDR*jpsi_backgroundSSD,jpsi_fBkgDSD*jpsi_backgroundDSD,jpsi_backgroundFD)");
+	//ws->factory("RooDecay::jpsi_backgroundSSD(Jpsict,jpsi_bkgTauSSD,jpsi_TotalPromptLifetime_punzi,RooDecay::SingleSided)");
+	ws->factory("SUM::jpsi_backgroundlifetime_punzi(jpsi_fBkgSSDR*jpsi_backgroundSSD,jpsi_fBkgSSDL*jpsi_backgroundFD,jpsi_backgroundDSD)");
+	ws->factory("PROD::jpsi_backgroundlifetime(jpsi_backgroundlifetime_punzi|JpsictErr, pdf_ctauerrModelBG)");
+
+	/*
+	jpsi_backgroundlifetime
+	jpsi_backgroundlifetimeRpre
+	jpsi_backgroundlifetimeLpre
+	jpsi_nonPromptSSD
+	jpsi_TotalPromptLifetime
+*/
 
 	//---final pdf
 	//signal region
@@ -238,6 +434,8 @@ void doFit(RooWorkspace *ws, int nState, double BkgRatio3Sig, double fracBkgInLS
 	RooDataSet *dataLSB = (RooDataSet*)ws->data(binNameLSB.str().c_str());
 	RooDataSet *dataRSB = (RooDataSet*)ws->data(binNameRSB.str().c_str());
 
+
+
 	//starting parameter of constrained parameters
 	ws->var("jpsi_fBkg")->setVal(BkgRatio3Sig);
 	ws->var("jpsi_fBkgLSB")->setVal(fracBkgInLSB);
@@ -266,8 +464,11 @@ void doFit(RooWorkspace *ws, int nState, double BkgRatio3Sig, double fracBkgInLS
 	//ws->var("jpsi_ctResolution")->setConstant(kTRUE);
 	//ws->var("jpsi_fracGauss2")->setConstant(kTRUE);
 
-	//ws->var("jpsi_ctResolution2")->setVal(1.55);
-	//ws->var("jpsi_ctResolution2")->setConstant(kTRUE);
+	ws->var("jpsi_ctResolution2")->setVal(1.55);
+	ws->var("jpsi_ctResolution2")->setConstant(kTRUE);
+
+	ws->var("jpsi_bkgTauDSD")->setVal(0.013);
+	ws->var("jpsi_bkgTauDSD")->setConstant(kTRUE);
 
 	//RooAbsPdf *ModelLifeSR = (RooAbsPdf*)ws->pdf("jpsi_fulllifetimeSR");
 	//RooAbsPdf *ModelLifeLSB = (RooAbsPdf*)ws->pdf("jpsi_backgroundlifetimeL");
@@ -284,34 +485,68 @@ void doFit(RooWorkspace *ws, int nState, double BkgRatio3Sig, double fracBkgInLS
 
 	MLNLLSR = (RooAbsReal *)ModelLifeSR->createNLL(*dataSR,
 			//ConditionalObservables(RooArgSet(*ws->function("JpsictErrDeformed"))),
-			ConditionalObservables(RooArgSet(*ws->var("JpsictErr"))),
-			Constrain(RooArgSet(*ws->var("jpsi_fBkg"))),
+			//ConditionalObservables(RooArgSet(*ws->var("JpsictErr"))),//defOnNoLonger
+			Constrain(RooArgSet(*ws->var("jpsi_fBkg"))),//defOn
 			Extended(kFALSE),
 			NumCPU(6));
 	MLNLLLSB = (RooAbsReal *)ModelLifeLSB->createNLL(*dataLSB,
 			//ConditionalObservables(RooArgSet(*ws->function("JpsictErrDeformed"))),
-			ConditionalObservables(RooArgSet(*ws->var("JpsictErr"))),
+			//ConditionalObservables(RooArgSet(*ws->var("JpsictErr"))),//defOnNoLonger
 			//Constrain(RooArgSet(*ws->var("jpsi_fBkgLSB"))),
 			Extended(kFALSE),
 			NumCPU(6));
 	MLNLLRSB = (RooAbsReal *)ModelLifeRSB->createNLL(*dataRSB,
 			//ConditionalObservables(RooArgSet(*ws->function("JpsictErrDeformed"))),
-			ConditionalObservables(RooArgSet(*ws->var("JpsictErr"))),
+			//ConditionalObservables(RooArgSet(*ws->var("JpsictErr"))),//defOnNoLonger
 			//Constrain(RooArgSet(*ws->var("jpsi_fBkgRSB"))),
 			Extended(kFALSE),
 			NumCPU(6));
 
+
+	//std::stringstream cutStringDataChange1;
+	//cutStringDataChange1 << "JpsictErr < " << 0.04;
+	//RooDataSet* dataSRChange1 = (RooDataSet*)dataSR->reduce(cutStringDataChange1.str().c_str());
+	//RooAbsReal *MLNLLSRdataChange1 = (RooAbsReal *)ModelLifeSR->createNLL(*dataSRChange1, Extended(kFALSE), NumCPU(6));
+	//cout<<"MLNLLSRdataChange1 start = "<<MLNLLSRdataChange1->getVal()<<endl;
+    //
+	//std::stringstream cutStringDataChange2;
+	//cutStringDataChange2 << "JpsictErr > " << 0.04;
+	//RooDataSet* dataSRChange2 = (RooDataSet*)dataSR->reduce(cutStringDataChange2.str().c_str());
+	//RooAbsReal *MLNLLSRdataChange2 = (RooAbsReal *)ModelLifeSR->createNLL(*dataSRChange2, Extended(kFALSE), NumCPU(6));
+	//cout<<"MLNLLSRdataChange2 start = "<<MLNLLSRdataChange2->getVal()<<endl;
+    //
+	//std::stringstream cutStringDataChange3;
+	//cutStringDataChange3 << "JpsictErr < " << 0.01;
+	//RooDataSet* dataSRChange3 = (RooDataSet*)dataSR->reduce(cutStringDataChange3.str().c_str());
+	//RooAbsReal *MLNLLSRdataChange3 = (RooAbsReal *)ModelLifeSR->createNLL(*dataSRChange3, Extended(kFALSE), NumCPU(6));
+	//cout<<"MLNLLSRdataChange3 start = "<<MLNLLSRdataChange3->getVal()<<endl;
+    //
+	//std::stringstream cutStringDataChange4;
+	//cutStringDataChange4 << "JpsictErr > " << 0.01;
+	//RooDataSet* dataSRChange4 = (RooDataSet*)dataSR->reduce(cutStringDataChange4.str().c_str());
+	//RooAbsReal *MLNLLSRdataChange4 = (RooAbsReal *)ModelLifeSR->createNLL(*dataSRChange4, Extended(kFALSE), NumCPU(6));
+	//cout<<"MLNLLSRdataChange4 start = "<<MLNLLSRdataChange4->getVal()<<endl;
+
+
+
+
+
 	cout<<"SR NLL before fit = "<<MLNLLSR->getVal()<<endl;
 
 	NLLs->add(*MLNLLSR);
-	NLLs->add(*MLNLLLSB);
-	NLLs->add(*MLNLLRSB);
+	NLLs->add(*MLNLLLSB);//defOn
+	NLLs->add(*MLNLLRSB);//defOn
 
 	RooAddition *simNLL = new RooAddition("add","add",*NLLs);
 	RooMinuit *lMinuit = new RooMinuit(*simNLL);
 	//RooMinuit *lMinuit = new RooMinuit(*MLNLLSR);
 
-	lMinuit->setStrategy(1); 
+	cout<<"NLLs start = "<<simNLL->getVal()<<endl;
+	cout<<"MLNLLSR start = "<<MLNLLSR->getVal()<<endl;
+	cout<<"MLNLLLSB start = "<<MLNLLLSB->getVal()<<endl;
+	cout<<"MLNLLRSB start = "<<MLNLLRSB->getVal()<<endl;
+
+	lMinuit->setStrategy(1);
 	//if(nState==4 && ptBin > 7) lMinuit->setStrategy(2);
 	lMinuit->setPrintEvalErrors(-1);
 	lMinuit->setEvalErrorWall(false);

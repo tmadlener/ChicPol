@@ -143,46 +143,48 @@ void chiMassLifetimeFit(const std::string &infilename, int rapBin, int ptBin, in
     RooGaussModel* promptLifetime = (RooGaussModel*)ws->pdf("promptLifetime");
     RooGaussModel* promptLifetime2 = (RooGaussModel*)ws->pdf("promptLifetime2");
     RooRealVar fracGauss2("fracGauss2","fracGauss2",0.2,0.1,0.45);
-    RooAddModel L_TotalPromptLifetime("L_TotalPromptLifetime","L_TotalPromptLifetime",
+    RooAddModel L_TotalPromptLifetime_punzi("L_TotalPromptLifetime_punzi","L_TotalPromptLifetime_punzi",
                                     RooArgSet(*promptLifetime2,*promptLifetime),fracGauss2);
     ws->import(fracGauss2);
-    ws->import(L_TotalPromptLifetime);
-    L_TotalPromptLifetime.Print();
+    ws->import(L_TotalPromptLifetime_punzi);
+    L_TotalPromptLifetime_punzi.Print();
+	ws->factory("PROD::L_TotalPromptLifetime(L_TotalPromptLifetime_punzi|JpsictErr, pdf_ctauerrModelPR)");
 
     //nonprompt signal
-    ws->factory("RooDecay::L_chic1_NP(Jpsict,NP_TauChic[.3,.1,1.],L_TotalPromptLifetime,RooDecay::SingleSided)");
-    ws->factory("RooDecay::L_chic2_NP(Jpsict,NP_TauChic,L_TotalPromptLifetime,RooDecay::SingleSided)");
-    ws->factory("RooDecay::L_chic0_NP(Jpsict,NP_TauChic,L_TotalPromptLifetime,RooDecay::SingleSided)");
+    ws->factory("RooDecay::L_chic1_NP_punzi(Jpsict,NP_TauChic[.3,.25,0.5],L_TotalPromptLifetime_punzi,RooDecay::SingleSided)");
+    ws->factory("RooDecay::L_chic2_NP_punzi(Jpsict,NP_TauChic,L_TotalPromptLifetime_punzi,RooDecay::SingleSided)");
+    ws->factory("RooDecay::L_chic0_NP_punzi(Jpsict,NP_TauChic,L_TotalPromptLifetime_punzi,RooDecay::SingleSided)");
+	ws->factory("PROD::L_chic1_NP(L_chic1_NP_punzi|JpsictErr, pdf_ctauerrModelNP)");
+	ws->factory("PROD::L_chic2_NP(L_chic1_NP_punzi|JpsictErr, pdf_ctauerrModelNP)");
+	ws->factory("PROD::L_chic0_NP(L_chic1_NP_punzi|JpsictErr, pdf_ctauerrModelNP)");
     //Jpsi background
-    ws->factory("RooDecay::L_background_NP(Jpsict,NP_TauBkg[.3,.1,1.],L_TotalPromptLifetime,RooDecay::SingleSided)");
+    ws->factory("RooDecay::L_background_NP_punzi(Jpsict,NP_TauBkg[.37,.35,0.425],L_TotalPromptLifetime_punzi,RooDecay::SingleSided)");
+	ws->factory("PROD::L_background_NP(L_background_NP_punzi|JpsictErr, pdf_ctauerrModelNP)");
     ws->factory("SUM::L_background(fBkgNP[.5,0,1.]*L_background_NP, L_TotalPromptLifetime)");
     //Combinatorial mumugamma background
-    ws->factory("RooDecay::L_backgroundFD(Jpsict,FD_TauBkg[.075,.025,0.125],L_TotalPromptLifetime,RooDecay::Flipped)");
-    ws->factory("RooDecay::L_backgroundDSD(Jpsict,DSD_TauBkg[.01,0,0.1],L_TotalPromptLifetime,RooDecay::DoubleSided)");
-    //ws->factory("SUM::L_background(fBkgNP[.5,0,1.]*L_background_NP,fBkgFD[.01,0.001,0.04]*L_backgroundFD, L_backgroundDSD)");
-
-	ws->factory("RooDecay::L_comb_backgroundSSD(Jpsict,jpsi_bkgTauSSD,L_TotalPromptLifetime,RooDecay::SingleSided)");
-	ws->factory("RooDecay::L_comb_backgroundFD(Jpsict,jpsi_bkgTauFD,L_TotalPromptLifetime,RooDecay::Flipped)");
-	ws->factory("RooDecay::L_comb_backgroundDSD(Jpsict,jpsi_bkgTauDSD,L_TotalPromptLifetime,RooDecay::DoubleSided)");
-	ws->factory("SUM::L_comb_background(jpsi_fBkgSSDR*L_comb_backgroundSSD,jpsi_fBkgDSD*L_comb_backgroundDSD,L_comb_backgroundFD)");
+    ws->factory("RooDecay::L_comb_backgroundSSD(Jpsict,jpsi_bkgTauSSD,L_TotalPromptLifetime_punzi,RooDecay::SingleSided)");
+	ws->factory("RooDecay::L_comb_backgroundFD(Jpsict,jpsi_bkgTauFD,L_TotalPromptLifetime_punzi,RooDecay::Flipped)");
+	ws->factory("RooDecay::L_comb_backgroundDSD(Jpsict,jpsi_bkgTauDSD,L_TotalPromptLifetime_punzi,RooDecay::DoubleSided)");
+	ws->factory("SUM::L_comb_background_punzi(jpsi_fBkgSSDR*L_comb_backgroundSSD,jpsi_fBkgSSDL*L_comb_backgroundFD,L_comb_backgroundDSD)");
+	ws->factory("PROD::L_comb_background(L_comb_background_punzi|JpsictErr, pdf_ctauerrModelBG)");
 
 
     //combine mass and lifetime
-    ws->factory("PROD::ML_chic1_PR(M_chic1,L_TotalPromptLifetime|JpsictErr)");
-    ws->factory("PROD::ML_chic1_NP(M_chic1,L_chic1_NP|JpsictErr)");
-    ws->factory("SUM::ML_chic1(fracNP_chic1[0.3,0.,1.]*ML_chic1_NP, ML_chic1_PR)");
+    ws->factory("PROD::ML_chic1_PR(M_chic1,L_TotalPromptLifetime)");
+    ws->factory("PROD::ML_chic1_NP(M_chic1,L_chic1_NP)");
+    ws->factory("SUM::ML_chic1(fracNP_chic1[0.25,0.1,0.4]*ML_chic1_NP, ML_chic1_PR)");
 
-    ws->factory("PROD::ML_chic2_PR(M_chic2,L_TotalPromptLifetime|JpsictErr)");
-    ws->factory("PROD::ML_chic2_NP(M_chic2,L_chic2_NP|JpsictErr)");
-    ws->factory("SUM::ML_chic2(fracNP_chic2[0.3,0.,1.]*ML_chic2_NP, ML_chic2_PR)");
+    ws->factory("PROD::ML_chic2_PR(M_chic2,L_TotalPromptLifetime)");
+    ws->factory("PROD::ML_chic2_NP(M_chic2,L_chic2_NP)");
+    ws->factory("SUM::ML_chic2(fracNP_chic2[0.15,0.,0.3]*ML_chic2_NP, ML_chic2_PR)");
 
-    ws->factory("PROD::ML_chic0_PR(M_chic0,L_TotalPromptLifetime|JpsictErr)");
-    ws->factory("PROD::ML_chic0_NP(M_chic0,L_chic0_NP|JpsictErr)");
-    ws->factory("SUM::ML_chic0(fracNP_chic0[0.3,0.,1.]*ML_chic0_NP, ML_chic0_PR)");
+    ws->factory("PROD::ML_chic0_PR(M_chic0,L_TotalPromptLifetime)");
+    ws->factory("PROD::ML_chic0_NP(M_chic0,L_chic0_NP)");
+    ws->factory("SUM::ML_chic0(fracNP_chic0[0.5,0.2,0.7]*ML_chic0_NP, ML_chic0_PR)");
 
-    ws->factory("PROD::ML_background(M_background,L_background|JpsictErr)");
-    ws->factory("PROD::ML_comb_background(M_background,L_comb_background|JpsictErr)");
-    ws->factory("SUM::ML_signal(fracSignal_chic1[0.8,0.,1.]*ML_chic1, fracSignal_chic0[0.02,0.,0.06]*ML_chic0, ML_chic2)");
+    ws->factory("PROD::ML_background(M_background,L_background)");
+    ws->factory("PROD::ML_comb_background(M_background,L_comb_background)");
+    ws->factory("SUM::ML_signal(fracSignal_chic1[0.7,0.6,0.8]*ML_chic1, fracSignal_chic0[0.03,0.,0.1]*ML_chic0, ML_chic2)");
 
 	RooFormulaVar fracSignal_chic2("fracSignal_chic2","1-@0-@1",RooArgList(*ws->var("fracSignal_chic0"),*ws->var("fracSignal_chic1")));
 	ws->import(fracSignal_chic2);
@@ -245,8 +247,29 @@ void chiMassLifetimeFit(const std::string &infilename, int rapBin, int ptBin, in
 
 
 
-    //ws->var("CBalpha")->setVal(0.5);
-    //ws->var("CBalpha")->setConstant(kTRUE);
+	if(ptBin==5){
+		ws->var("CBalpha1")->setVal(0.55);
+		ws->var("CBalpha1")->setConstant(kTRUE);
+		ws->var("CBalpha2")->setVal(0.475);
+		ws->var("CBalpha2")->setConstant(kTRUE);
+
+		//ws->var("fBkgNP")->setVal(0.65);
+		//ws->var("fBkgNP")->setConstant(kTRUE);
+
+        //ws->var("fracNP_chic1")->setVal(0.34);
+        //ws->var("fracNP_chic1")->setConstant(kTRUE);
+        //ws->var("fracNP_chic2")->setVal(0.16);
+        //ws->var("fracNP_chic2")->setConstant(kTRUE);
+        //ws->var("fracBackground")->setVal(0.687);
+        //ws->var("fracBackground")->setConstant(kTRUE);
+
+	}
+
+	if(ptBin>3){
+		ws->var("CBmass1")->setVal(3.5062);
+		ws->var("CBmass1")->setConstant(kTRUE);
+	}
+
 
     //ws->var("FD_TauBkg")->setVal(0.1);
     //ws->var("FD_TauBkg")->setConstant(kTRUE);
@@ -264,6 +287,9 @@ void chiMassLifetimeFit(const std::string &infilename, int rapBin, int ptBin, in
 
     ws->var("CBn")->setVal(2.75);
     ws->var("CBn")->setConstant(kTRUE);
+    ws->var("fracSignal_chic0")->setVal(0.03);
+    ws->var("fracSignal_chic0")->setConstant(kTRUE);
+
 
 
     //Fix comb background from jpsi fit
@@ -279,7 +305,7 @@ void chiMassLifetimeFit(const std::string &infilename, int rapBin, int ptBin, in
 
 	ws->var("jpsi_fBkg")->setConstant(kTRUE);
 	ws->var("jpsi_fBkgSSDR")->setConstant(kTRUE);
-	ws->var("jpsi_fBkgDSD")->setConstant(kTRUE);
+	ws->var("jpsi_fBkgSSDL")->setConstant(kTRUE);
 	ws->var("jpsi_bkgTauSSD")->setConstant(kTRUE);
 	ws->var("jpsi_bkgTauFD")->setConstant(kTRUE);
 	ws->var("jpsi_bkgTauDSD")->setConstant(kTRUE);

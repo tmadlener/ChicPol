@@ -124,8 +124,18 @@ int main(int argc, char* argv[]){
 	sprintf(SaveName, "default");
 
 	for(int rapBin = rapMin; rapBin < rapMax+1; rapBin++){
-		for(int RegionCode=1;RegionCode<9;RegionCode++)
+		for(int RegionCode=1;RegionCode<9;RegionCode++){
 			PlotChiRegionFracs(nState, rapBin, ptMin, ptMax, Ymin, Ymax, Folder, SaveName, logY, RegionCode);
+		}
+	}
+
+	sprintf(Folder, "chic_fractions");  Ymin = 1e-5; Ymax = 1.; logY=true; //2e-3
+	sprintf(SaveName, "default");
+
+	for(int rapBin = rapMin; rapBin < rapMax+1; rapBin++){
+		for(int RegionCode=1;RegionCode<9;RegionCode++){
+			PlotChiRegionFracs(nState, rapBin, ptMin, ptMax, Ymin, Ymax, Folder, SaveName, logY, RegionCode);
+		}
 	}
 
 	WhatKindOfParIndex=500; sprintf(SaveName, "bfrac_Jpsi"); sprintf(ParName, "fBkgNP"); sprintf(ParTitle,"J/#psi B-fraction"); sprintf(Folder, "chic_additionals");  Ymin = 0.; Ymax = 1.; logY=false;
@@ -167,7 +177,7 @@ int main(int argc, char* argv[]){
 	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
 	WhatKindOfParIndex=0; sprintf(SaveName, "fracSignal_chic1"); sprintf(ParName, "fracSignal_chic1"); sprintf(ParTitle,"f^{Sig}_{#chi_{c1}}"); sprintf(Folder, "chic_mass");  Ymin = 0.6; Ymax = 0.85; logY=false;
 	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
-	WhatKindOfParIndex=3; sprintf(SaveName, "fracSignal_chic2"); sprintf(ParName, "fracSignal_chic2"); sprintf(ParTitle,"f^{Sig}_{#chi_{c2}}"); sprintf(Folder, "chic_mass");  Ymin = 0.25; Ymax = 0.35; logY=false;
+	WhatKindOfParIndex=3; sprintf(SaveName, "fracSignal_chic2"); sprintf(ParName, "fracSignal_chic2"); sprintf(ParTitle,"f^{Sig}_{#chi_{c2}}"); sprintf(Folder, "chic_mass");  Ymin = 0.15; Ymax = 0.35; logY=false;
 	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
 	//WhatKindOfParIndex=0; sprintf(SaveName, "NumEvE"); sprintf(ParName, "NumEvE"); sprintf(ParTitle,"n^{Tot}_{fit}"); sprintf(Folder, "chic_mass");  Ymin = 1.; Ymax = 3e5; logY=true;
 	//PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
@@ -195,23 +205,23 @@ int main(int argc, char* argv[]){
 	WhatKindOfParIndex=0; sprintf(SaveName, "fracNP_chic2"); sprintf(ParName, "fracNP_chic2"); sprintf(ParTitle,"f^{#chi_{c2}}_{NP}"); sprintf(Folder, "chic_lifetime");  Ymin = 0.; Ymax = 0.2; logY=false;
 	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
 
-	WhatKindOfParIndex=4; sprintf(SaveName, "covQualMigrad"); sprintf(ParName, "var_covQualMigrad"); sprintf(ParTitle,"Migrad covQual"); sprintf(Folder, "chic_fitqual");  Ymin = 0.; Ymax = 40.; logY=false;
+	WhatKindOfParIndex=999; sprintf(SaveName, "covQualMigrad"); sprintf(ParName, "var_covQualMigrad"); sprintf(ParTitle,"Migrad covQual"); sprintf(Folder, "chic_fitqual");  Ymin = 0.; Ymax = 40.; logY=false;
 	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
-	WhatKindOfParIndex=4; sprintf(SaveName, "covQualHesse"); sprintf(ParName, "var_covQualHesse"); sprintf(ParTitle,"Hesse covQual"); sprintf(Folder, "chic_fitqual");  Ymin = 0.; Ymax = 40.; logY=false;
+	WhatKindOfParIndex=999; sprintf(SaveName, "covQualHesse"); sprintf(ParName, "var_covQualHesse"); sprintf(ParTitle,"Hesse covQual"); sprintf(Folder, "chic_fitqual");  Ymin = 0.; Ymax = 40.; logY=false;
 	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
 
 
-	WhatKindOfParIndex=4; sprintf(SaveName, "Chi2ndf_Lifetime_RSB"); sprintf(ParName, "var_chi2ndf_Lifetime_RSB"); sprintf(ParTitle,"#chi^{2} / ndf (lifetime RSB)"); sprintf(Folder, "chic_fitqual");  Ymin = 0.; Ymax = 3.; logY=false;
+	WhatKindOfParIndex=999; sprintf(SaveName, "Chi2ndf_Lifetime_RSB"); sprintf(ParName, "var_chi2ndf_Lifetime_RSB"); sprintf(ParTitle,"#chi^{2} / ndf (lifetime RSB)"); sprintf(Folder, "chic_fitqual");  Ymin = 0.; Ymax = 5.; logY=false;
 	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
-	WhatKindOfParIndex=4; sprintf(SaveName, "Chi2ndf_Lifetime_LSB"); sprintf(ParName, "var_chi2ndf_Lifetime_LSB"); sprintf(ParTitle,"#chi^{2} / ndf (lifetime LSB)"); sprintf(Folder, "chic_fitqual");  Ymin = 0.; Ymax = 3.; logY=false;
+	WhatKindOfParIndex=999; sprintf(SaveName, "Chi2ndf_Lifetime_LSB"); sprintf(ParName, "var_chi2ndf_Lifetime_LSB"); sprintf(ParTitle,"#chi^{2} / ndf (lifetime LSB)"); sprintf(Folder, "chic_fitqual");  Ymin = 0.; Ymax = 5.; logY=false;
 	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
-	WhatKindOfParIndex=4; sprintf(SaveName, "Chi2ndf_Lifetime_SR2"); sprintf(ParName, "var_chi2ndf_Lifetime_SR2"); sprintf(ParTitle,"#chi^{2} / ndf (lifetime SR2)"); sprintf(Folder, "chic_fitqual");  Ymin = 0.; Ymax = 3.; logY=false;
+	WhatKindOfParIndex=999; sprintf(SaveName, "Chi2ndf_Lifetime_SR2"); sprintf(ParName, "var_chi2ndf_Lifetime_SR2"); sprintf(ParTitle,"#chi^{2} / ndf (lifetime SR2)"); sprintf(Folder, "chic_fitqual");  Ymin = 0.; Ymax = 5.; logY=false;
 	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
-	WhatKindOfParIndex=4; sprintf(SaveName, "Chi2ndf_Lifetime_SR1"); sprintf(ParName, "var_chi2ndf_Lifetime_SR1"); sprintf(ParTitle,"#chi^{2} / ndf (lifetime SR1)"); sprintf(Folder, "chic_fitqual");  Ymin = 0.; Ymax = 3.; logY=false;
+	WhatKindOfParIndex=999; sprintf(SaveName, "Chi2ndf_Lifetime_SR1"); sprintf(ParName, "var_chi2ndf_Lifetime_SR1"); sprintf(ParTitle,"#chi^{2} / ndf (lifetime SR1)"); sprintf(Folder, "chic_fitqual");  Ymin = 0.; Ymax = 5.; logY=false;
 	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
-	WhatKindOfParIndex=4; sprintf(SaveName, "Chi2ndf_Lifetime"); sprintf(ParName, "var_chi2ndf_Lifetime"); sprintf(ParTitle,"#chi^{2} / ndf (lifetime)"); sprintf(Folder, "chic_fitqual");  Ymin = 0.; Ymax = 3.; logY=false;
+	WhatKindOfParIndex=999; sprintf(SaveName, "Chi2ndf_Lifetime"); sprintf(ParName, "var_chi2ndf_Lifetime"); sprintf(ParTitle,"#chi^{2} / ndf (lifetime)"); sprintf(Folder, "chic_fitqual");  Ymin = 0.; Ymax = 5.; logY=false;
 	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
-	WhatKindOfParIndex=4; sprintf(SaveName, "Chi2ndf_Mass"); sprintf(ParName, "var_chi2ndf_Mass"); sprintf(ParTitle,"#chi^{2} / ndf (mass)"); sprintf(Folder, "chic_fitqual");  Ymin = 0.; Ymax = 3.; logY=false;
+	WhatKindOfParIndex=999; sprintf(SaveName, "Chi2ndf_Mass"); sprintf(ParName, "var_chi2ndf_Mass"); sprintf(ParTitle,"#chi^{2} / ndf (mass)"); sprintf(Folder, "chic_fitqual");  Ymin = 0.; Ymax = 5.; logY=false;
 	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
 
 
@@ -251,6 +261,10 @@ int main(int argc, char* argv[]){
 	WhatKindOfParIndex=3; sprintf(SaveName, "ratio_NP_chic2_over_chic1"); sprintf(ParName, "var_ratio_NP_chic2_over_chic1"); sprintf(ParTitle,"N(#chi^{NP}_{c2}) / N(#chi^{NP}_{c1})"); sprintf(Folder, "chic_additionals");  Ymin = 0.; Ymax = 1.; logY=false;
 	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
 
+	WhatKindOfParIndex=3; sprintf(SaveName, "fLSBChic1"); sprintf(ParName, "var_fLSBChic1"); sprintf(ParTitle,"f_{LSB}^{#chi_{c1}}"); sprintf(Folder, "chic_additionals");  Ymin = 0.; Ymax = 1.; logY=false;
+	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
+	WhatKindOfParIndex=3; sprintf(SaveName, "fLSBChic2"); sprintf(ParName, "var_fLSBChic2"); sprintf(ParTitle,"f_{LSB}^{#chi_{c2}}"); sprintf(Folder, "chic_additionals");  Ymin = 0.; Ymax = 1.; logY=false;
+	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
 
 
 
@@ -352,6 +366,8 @@ void PlotChiFitPar(int  nState, int rapMin, int rapMax, int ptMin, int ptMax, in
 
 	}
 
+	int nFixedBins=0;
+
 	for(int rapBin = rapMin; rapBin < rapMax+1; rapBin++){
 		int rapArrayIndex=rapBin-rapMin;
 		for(int ptBin = ptMin; ptBin < ptMax+1; ptBin++){
@@ -394,11 +410,17 @@ void PlotChiFitPar(int  nState, int rapMin, int rapMax, int ptMin, int ptMax, in
 				Par_Err[rapArrayIndex][ptArrayIndex] = 0.;
 			}
 
-			if(WhatKindOfParIndex==0){
-				if(!functionVar)
-					if(ws->var(ParName)->isConstant()) WhatKindOfParIndex=1;
-				if(functionVar)
+			if(WhatKindOfParIndex==0 || WhatKindOfParIndex==1){
+				if(!functionVar){
+					if(ws->var(ParName)->isConstant()){
+						WhatKindOfParIndex=1;
+						nFixedBins++;
+					}
+				}
+				if(functionVar){
 					WhatKindOfParIndex=1;
+					nFixedBins++;
+				}
 			}
 
 			cout<<"pTmean: "<<pTmean[rapArrayIndex][ptArrayIndex]<<" +-"<<pTmean_Err[rapArrayIndex][ptArrayIndex]<<endl;
@@ -409,6 +431,10 @@ void PlotChiFitPar(int  nState, int rapMin, int rapMax, int ptMin, int ptMax, in
 
 	cout<<"read all parameters"<<endl;
 
+	cout<<"nFixedBins "<<nFixedBins<<endl;
+	cout<<"ptMax-ptMin+1 "<<ptMax-ptMin+1<<endl;
+
+	if(WhatKindOfParIndex==1 && nFixedBins<ptMax-ptMin+1) WhatKindOfParIndex=4;
 
 	int box_Incl_FillStyle=3001;
 	int box_Incl_FillColor=416-7;
@@ -704,10 +730,11 @@ void PlotChiFitPar(int  nState, int rapMin, int rapMax, int ptMin, int ptMax, in
 	if(WhatKindOfParIndex==1) sprintf(WhatKindOfPar,"Fixed par.");
 	if(WhatKindOfParIndex==2) sprintf(WhatKindOfPar,"Constrained par.");
 	if(WhatKindOfParIndex==3) sprintf(WhatKindOfPar,"Derived par.");
+	if(WhatKindOfParIndex==4) sprintf(WhatKindOfPar,"Part. fixed par.");
 
 	left=0.65; top=2*bottomMarg;
     latex->SetTextColor(kRed);
-    if(WhatKindOfParIndex<4) latex->DrawLatex(left,top,Form(WhatKindOfPar));
+    if(WhatKindOfParIndex<5) latex->DrawLatex(left,top,Form(WhatKindOfPar));
 
 
 
@@ -990,7 +1017,8 @@ void PlotChiRegionFracs(int  nState, int rapBin, int ptMin, int ptMax, double Ym
 	if(logY) c1->SetLogy(true);
 	else c1->SetLogy(false);
 
-	c1->SaveAs(Form("%s/Fractions_In_%s_rap%d.pdf",savePath.str().c_str(),RegName,rapBin));
+	if(!logY) c1->SaveAs(Form("%s/Fractions_In_%s_rap%d.pdf",savePath.str().c_str(),RegName,rapBin));
+	else c1->SaveAs(Form("%s/FractionsLog_In_%s_rap%d.pdf",savePath.str().c_str(),RegName,rapBin));
 
 
 	///

@@ -690,14 +690,14 @@ double plotMass(RooWorkspace *ws, int rapBin, int ptBin, int nState){
 
 
 
-	data->plotOn(massFrame,MarkerSize(onia::markerSize_ML));
+	data->plotOn(massFrame,MarkerSize(onia::markerSize_ML), Name("myHist"));
 	maxY = massFrame->GetMaximum()*enlargeYby;
 	minY = 5e-1;
 	massFrame->GetYaxis()->SetRangeUser(minY,maxY);
 
 	fullMassPdf->plotOn(massFrame,
 			LineWidth(onia::lineWidth_ML),
-			ProjWData(*data));
+			ProjWData(*data), Name("myCurve"));
 
 	int parsFit=(fitRlt->floatParsFinal()).getSize(); //this used the full p.d.f.
 	int nBins_Mass=massFrame->GetNbinsX();
@@ -709,7 +709,8 @@ double plotMass(RooWorkspace *ws, int rapBin, int ptBin, int nState){
 	gSystem->mkdir("Fit/root",kTRUE);gSystem->mkdir("Fit/chicFit",kTRUE);
 	TFile *pullFile = new TFile(Form("Fit/root/pull_mass_rap%d_pt%d.root",rapBin,ptBin),"RECREATE");
 
-	RooHist* hpull_mass = massFrame->pullHist() ;
+	RooHist* hpull_mass = massFrame->pullHist("myHist","myCurve",kTRUE);
+
 	hpull_mass->SetMarkerSize(onia::markerSize_ML);
 	for(int i=0;i<hpull_mass->GetN();i++){
 		hpull_mass->SetPointEYlow(i,0.);
@@ -1104,7 +1105,7 @@ double plotLifetime(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool Sp
 	double maxY = 0.;
 	double enlargeYby=onia::enlargeYby_ML;
 
-	data->plotOn(ctauFrame,MarkerSize(onia::markerSize_ML));
+	data->plotOn(ctauFrame,MarkerSize(onia::markerSize_ML), Name("myHist"));
 	maxY = ctauFrame->GetMaximum()*enlargeYby;
 	minY = 5e-1;
 	ctauFrame->GetYaxis()->SetRangeUser(minY,maxY);
@@ -1129,7 +1130,8 @@ double plotLifetime(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool Sp
 	gSystem->mkdir("Fit/root",kTRUE);gSystem->mkdir("Fit/chicFit",kTRUE);
 	TFile *pullFile = new TFile(Form("Fit/root/pull_ctau_all_rap%d_pt%d.root",rapBin,ptBin),"RECREATE");
 
-	RooHist* hpull_ctau = ctauFrame->pullHist() ;
+	RooHist* hpull_ctau = ctauFrame->pullHist("myHist","myCurve",kTRUE);
+
 	hpull_ctau->SetMarkerSize(onia::markerSize_ML);
 	for(int i=0;i<hpull_ctau->GetN();i++){
 		hpull_ctau->SetPointEYlow(i,0.);
@@ -1202,6 +1204,25 @@ double plotLifetime(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool Sp
 				ProjWData(*JpsictErr, *dataFullRegionProj), NumCPU(1));
 		cout<<"Plotting Chic2 finished"<<endl;
 	}
+
+
+
+
+	//fullPdf->plotOn(ctauFrame,
+	//		Components("ML_chic0_PR, ML_chic1_PR, ML_chic2_PR, ML_background"),
+	//		//Normalization(ws->var("var_ev")->getVal(),2),
+	//		LineStyle(onia::lineStyle_subComps_ML),
+	//		LineColor(kOrange),
+	//		LineWidth(onia::lineWidth_ML),
+	//		ProjWData(*JpsictErr, *dataFullRegionProj), NumCPU(1));
+	//fullPdf->plotOn(ctauFrame,
+	//		Components("ML_chic0_NP, ML_chic1_NP, ML_chic2_NP, ML_background"),
+	//		//Normalization(ws->var("var_ev")->getVal(),2),
+	//		LineStyle(onia::lineStyle_subComps_ML),
+	//		LineColor(kMagenta),
+	//		LineWidth(onia::lineWidth_ML),
+	//		ProjWData(*JpsictErr, *dataFullRegionProj), NumCPU(1));
+
 
 
 	if(correctResolutionForPlotting){
@@ -1482,7 +1503,7 @@ double plotLifetimeSR1(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 	double maxY = 0.;
 	double enlargeYby=onia::enlargeYby_ML;
 
-	dataSR1->plotOn(ctauFrame,MarkerSize(onia::markerSize_ML));
+	dataSR1->plotOn(ctauFrame,MarkerSize(onia::markerSize_ML), Name("myHist"));
 	maxY = ctauFrame->GetMaximum()*enlargeYby;
 	minY = 5e-1;
 	ctauFrame->GetYaxis()->SetRangeUser(minY,maxY);
@@ -1507,7 +1528,7 @@ double plotLifetimeSR1(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 	gSystem->mkdir("Fit/root",kTRUE);gSystem->mkdir("Fit/chicFit",kTRUE);
 	TFile *pullFile = new TFile(Form("Fit/root/pull_ctau_SR1_rap%d_pt%d.root",rapBin,ptBin),"RECREATE");
 
-	RooHist* hpull_ctau = ctauFrame->pullHist() ;
+	RooHist* hpull_ctau = ctauFrame->pullHist("myHist","myCurve",kTRUE);
 	hpull_ctau->SetMarkerSize(onia::markerSize_ML);
 	for(int i=0;i<hpull_ctau->GetN();i++){
 		hpull_ctau->SetPointEYlow(i,0.);
@@ -1918,7 +1939,7 @@ double plotLifetimeSR2(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 	double maxY = 0.;
 	double enlargeYby=onia::enlargeYby_ML;
 
-	dataSR2->plotOn(ctauFrame,MarkerSize(onia::markerSize_ML));
+	dataSR2->plotOn(ctauFrame,MarkerSize(onia::markerSize_ML), Name("myHist"));
 	maxY = ctauFrame->GetMaximum()*enlargeYby;
 	minY = 5e-1;
 	ctauFrame->GetYaxis()->SetRangeUser(minY,maxY);
@@ -1943,7 +1964,7 @@ double plotLifetimeSR2(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 	gSystem->mkdir("Fit/root",kTRUE);gSystem->mkdir("Fit/chicFit",kTRUE);
 	TFile *pullFile = new TFile(Form("Fit/root/pull_ctau_SR2_rap%d_pt%d.root",rapBin,ptBin),"RECREATE");
 
-	RooHist* hpull_ctau = ctauFrame->pullHist() ;
+	RooHist* hpull_ctau = ctauFrame->pullHist("myHist","myCurve",kTRUE);
 	hpull_ctau->SetMarkerSize(onia::markerSize_ML);
 	for(int i=0;i<hpull_ctau->GetN();i++){
 		hpull_ctau->SetPointEYlow(i,0.);
@@ -2346,7 +2367,7 @@ double plotLifetimeLSB(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 	double maxY = 0.;
 	double enlargeYby=onia::enlargeYby_ML;
 
-	dataLSB->plotOn(ctauFrame,MarkerSize(onia::markerSize_ML));
+	dataLSB->plotOn(ctauFrame,MarkerSize(onia::markerSize_ML), Name("myHist"));
 	maxY = ctauFrame->GetMaximum()*enlargeYby;
 	minY = 5e-1;
 	ctauFrame->GetYaxis()->SetRangeUser(minY,maxY);
@@ -2371,7 +2392,7 @@ double plotLifetimeLSB(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 	gSystem->mkdir("Fit/root",kTRUE);gSystem->mkdir("Fit/chicFit",kTRUE);
 	TFile *pullFile = new TFile(Form("Fit/root/pull_ctau_LSB_rap%d_pt%d.root",rapBin,ptBin),"RECREATE");
 
-	RooHist* hpull_ctau = ctauFrame->pullHist() ;
+	RooHist* hpull_ctau = ctauFrame->pullHist("myHist","myCurve",kTRUE);
 	hpull_ctau->SetMarkerSize(onia::markerSize_ML);
 	for(int i=0;i<hpull_ctau->GetN();i++){
 		hpull_ctau->SetPointEYlow(i,0.);
@@ -2785,7 +2806,7 @@ double plotLifetimeRSB(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 	double maxY = 0.;
 	double enlargeYby=onia::enlargeYby_ML;
 
-	dataRSB->plotOn(ctauFrame,MarkerSize(onia::markerSize_ML));
+	dataRSB->plotOn(ctauFrame,MarkerSize(onia::markerSize_ML), Name("myHist"));
 	maxY = ctauFrame->GetMaximum()*enlargeYby;
 	minY = 5e-1;
 	ctauFrame->GetYaxis()->SetRangeUser(minY,maxY);
@@ -2810,7 +2831,7 @@ double plotLifetimeRSB(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 	gSystem->mkdir("Fit/root",kTRUE);gSystem->mkdir("Fit/chicFit",kTRUE);
 	TFile *pullFile = new TFile(Form("Fit/root/pull_ctau_RSB_rap%d_pt%d.root",rapBin,ptBin),"RECREATE");
 
-	RooHist* hpull_ctau = ctauFrame->pullHist() ;
+	RooHist* hpull_ctau = ctauFrame->pullHist("myHist","myCurve",kTRUE);
 	hpull_ctau->SetMarkerSize(onia::markerSize_ML);
 	for(int i=0;i<hpull_ctau->GetN();i++){
 		hpull_ctau->SetPointEYlow(i,0.);

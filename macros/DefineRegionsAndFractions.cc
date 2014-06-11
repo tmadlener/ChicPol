@@ -14,7 +14,7 @@
 
 using namespace RooFit;
 
-void DefineRegionsAndFractions(const std::string &infilename, int rapBin, int ptBin, int nState, bool runChiMassFitOnly, bool FixRegionsToInclusiveFit, int rapFixTo, int ptFixTo){
+void DefineRegionsAndFractions(const std::string &infilename, int rapBin, int ptBin, int nState, bool runChiMassFitOnly, bool FixRegionsToInclusiveFit, int rapFixTo, int ptFixTo, bool doFractionUncer){
 
     TFile *infile = new TFile(infilename.c_str(), "UPDATE");
     if(!infile){
@@ -241,10 +241,10 @@ void DefineRegionsAndFractions(const std::string &infilename, int rapBin, int pt
     //Calculate fLSBchi
 
 
-    double meanChiLSB;
-    double meanChiRSB;
-    double meanChiSR1;
-    double meanChiSR2;
+    double medianChiLSB;
+    double medianChiRSB;
+    double medianChiSR1;
+    double medianChiSR2;
 
 	RooAbsReal* real_fL_int;
 
@@ -257,7 +257,7 @@ void DefineRegionsAndFractions(const std::string &infilename, int rapBin, int pt
     for(int i=1;i<1000000;i++){
 		mass->setRange("testregion", lsbMinMass, lsbMinMass+i*MassDist);
 		real_fL_int = ws->pdf("M_background")->createIntegral(RooArgSet(*mass), NormSet(RooArgSet(*mass)), Range("testregion"));
-		if(real_fL_int->getVal()>IntLSB/2.) {meanChiLSB=lsbMinMass+i*MassDist; break;}
+		if(real_fL_int->getVal()>IntLSB/2.) {medianChiLSB=lsbMinMass+i*MassDist; break;}
     }
     mass->setRange("testregion", rsbMinMass, rsbMaxMass);
 	real_fL_int = ws->pdf("M_background")->createIntegral(RooArgSet(*mass), NormSet(RooArgSet(*mass)), Range("testregion"));
@@ -265,7 +265,7 @@ void DefineRegionsAndFractions(const std::string &infilename, int rapBin, int pt
     for(int i=1;i<1000000;i++){
 		mass->setRange("testregion", rsbMinMass, rsbMinMass+i*MassDist);
 		real_fL_int = ws->pdf("M_background")->createIntegral(RooArgSet(*mass), NormSet(RooArgSet(*mass)), Range("testregion"));
-		if(real_fL_int->getVal()>IntRSB/2.) {meanChiRSB=rsbMinMass+i*MassDist; break;}
+		if(real_fL_int->getVal()>IntRSB/2.) {medianChiRSB=rsbMinMass+i*MassDist; break;}
     }
     mass->setRange("testregion", sig1MinMass, sig1MaxMass);
 	real_fL_int = ws->pdf("M_background")->createIntegral(RooArgSet(*mass), NormSet(RooArgSet(*mass)), Range("testregion"));
@@ -273,7 +273,7 @@ void DefineRegionsAndFractions(const std::string &infilename, int rapBin, int pt
     for(int i=1;i<1000000;i++){
 		mass->setRange("testregion", sig1MinMass, sig1MinMass+i*MassDist);
 		real_fL_int = ws->pdf("M_background")->createIntegral(RooArgSet(*mass), NormSet(RooArgSet(*mass)), Range("testregion"));
-		if(real_fL_int->getVal()>IntSR1/2.) {meanChiSR1=sig1MinMass+i*MassDist; break;}
+		if(real_fL_int->getVal()>IntSR1/2.) {medianChiSR1=sig1MinMass+i*MassDist; break;}
     }
     mass->setRange("testregion", sig2MinMass, sig2MaxMass);
 	real_fL_int = ws->pdf("M_background")->createIntegral(RooArgSet(*mass), NormSet(RooArgSet(*mass)), Range("testregion"));
@@ -281,19 +281,19 @@ void DefineRegionsAndFractions(const std::string &infilename, int rapBin, int pt
     for(int i=1;i<1000000;i++){
 		mass->setRange("testregion", sig2MinMass, sig2MinMass+i*MassDist);
 		real_fL_int = ws->pdf("M_background")->createIntegral(RooArgSet(*mass), NormSet(RooArgSet(*mass)), Range("testregion"));
-		if(real_fL_int->getVal()>IntSR2/2.) {meanChiSR2=sig2MinMass+i*MassDist; break;}
+		if(real_fL_int->getVal()>IntSR2/2.) {medianChiSR2=sig2MinMass+i*MassDist; break;}
     }
 
 
 
 
 
-    double fLSBChic1=1-(meanChiSR1-meanChiLSB)/(meanChiRSB-meanChiLSB);
-    double fLSBChic2=1-(meanChiSR2-meanChiLSB)/(meanChiRSB-meanChiLSB);
-    cout<<"Median Chi LSB: "<<meanChiLSB<<endl;
-    cout<<"Median Chi RSB: "<<meanChiRSB<<endl;
-    cout<<"Median Chi SR1: "<<meanChiSR1<<endl;
-    cout<<"Median Chi SR2: "<<meanChiSR2<<endl;
+    double fLSBChic1=1-(medianChiSR1-medianChiLSB)/(medianChiRSB-medianChiLSB);
+    double fLSBChic2=1-(medianChiSR2-medianChiLSB)/(medianChiRSB-medianChiLSB);
+    cout<<"Median Chi LSB: "<<medianChiLSB<<endl;
+    cout<<"Median Chi RSB: "<<medianChiRSB<<endl;
+    cout<<"Median Chi SR1: "<<medianChiSR1<<endl;
+    cout<<"Median Chi SR2: "<<medianChiSR2<<endl;
     cout<<"fLSBChic1: "<<fLSBChic1<<endl;
     cout<<"fLSBChic2: "<<fLSBChic2<<endl;
 
@@ -301,10 +301,10 @@ void DefineRegionsAndFractions(const std::string &infilename, int rapBin, int pt
     RooRealVar var_fLSBChic1("var_fLSBChic1","var_fLSBChic1",fLSBChic1); var_fLSBChic1.setError(0.); if(!ws->var("var_fLSBChic1")) ws->import(var_fLSBChic1); else {ws->var("var_fLSBChic1")->setVal(fLSBChic1); ws->var("var_fLSBChic1")->setError(0.);}
     RooRealVar var_fLSBChic2("var_fLSBChic2","var_fLSBChic2",fLSBChic2); var_fLSBChic2.setError(0.); if(!ws->var("var_fLSBChic2")) ws->import(var_fLSBChic2); else {ws->var("var_fLSBChic2")->setVal(fLSBChic2); ws->var("var_fLSBChic2")->setError(0.);}
 
-    RooRealVar var_meanChiLSB("var_meanChiLSB","var_meanChiLSB",meanChiLSB); var_meanChiLSB.setError(0.); if(!ws->var("var_meanChiLSB")) ws->import(var_meanChiLSB); else {ws->var("var_meanChiLSB")->setVal(meanChiLSB); ws->var("var_meanChiLSB")->setError(0.);}
-    RooRealVar var_meanChiRSB("var_meanChiRSB","var_meanChiRSB",meanChiRSB); var_meanChiRSB.setError(0.); if(!ws->var("var_meanChiRSB")) ws->import(var_meanChiRSB); else {ws->var("var_meanChiRSB")->setVal(meanChiRSB); ws->var("var_meanChiRSB")->setError(0.);}
-    RooRealVar var_meanChiSR1("var_meanChiSR1","var_meanChiSR1",meanChiSR1); var_meanChiSR1.setError(0.); if(!ws->var("var_meanChiSR1")) ws->import(var_meanChiSR1); else {ws->var("var_meanChiSR1")->setVal(meanChiSR1); ws->var("var_meanChiSR1")->setError(0.);}
-    RooRealVar var_meanChiSR2("var_meanChiSR2","var_meanChiSR2",meanChiSR2); var_meanChiSR2.setError(0.); if(!ws->var("var_meanChiSR2")) ws->import(var_meanChiSR2); else {ws->var("var_meanChiSR2")->setVal(meanChiSR2); ws->var("var_meanChiSR2")->setError(0.);}
+    RooRealVar var_medianChiLSB("var_medianChiLSB","var_medianChiLSB",medianChiLSB); var_medianChiLSB.setError(0.); if(!ws->var("var_medianChiLSB")) ws->import(var_medianChiLSB); else {ws->var("var_medianChiLSB")->setVal(medianChiLSB); ws->var("var_medianChiLSB")->setError(0.);}
+    RooRealVar var_medianChiRSB("var_medianChiRSB","var_medianChiRSB",medianChiRSB); var_medianChiRSB.setError(0.); if(!ws->var("var_medianChiRSB")) ws->import(var_medianChiRSB); else {ws->var("var_medianChiRSB")->setVal(medianChiRSB); ws->var("var_medianChiRSB")->setError(0.);}
+    RooRealVar var_medianChiSR1("var_medianChiSR1","var_medianChiSR1",medianChiSR1); var_medianChiSR1.setError(0.); if(!ws->var("var_medianChiSR1")) ws->import(var_medianChiSR1); else {ws->var("var_medianChiSR1")->setVal(medianChiSR1); ws->var("var_medianChiSR1")->setError(0.);}
+    RooRealVar var_medianChiSR2("var_medianChiSR2","var_medianChiSR2",medianChiSR2); var_medianChiSR2.setError(0.); if(!ws->var("var_medianChiSR2")) ws->import(var_medianChiSR2); else {ws->var("var_medianChiSR2")->setVal(medianChiSR2); ws->var("var_medianChiSR2")->setError(0.);}
 
 
     //DEFINE LIFETIME REGIONS
@@ -382,7 +382,7 @@ void DefineRegionsAndFractions(const std::string &infilename, int rapBin, int pt
 
 
 
-
+/*
     bool debugInt=false;
 
     if(debugInt){
@@ -517,7 +517,7 @@ void DefineRegionsAndFractions(const std::string &infilename, int rapBin, int pt
 
 
 
-
+*/
 
 
 
@@ -576,6 +576,16 @@ void DefineRegionsAndFractions(const std::string &infilename, int rapBin, int pt
     double fractionCombBGofTotalBackground = fCombBackground / fTotBackground;
     double fractionJpsiBGofTotalBackground = fJpsiBackground / fTotBackground;
 
+
+    double nPRChic1InPRSR1_;
+    double nPRChic2InPRSR2_;
+
+    double nPRChic1InPRSR1_Err_;
+    double nPRChic2InPRSR2_Err_;
+
+    bool calcFractions=true;
+	if(calcFractions){
+
     double nBackground=ev*(ws->var("fracBackground")->getVal()+ws->var("jpsi_fBkg")->getVal());
     double nChic=ev-nBackground;
     double nChic0=nChic*ws->var("fracSignal_chic0")->getVal();
@@ -587,6 +597,7 @@ void DefineRegionsAndFractions(const std::string &infilename, int rapBin, int pt
     double nChic1PR=nChic1-nChic1NP;
     double nChic2NP=nChic2*ws->var("fracNP_chic2")->getVal();
     double nChic2PR=nChic2-nChic2NP;
+
 
 
     cout<<"FULL MASS REGION:"<<endl;
@@ -821,6 +832,11 @@ void DefineRegionsAndFractions(const std::string &infilename, int rapBin, int pt
     double nPRChic1InPRSR1_Err = TMath::Sqrt(nPRChic1InPRSR1);
     double nPRChic2InPRSR2_Err = TMath::Sqrt(nPRChic2InPRSR2);
 
+    nPRChic1InPRSR1_=nPRChic1InPRSR1;
+    nPRChic2InPRSR2_=nPRChic2InPRSR2;
+    nPRChic1InPRSR1_Err_=nPRChic1InPRSR1_Err;
+    nPRChic2InPRSR2_Err_=nPRChic2InPRSR2_Err;
+
     cout<<"Components in PR LSB"<<endl;
     double nTotInPRLSB = nPRChic0InPRLSB + nPRChic1InPRLSB + nPRChic2InPRLSB + nNPChic0InPRLSB + nNPChic1InPRLSB + nNPChic2InPRLSB + nBackgroundInPRLSB;
     double fracPRChic0InPRLSB = nPRChic0InPRLSB / nTotInPRLSB ;
@@ -962,7 +978,6 @@ void DefineRegionsAndFractions(const std::string &infilename, int rapBin, int pt
     cout<<"fracBackgroundInNPSR2 = "<<fracBackgroundInNPSR2<<endl;
 
 
-    //TODO: add fracs to ws
 
 
     //add variables to ws. If they exist, change value
@@ -1127,14 +1142,815 @@ void DefineRegionsAndFractions(const std::string &infilename, int rapBin, int pt
     RooRealVar var_fracNPChic2InNPSR2("var_fracNPChic2InNPSR2","var_fracNPChic2InNPSR2",fracNPChic2InNPSR2); if(!ws->var("var_fracNPChic2InNPSR2")) ws->import(var_fracNPChic2InNPSR2); else ws->var("var_fracNPChic2InNPSR2")->setVal(fracNPChic2InNPSR2);
     RooRealVar var_fracBackgroundInNPSR2("var_fracBackgroundInNPSR2","var_fracBackgroundInNPSR2",fracBackgroundInNPSR2); if(!ws->var("var_fracBackgroundInNPSR2")) ws->import(var_fracBackgroundInNPSR2); else ws->var("var_fracBackgroundInNPSR2")->setVal(fracBackgroundInNPSR2);
 
+	}
+
     RooRealVar var_fTotBackground("var_fTotBackground","var_fTotBackground",fTotBackground); if(!ws->var("var_fTotBackground")) ws->import(var_fTotBackground); else ws->var("var_fTotBackground")->setVal(fTotBackground);
+
+    double relerr_fracSignal_chic0 = ws->var("fracSignal_chic0")->getError()/ws->var("fracSignal_chic0")->getVal();
+    double relerr_fracNP_chic0 = ws->var("fracNP_chic0")->getError()/ws->var("fracNP_chic0")->getVal();
+    double relerr_fracPR_chic0 = ws->var("fracNP_chic0")->getError()/(1.-ws->var("fracNP_chic0")->getVal());
+    double relerr_fracSignal_chic1 = ws->var("fracSignal_chic1")->getError()/ws->var("fracSignal_chic1")->getVal();
+    double relerr_fracNP_chic1 = ws->var("fracNP_chic1")->getError()/ws->var("fracNP_chic1")->getVal();
+    double relerr_fracPR_chic1 = ws->var("fracNP_chic1")->getError()/(1.-ws->var("fracNP_chic1")->getVal());
+    double relerr_fracSignal_chic2 = (ws->var("fracSignal_chic0")->getError()+ws->var("fracSignal_chic1")->getError())/ws->function("fracSignal_chic2")->getVal();
+    double relerr_fracNP_chic2 = ws->var("fracNP_chic2")->getError()/ws->var("fracNP_chic2")->getVal();
+    double relerr_fracPR_chic2 = ws->var("fracNP_chic2")->getError()/(1.-ws->var("fracNP_chic2")->getVal());
+
+    double relerr_fracSignal_chic0_times_relerr_fracNP_chic0 = relerr_fracSignal_chic0+relerr_fracNP_chic0;
+    double relerr_fracSignal_chic0_times_relerr_fracPR_chic0 = relerr_fracSignal_chic0+relerr_fracPR_chic0;
+    double relerr_fracSignal_chic1_times_relerr_fracNP_chic1 = relerr_fracSignal_chic1+relerr_fracNP_chic1;
+    double relerr_fracSignal_chic1_times_relerr_fracPR_chic1 = relerr_fracSignal_chic1+relerr_fracPR_chic1;
+    double relerr_fracSignal_chic2_times_relerr_fracNP_chic2 = relerr_fracSignal_chic2+relerr_fracNP_chic2;
+    double relerr_fracSignal_chic2_times_relerr_fracPR_chic2 = relerr_fracSignal_chic2+relerr_fracPR_chic2;
+
+    double relerr_fracBackgroundComb=ws->var("jpsi_fBkg")->getError()/ws->var("jpsi_fBkg")->getVal();
+    double relerr_fracBackgroundJpsi=ws->var("fracBackground")->getError()/ws->var("fracBackground")->getVal();
+
+    double err_fracTotBackground=ws->var("jpsi_fBkg")->getError()+ws->var("fracBackground")->getError();
+    double relerr_fracJpsiBackgroundInPRregion=ws->var("fBkgNP")->getError()/(1.-ws->var("fBkgNP")->getVal());
+    double relerr_fracJpsiBackgroundInNPregion=ws->var("fBkgNP")->getError()/(ws->var("fBkgNP")->getVal());
+
+    double relerr_fracTotBackground=err_fracTotBackground/fTotBackground;
+    double relerr_fracTotBackgroundInPR=TMath::Sqrt(relerr_fracTotBackground*relerr_fracTotBackground+relerr_fracJpsiBackgroundInPRregion*relerr_fracJpsiBackgroundInPRregion);
+    double relerr_fracTotBackgroundInNP=TMath::Sqrt(relerr_fracTotBackground*relerr_fracTotBackground+relerr_fracJpsiBackgroundInNPregion*relerr_fracJpsiBackgroundInNPregion);
+
+/*
+
+    cout<<"relerr_fracSignal_chic0    = "<<relerr_fracSignal_chic0   <<endl;
+    cout<<"relerr_fracNP_chic0    = "<<relerr_fracNP_chic0   <<endl;
+    cout<<"relerr_fracPR_chic0    = "<<relerr_fracPR_chic0   <<endl;
+    cout<<"relerr_fracSignal_chic0_times_relerr_fracNP_chic0    = "<<relerr_fracSignal_chic0_times_relerr_fracNP_chic0   <<endl;
+    cout<<"relerr_fracSignal_chic0_times_relerr_fracPR_chic0    = "<<relerr_fracSignal_chic0_times_relerr_fracPR_chic0   <<endl;
+
+    cout<<"relerr_fracSignal_chic1    = "<<relerr_fracSignal_chic1   <<endl;
+    cout<<"relerr_fracNP_chic1    = "<<relerr_fracNP_chic1   <<endl;
+    cout<<"relerr_fracPR_chic1    = "<<relerr_fracPR_chic1   <<endl;
+    cout<<"relerr_fracSignal_chic1_times_relerr_fracNP_chic1    = "<<relerr_fracSignal_chic1_times_relerr_fracNP_chic1   <<endl;
+    cout<<"relerr_fracSignal_chic1_times_relerr_fracPR_chic1    = "<<relerr_fracSignal_chic1_times_relerr_fracPR_chic1   <<endl;
+
+    cout<<"relerr_fracSignal_chic2    = "<<relerr_fracSignal_chic2   <<endl;
+    cout<<"relerr_fracNP_chic2    = "<<relerr_fracNP_chic2   <<endl;
+    cout<<"relerr_fracPR_chic2    = "<<relerr_fracPR_chic2   <<endl;
+    cout<<"relerr_fracSignal_chic2_times_relerr_fracNP_chic2    = "<<relerr_fracSignal_chic2_times_relerr_fracNP_chic2   <<endl;
+    cout<<"relerr_fracSignal_chic2_times_relerr_fracPR_chic2    = "<<relerr_fracSignal_chic2_times_relerr_fracPR_chic2   <<endl;
+
+    cout<<"relerr_fracBackgroundComb    = "<<relerr_fracBackgroundComb   <<endl;
+    cout<<"relerr_fracBackgroundJpsi    = "<<relerr_fracBackgroundJpsi   <<endl;
+    cout<<"relerr_fracTotBackground    = "<<relerr_fracTotBackground   <<endl;
+    cout<<"relerr_fracJpsiBackgroundInPRregion    = "<<relerr_fracJpsiBackgroundInPRregion   <<endl;
+    cout<<"relerr_fracJpsiBackgroundInNPregion    = "<<relerr_fracJpsiBackgroundInNPregion   <<endl;
+    cout<<"relerr_fracTotBackgroundInPR    = "<<relerr_fracTotBackgroundInPR   <<endl;
+    cout<<"relerr_fracTotBackgroundInNP    = "<<relerr_fracTotBackgroundInNP   <<endl;
+
+    ws->var("var_fracPRChic0InPRSR1")->setError(ws->var("var_fracPRChic0InPRSR1")->getVal()*relerr_fracSignal_chic0_times_relerr_fracPR_chic0);
+    ws->var("var_fracPRChic0InPRSR2")->setError(ws->var("var_fracPRChic0InPRSR2")->getVal()*relerr_fracSignal_chic0_times_relerr_fracPR_chic0);
+    ws->var("var_fracPRChic0InPRLSB")->setError(ws->var("var_fracPRChic0InPRLSB")->getVal()*relerr_fracSignal_chic0_times_relerr_fracPR_chic0);
+    ws->var("var_fracPRChic0InPRRSB")->setError(ws->var("var_fracPRChic0InPRRSB")->getVal()*relerr_fracSignal_chic0_times_relerr_fracPR_chic0);
+    ws->var("var_fracPRChic0InNPSR1")->setError(ws->var("var_fracPRChic0InNPSR1")->getVal()*relerr_fracSignal_chic0_times_relerr_fracPR_chic0);
+    ws->var("var_fracPRChic0InNPSR2")->setError(ws->var("var_fracPRChic0InNPSR2")->getVal()*relerr_fracSignal_chic0_times_relerr_fracPR_chic0);
+    ws->var("var_fracPRChic0InNPLSB")->setError(ws->var("var_fracPRChic0InNPLSB")->getVal()*relerr_fracSignal_chic0_times_relerr_fracPR_chic0);
+    ws->var("var_fracPRChic0InNPRSB")->setError(ws->var("var_fracPRChic0InNPRSB")->getVal()*relerr_fracSignal_chic0_times_relerr_fracPR_chic0);
+
+    ws->var("var_fracNPChic0InPRSR1")->setError(ws->var("var_fracNPChic0InPRSR1")->getVal()*relerr_fracSignal_chic0_times_relerr_fracNP_chic0);
+    ws->var("var_fracNPChic0InPRSR2")->setError(ws->var("var_fracNPChic0InPRSR2")->getVal()*relerr_fracSignal_chic0_times_relerr_fracNP_chic0);
+    ws->var("var_fracNPChic0InPRLSB")->setError(ws->var("var_fracNPChic0InPRLSB")->getVal()*relerr_fracSignal_chic0_times_relerr_fracNP_chic0);
+    ws->var("var_fracNPChic0InPRRSB")->setError(ws->var("var_fracNPChic0InPRRSB")->getVal()*relerr_fracSignal_chic0_times_relerr_fracNP_chic0);
+    ws->var("var_fracNPChic0InNPSR1")->setError(ws->var("var_fracNPChic0InNPSR1")->getVal()*relerr_fracSignal_chic0_times_relerr_fracNP_chic0);
+    ws->var("var_fracNPChic0InNPSR2")->setError(ws->var("var_fracNPChic0InNPSR2")->getVal()*relerr_fracSignal_chic0_times_relerr_fracNP_chic0);
+    ws->var("var_fracNPChic0InNPLSB")->setError(ws->var("var_fracNPChic0InNPLSB")->getVal()*relerr_fracSignal_chic0_times_relerr_fracNP_chic0);
+    ws->var("var_fracNPChic0InNPRSB")->setError(ws->var("var_fracNPChic0InNPRSB")->getVal()*relerr_fracSignal_chic0_times_relerr_fracNP_chic0);
+
+    ws->var("var_fracPRChic1InPRSR1")->setError(ws->var("var_fracPRChic1InPRSR1")->getVal()*relerr_fracSignal_chic1_times_relerr_fracPR_chic1);
+    ws->var("var_fracPRChic1InPRSR2")->setError(ws->var("var_fracPRChic1InPRSR2")->getVal()*relerr_fracSignal_chic1_times_relerr_fracPR_chic1);
+    ws->var("var_fracPRChic1InPRLSB")->setError(ws->var("var_fracPRChic1InPRLSB")->getVal()*relerr_fracSignal_chic1_times_relerr_fracPR_chic1);
+    ws->var("var_fracPRChic1InPRRSB")->setError(ws->var("var_fracPRChic1InPRRSB")->getVal()*relerr_fracSignal_chic1_times_relerr_fracPR_chic1);
+    ws->var("var_fracPRChic1InNPSR1")->setError(ws->var("var_fracPRChic1InNPSR1")->getVal()*relerr_fracSignal_chic1_times_relerr_fracPR_chic1);
+    ws->var("var_fracPRChic1InNPSR2")->setError(ws->var("var_fracPRChic1InNPSR2")->getVal()*relerr_fracSignal_chic1_times_relerr_fracPR_chic1);
+    ws->var("var_fracPRChic1InNPLSB")->setError(ws->var("var_fracPRChic1InNPLSB")->getVal()*relerr_fracSignal_chic1_times_relerr_fracPR_chic1);
+    ws->var("var_fracPRChic1InNPRSB")->setError(ws->var("var_fracPRChic1InNPRSB")->getVal()*relerr_fracSignal_chic1_times_relerr_fracPR_chic1);
+
+    ws->var("var_fracNPChic1InPRSR1")->setError(ws->var("var_fracNPChic1InPRSR1")->getVal()*relerr_fracSignal_chic1_times_relerr_fracNP_chic1);
+    ws->var("var_fracNPChic1InPRSR2")->setError(ws->var("var_fracNPChic1InPRSR2")->getVal()*relerr_fracSignal_chic1_times_relerr_fracNP_chic1);
+    ws->var("var_fracNPChic1InPRLSB")->setError(ws->var("var_fracNPChic1InPRLSB")->getVal()*relerr_fracSignal_chic1_times_relerr_fracNP_chic1);
+    ws->var("var_fracNPChic1InPRRSB")->setError(ws->var("var_fracNPChic1InPRRSB")->getVal()*relerr_fracSignal_chic1_times_relerr_fracNP_chic1);
+    ws->var("var_fracNPChic1InNPSR1")->setError(ws->var("var_fracNPChic1InNPSR1")->getVal()*relerr_fracSignal_chic1_times_relerr_fracNP_chic1);
+    ws->var("var_fracNPChic1InNPSR2")->setError(ws->var("var_fracNPChic1InNPSR2")->getVal()*relerr_fracSignal_chic1_times_relerr_fracNP_chic1);
+    ws->var("var_fracNPChic1InNPLSB")->setError(ws->var("var_fracNPChic1InNPLSB")->getVal()*relerr_fracSignal_chic1_times_relerr_fracNP_chic1);
+    ws->var("var_fracNPChic1InNPRSB")->setError(ws->var("var_fracNPChic1InNPRSB")->getVal()*relerr_fracSignal_chic1_times_relerr_fracNP_chic1);
+
+    ws->var("var_fracPRChic2InPRSR1")->setError(ws->var("var_fracPRChic2InPRSR1")->getVal()*relerr_fracSignal_chic2_times_relerr_fracPR_chic2);
+    ws->var("var_fracPRChic2InPRSR2")->setError(ws->var("var_fracPRChic2InPRSR2")->getVal()*relerr_fracSignal_chic2_times_relerr_fracPR_chic2);
+    ws->var("var_fracPRChic2InPRLSB")->setError(ws->var("var_fracPRChic2InPRLSB")->getVal()*relerr_fracSignal_chic2_times_relerr_fracPR_chic2);
+    ws->var("var_fracPRChic2InPRRSB")->setError(ws->var("var_fracPRChic2InPRRSB")->getVal()*relerr_fracSignal_chic2_times_relerr_fracPR_chic2);
+    ws->var("var_fracPRChic2InNPSR1")->setError(ws->var("var_fracPRChic2InNPSR1")->getVal()*relerr_fracSignal_chic2_times_relerr_fracPR_chic2);
+    ws->var("var_fracPRChic2InNPSR2")->setError(ws->var("var_fracPRChic2InNPSR2")->getVal()*relerr_fracSignal_chic2_times_relerr_fracPR_chic2);
+    ws->var("var_fracPRChic2InNPLSB")->setError(ws->var("var_fracPRChic2InNPLSB")->getVal()*relerr_fracSignal_chic2_times_relerr_fracPR_chic2);
+    ws->var("var_fracPRChic2InNPRSB")->setError(ws->var("var_fracPRChic2InNPRSB")->getVal()*relerr_fracSignal_chic2_times_relerr_fracPR_chic2);
+
+    ws->var("var_fracNPChic2InPRSR1")->setError(ws->var("var_fracNPChic2InPRSR1")->getVal()*relerr_fracSignal_chic2_times_relerr_fracNP_chic2);
+    ws->var("var_fracNPChic2InPRSR2")->setError(ws->var("var_fracNPChic2InPRSR2")->getVal()*relerr_fracSignal_chic2_times_relerr_fracNP_chic2);
+    ws->var("var_fracNPChic2InPRLSB")->setError(ws->var("var_fracNPChic2InPRLSB")->getVal()*relerr_fracSignal_chic2_times_relerr_fracNP_chic2);
+    ws->var("var_fracNPChic2InPRRSB")->setError(ws->var("var_fracNPChic2InPRRSB")->getVal()*relerr_fracSignal_chic2_times_relerr_fracNP_chic2);
+    ws->var("var_fracNPChic2InNPSR1")->setError(ws->var("var_fracNPChic2InNPSR1")->getVal()*relerr_fracSignal_chic2_times_relerr_fracNP_chic2);
+    ws->var("var_fracNPChic2InNPSR2")->setError(ws->var("var_fracNPChic2InNPSR2")->getVal()*relerr_fracSignal_chic2_times_relerr_fracNP_chic2);
+    ws->var("var_fracNPChic2InNPLSB")->setError(ws->var("var_fracNPChic2InNPLSB")->getVal()*relerr_fracSignal_chic2_times_relerr_fracNP_chic2);
+    ws->var("var_fracNPChic2InNPRSB")->setError(ws->var("var_fracNPChic2InNPRSB")->getVal()*relerr_fracSignal_chic2_times_relerr_fracNP_chic2);
+
+    ws->var("var_fracBackgroundInPRSR1")->setError(ws->var("var_fracBackgroundInPRSR1")->getVal()*relerr_fracTotBackgroundInPR);
+    ws->var("var_fracBackgroundInPRSR2")->setError(ws->var("var_fracBackgroundInPRSR2")->getVal()*relerr_fracTotBackgroundInPR);
+    ws->var("var_fracBackgroundInPRLSB")->setError(ws->var("var_fracBackgroundInPRLSB")->getVal()*relerr_fracTotBackgroundInPR);
+    ws->var("var_fracBackgroundInPRRSB")->setError(ws->var("var_fracBackgroundInPRRSB")->getVal()*relerr_fracTotBackgroundInPR);
+    ws->var("var_fracBackgroundInNPSR1")->setError(ws->var("var_fracBackgroundInNPSR1")->getVal()*relerr_fracTotBackgroundInNP);
+    ws->var("var_fracBackgroundInNPSR2")->setError(ws->var("var_fracBackgroundInNPSR2")->getVal()*relerr_fracTotBackgroundInNP);
+    ws->var("var_fracBackgroundInNPLSB")->setError(ws->var("var_fracBackgroundInNPLSB")->getVal()*relerr_fracTotBackgroundInNP);
+    ws->var("var_fracBackgroundInNPRSB")->setError(ws->var("var_fracBackgroundInNPRSB")->getVal()*relerr_fracTotBackgroundInNP);
+
+    ws->var("var_fTotBackground")->setError(ws->var("var_fTotBackground")->getVal()*relerr_fracTotBackground);
+
+*/
+
+
+
+
+
+	//------------------------------------------------------------------------------------------------
+	// evaluate error on fractions
+
+double err_fracPRChic0InPRSR1 = 0.;
+double err_fracNPChic0InPRSR1 = 0.;
+double err_fracPRChic1InPRSR1 = 0.;
+double err_fracNPChic1InPRSR1 = 0.;
+double err_fracPRChic2InPRSR1 = 0.;
+double err_fracNPChic2InPRSR1 = 0.;
+double err_fracBackgroundInPRSR1 = 0.;
+
+double err_fracPRChic0InNPSR1 = 0.;
+double err_fracNPChic0InNPSR1 = 0.;
+double err_fracPRChic1InNPSR1 = 0.;
+double err_fracNPChic1InNPSR1 = 0.;
+double err_fracPRChic2InNPSR1 = 0.;
+double err_fracNPChic2InNPSR1 = 0.;
+double err_fracBackgroundInNPSR1 = 0.;
+
+double err_fracPRChic0InPRSR2 = 0.;
+double err_fracNPChic0InPRSR2 = 0.;
+double err_fracPRChic1InPRSR2 = 0.;
+double err_fracNPChic1InPRSR2 = 0.;
+double err_fracPRChic2InPRSR2 = 0.;
+double err_fracNPChic2InPRSR2 = 0.;
+double err_fracBackgroundInPRSR2 = 0.;
+
+double err_fracPRChic0InNPSR2 = 0.;
+double err_fracNPChic0InNPSR2 = 0.;
+double err_fracPRChic1InNPSR2 = 0.;
+double err_fracNPChic1InNPSR2 = 0.;
+double err_fracPRChic2InNPSR2 = 0.;
+double err_fracNPChic2InNPSR2 = 0.;
+double err_fracBackgroundInNPSR2 = 0.;
+
+double err_fracPRChic0InPRLSB = 0.;
+double err_fracNPChic0InPRLSB = 0.;
+double err_fracPRChic1InPRLSB = 0.;
+double err_fracNPChic1InPRLSB = 0.;
+double err_fracPRChic2InPRLSB = 0.;
+double err_fracNPChic2InPRLSB = 0.;
+double err_fracBackgroundInPRLSB = 0.;
+
+double err_fracPRChic0InNPLSB = 0.;
+double err_fracNPChic0InNPLSB = 0.;
+double err_fracPRChic1InNPLSB = 0.;
+double err_fracNPChic1InNPLSB = 0.;
+double err_fracPRChic2InNPLSB = 0.;
+double err_fracNPChic2InNPLSB = 0.;
+double err_fracBackgroundInNPLSB = 0.;
+
+double err_fracPRChic0InPRRSB = 0.;
+double err_fracNPChic0InPRRSB = 0.;
+double err_fracPRChic1InPRRSB = 0.;
+double err_fracNPChic1InPRRSB = 0.;
+double err_fracPRChic2InPRRSB = 0.;
+double err_fracNPChic2InPRRSB = 0.;
+double err_fracBackgroundInPRRSB = 0.;
+
+double err_fracPRChic0InNPRSB = 0.;
+double err_fracNPChic0InNPRSB = 0.;
+double err_fracPRChic1InNPRSB = 0.;
+double err_fracNPChic1InNPRSB = 0.;
+double err_fracPRChic2InNPRSB = 0.;
+double err_fracNPChic2InNPRSB = 0.;
+double err_fracBackgroundInNPRSB = 0.;
+
+		if(doFractionUncer){
+			int nEvents = 500;
+
+			RooFitResult* result = dynamic_cast<RooFitResult*>(ws->obj(Form("fitresult_rap%d_pt%d",rapBin,ptBin)));
+
+			RooRealVar* BK_p1=(RooRealVar*)ws->var("BK_p1");
+			RooRealVar* CBmass1=(RooRealVar*)ws->var("CBmass1");
+			RooRealVar* CBsigma1=(RooRealVar*)ws->var("CBsigma1");
+			RooRealVar* NP_TauBkg=(RooRealVar*)ws->var("NP_TauBkg");
+			RooRealVar* NP_TauChic=(RooRealVar*)ws->var("NP_TauChic");
+			RooRealVar* fBkgNP=(RooRealVar*)ws->var("fBkgNP");
+			RooRealVar* fracBackground=(RooRealVar*)ws->var("fracBackground");
+			RooRealVar* fracNP_chic0=(RooRealVar*)ws->var("fracNP_chic0");
+			RooRealVar* fracNP_chic1=(RooRealVar*)ws->var("fracNP_chic1");
+			RooRealVar* fracNP_chic2=(RooRealVar*)ws->var("fracNP_chic2");
+			RooRealVar* fracSignal_chic1=(RooRealVar*)ws->var("fracSignal_chic1");
+
+			RooArgSet *paraVars = new RooArgSet(*BK_p1,*CBsigma1,*CBmass1,*NP_TauBkg,*NP_TauChic,*fBkgNP,*fracBackground);
+			paraVars->add(RooArgSet(*fracNP_chic0,*fracNP_chic1,*fracNP_chic2,*fracSignal_chic1));
+
+			double BK_p1_buff=ws->var("BK_p1")->getVal();
+			double CBmass1_buff=ws->var("CBmass1")->getVal();
+			double CBsigma1_buff=ws->var("CBsigma1")->getVal();
+			double NP_TauBkg_buff=ws->var("NP_TauBkg")->getVal();
+			double NP_TauChic_buff=ws->var("NP_TauChic")->getVal();
+			double fBkgNP_buff=ws->var("fBkgNP")->getVal();
+			double fracBackground_buff=ws->var("fracBackground")->getVal();
+			double fracNP_chic0_buff=ws->var("fracNP_chic0")->getVal();
+			double fracNP_chic1_buff=ws->var("fracNP_chic1")->getVal();
+			double fracNP_chic2_buff=ws->var("fracNP_chic2")->getVal();
+			double fracSignal_chic1_buff=ws->var("fracSignal_chic1")->getVal();
+
+			cout<<"create Hesse"<<endl;
+			// create Hesse pdf and generate dataset
+			RooAbsPdf *multiVarPdf = (RooAbsPdf*)result->createHessePdf(*paraVars);
+			cout<<"create Hesse"<<endl;
+			RooDataSet *multiVarData = (RooDataSet*)multiVarPdf->generate(*paraVars,nEvents);
+			multiVarData->Print();
+
+			cout<<"create hists"<<endl;
+
+			int nbinsUnc=500;
+			double UncMin=-0.1;
+			double UncMax=+1.1;
+
+			TH1D* hist_fracPRChic0InPRSR1 = new TH1D("hist_fracPRChic0InPRSR1","hist_fracPRChic0InPRSR1",nbinsUnc,UncMin,UncMax);
+			TH1D* hist_fracNPChic0InPRSR1 = new TH1D("hist_fracNPChic0InPRSR1","hist_fracNPChic0InPRSR1",nbinsUnc,UncMin,UncMax);
+			TH1D* hist_fracPRChic1InPRSR1 = new TH1D("hist_fracPRChic1InPRSR1","hist_fracPRChic1InPRSR1",nbinsUnc,UncMin,UncMax);
+			TH1D* hist_fracNPChic1InPRSR1 = new TH1D("hist_fracNPChic1InPRSR1","hist_fracNPChic1InPRSR1",nbinsUnc,UncMin,UncMax);
+			TH1D* hist_fracPRChic2InPRSR1 = new TH1D("hist_fracPRChic2InPRSR1","hist_fracPRChic2InPRSR1",nbinsUnc,UncMin,UncMax);
+			TH1D* hist_fracNPChic2InPRSR1 = new TH1D("hist_fracNPChic2InPRSR1","hist_fracNPChic2InPRSR1",nbinsUnc,UncMin,UncMax);
+			TH1D* hist_fracBackgroundInPRSR1 = new TH1D("hist_fracBackgroundInPRSR1","hist_fracBackgroundInPRSR1",nbinsUnc,UncMin,UncMax);
+			TH1D* hist_fracPRChic0InNPSR1 = new TH1D("hist_fracPRChic0InNPSR1","hist_fracPRChic0InNPSR1",nbinsUnc,UncMin,UncMax);
+			TH1D* hist_fracNPChic0InNPSR1 = new TH1D("hist_fracNPChic0InNPSR1","hist_fracNPChic0InNPSR1",nbinsUnc,UncMin,UncMax);
+			TH1D* hist_fracPRChic1InNPSR1 = new TH1D("hist_fracPRChic1InNPSR1","hist_fracPRChic1InNPSR1",nbinsUnc,UncMin,UncMax);
+			TH1D* hist_fracNPChic1InNPSR1 = new TH1D("hist_fracNPChic1InNPSR1","hist_fracNPChic1InNPSR1",nbinsUnc,UncMin,UncMax);
+			TH1D* hist_fracPRChic2InNPSR1 = new TH1D("hist_fracPRChic2InNPSR1","hist_fracPRChic2InNPSR1",nbinsUnc,UncMin,UncMax);
+			TH1D* hist_fracNPChic2InNPSR1 = new TH1D("hist_fracNPChic2InNPSR1","hist_fracNPChic2InNPSR1",nbinsUnc,UncMin,UncMax);
+			TH1D* hist_fracBackgroundInNPSR1 = new TH1D("hist_fracBackgroundInNPSR1","hist_fracBackgroundInNPSR1",nbinsUnc,UncMin,UncMax);
+
+			TH1D* hist_fracPRChic0InPRSR2 = new TH1D("hist_fracPRChic0InPRSR2","hist_fracPRChic0InPRSR2",nbinsUnc,UncMin,UncMax);
+			TH1D* hist_fracNPChic0InPRSR2 = new TH1D("hist_fracNPChic0InPRSR2","hist_fracNPChic0InPRSR2",nbinsUnc,UncMin,UncMax);
+			TH1D* hist_fracPRChic1InPRSR2 = new TH1D("hist_fracPRChic1InPRSR2","hist_fracPRChic1InPRSR2",nbinsUnc,UncMin,UncMax);
+			TH1D* hist_fracNPChic1InPRSR2 = new TH1D("hist_fracNPChic1InPRSR2","hist_fracNPChic1InPRSR2",nbinsUnc,UncMin,UncMax);
+			TH1D* hist_fracPRChic2InPRSR2 = new TH1D("hist_fracPRChic2InPRSR2","hist_fracPRChic2InPRSR2",nbinsUnc,UncMin,UncMax);
+			TH1D* hist_fracNPChic2InPRSR2 = new TH1D("hist_fracNPChic2InPRSR2","hist_fracNPChic2InPRSR2",nbinsUnc,UncMin,UncMax);
+			TH1D* hist_fracBackgroundInPRSR2 = new TH1D("hist_fracBackgroundInPRSR2","hist_fracBackgroundInPRSR2",nbinsUnc,UncMin,UncMax);
+			TH1D* hist_fracPRChic0InNPSR2 = new TH1D("hist_fracPRChic0InNPSR2","hist_fracPRChic0InNPSR2",nbinsUnc,UncMin,UncMax);
+			TH1D* hist_fracNPChic0InNPSR2 = new TH1D("hist_fracNPChic0InNPSR2","hist_fracNPChic0InNPSR2",nbinsUnc,UncMin,UncMax);
+			TH1D* hist_fracPRChic1InNPSR2 = new TH1D("hist_fracPRChic1InNPSR2","hist_fracPRChic1InNPSR2",nbinsUnc,UncMin,UncMax);
+			TH1D* hist_fracNPChic1InNPSR2 = new TH1D("hist_fracNPChic1InNPSR2","hist_fracNPChic1InNPSR2",nbinsUnc,UncMin,UncMax);
+			TH1D* hist_fracPRChic2InNPSR2 = new TH1D("hist_fracPRChic2InNPSR2","hist_fracPRChic2InNPSR2",nbinsUnc,UncMin,UncMax);
+			TH1D* hist_fracNPChic2InNPSR2 = new TH1D("hist_fracNPChic2InNPSR2","hist_fracNPChic2InNPSR2",nbinsUnc,UncMin,UncMax);
+			TH1D* hist_fracBackgroundInNPSR2 = new TH1D("hist_fracBackgroundInNPSR2","hist_fracBackgroundInNPSR2",nbinsUnc,UncMin,UncMax);
+
+			TH1D* hist_fracPRChic0InPRLSB = new TH1D("hist_fracPRChic0InPRLSB","hist_fracPRChic0InPRLSB",nbinsUnc,UncMin,UncMax);
+			TH1D* hist_fracNPChic0InPRLSB = new TH1D("hist_fracNPChic0InPRLSB","hist_fracNPChic0InPRLSB",nbinsUnc,UncMin,UncMax);
+			TH1D* hist_fracPRChic1InPRLSB = new TH1D("hist_fracPRChic1InPRLSB","hist_fracPRChic1InPRLSB",nbinsUnc,UncMin,UncMax);
+			TH1D* hist_fracNPChic1InPRLSB = new TH1D("hist_fracNPChic1InPRLSB","hist_fracNPChic1InPRLSB",nbinsUnc,UncMin,UncMax);
+			TH1D* hist_fracPRChic2InPRLSB = new TH1D("hist_fracPRChic2InPRLSB","hist_fracPRChic2InPRLSB",nbinsUnc,UncMin,UncMax);
+			TH1D* hist_fracNPChic2InPRLSB = new TH1D("hist_fracNPChic2InPRLSB","hist_fracNPChic2InPRLSB",nbinsUnc,UncMin,UncMax);
+			TH1D* hist_fracBackgroundInPRLSB = new TH1D("hist_fracBackgroundInPRLSB","hist_fracBackgroundInPRLSB",nbinsUnc,UncMin,UncMax);
+			TH1D* hist_fracPRChic0InNPLSB = new TH1D("hist_fracPRChic0InNPLSB","hist_fracPRChic0InNPLSB",nbinsUnc,UncMin,UncMax);
+			TH1D* hist_fracNPChic0InNPLSB = new TH1D("hist_fracNPChic0InNPLSB","hist_fracNPChic0InNPLSB",nbinsUnc,UncMin,UncMax);
+			TH1D* hist_fracPRChic1InNPLSB = new TH1D("hist_fracPRChic1InNPLSB","hist_fracPRChic1InNPLSB",nbinsUnc,UncMin,UncMax);
+			TH1D* hist_fracNPChic1InNPLSB = new TH1D("hist_fracNPChic1InNPLSB","hist_fracNPChic1InNPLSB",nbinsUnc,UncMin,UncMax);
+			TH1D* hist_fracPRChic2InNPLSB = new TH1D("hist_fracPRChic2InNPLSB","hist_fracPRChic2InNPLSB",nbinsUnc,UncMin,UncMax);
+			TH1D* hist_fracNPChic2InNPLSB = new TH1D("hist_fracNPChic2InNPLSB","hist_fracNPChic2InNPLSB",nbinsUnc,UncMin,UncMax);
+			TH1D* hist_fracBackgroundInNPLSB = new TH1D("hist_fracBackgroundInNPLSB","hist_fracBackgroundInNPLSB",nbinsUnc,UncMin,UncMax);
+
+			TH1D* hist_fracPRChic0InPRRSB = new TH1D("hist_fracPRChic0InPRRSB","hist_fracPRChic0InPRRSB",nbinsUnc,UncMin,UncMax);
+			TH1D* hist_fracNPChic0InPRRSB = new TH1D("hist_fracNPChic0InPRRSB","hist_fracNPChic0InPRRSB",nbinsUnc,UncMin,UncMax);
+			TH1D* hist_fracPRChic1InPRRSB = new TH1D("hist_fracPRChic1InPRRSB","hist_fracPRChic1InPRRSB",nbinsUnc,UncMin,UncMax);
+			TH1D* hist_fracNPChic1InPRRSB = new TH1D("hist_fracNPChic1InPRRSB","hist_fracNPChic1InPRRSB",nbinsUnc,UncMin,UncMax);
+			TH1D* hist_fracPRChic2InPRRSB = new TH1D("hist_fracPRChic2InPRRSB","hist_fracPRChic2InPRRSB",nbinsUnc,UncMin,UncMax);
+			TH1D* hist_fracNPChic2InPRRSB = new TH1D("hist_fracNPChic2InPRRSB","hist_fracNPChic2InPRRSB",nbinsUnc,UncMin,UncMax);
+			TH1D* hist_fracBackgroundInPRRSB = new TH1D("hist_fracBackgroundInPRRSB","hist_fracBackgroundInPRRSB",nbinsUnc,UncMin,UncMax);
+			TH1D* hist_fracPRChic0InNPRSB = new TH1D("hist_fracPRChic0InNPRSB","hist_fracPRChic0InNPRSB",nbinsUnc,UncMin,UncMax);
+			TH1D* hist_fracNPChic0InNPRSB = new TH1D("hist_fracNPChic0InNPRSB","hist_fracNPChic0InNPRSB",nbinsUnc,UncMin,UncMax);
+			TH1D* hist_fracPRChic1InNPRSB = new TH1D("hist_fracPRChic1InNPRSB","hist_fracPRChic1InNPRSB",nbinsUnc,UncMin,UncMax);
+			TH1D* hist_fracNPChic1InNPRSB = new TH1D("hist_fracNPChic1InNPRSB","hist_fracNPChic1InNPRSB",nbinsUnc,UncMin,UncMax);
+			TH1D* hist_fracPRChic2InNPRSB = new TH1D("hist_fracPRChic2InNPRSB","hist_fracPRChic2InNPRSB",nbinsUnc,UncMin,UncMax);
+			TH1D* hist_fracNPChic2InNPRSB = new TH1D("hist_fracNPChic2InNPRSB","hist_fracNPChic2InNPRSB",nbinsUnc,UncMin,UncMax);
+			TH1D* hist_fracBackgroundInNPRSB = new TH1D("hist_fracBackgroundInNPRSB","hist_fracBackgroundInNPRSB",nbinsUnc,UncMin,UncMax);
+
+			for(int n = 0; n < nEvents; n++) {
+				if(n%100==0) std::cout << (double)n << " combinations drawn" << std::endl;
+				RooArgSet* args = (RooArgSet*)multiVarData->get(n);
+
+				double BK_p1_=((RooRealVar*)args->find("BK_p1"))->getVal();
+				double CBmass1_=((RooRealVar*)args->find("CBmass1"))->getVal();
+				double CBsigma1_=((RooRealVar*)args->find("CBsigma1"))->getVal();
+				double NP_TauBkg_=((RooRealVar*)args->find("NP_TauBkg"))->getVal();
+				double NP_TauChic_=((RooRealVar*)args->find("NP_TauChic"))->getVal();
+				double fBkgNP_=((RooRealVar*)args->find("fBkgNP"))->getVal();
+				double fracBackground_=((RooRealVar*)args->find("fracBackground"))->getVal();
+				double fracNP_chic0_=((RooRealVar*)args->find("fracNP_chic0"))->getVal();
+				double fracNP_chic1_=((RooRealVar*)args->find("fracNP_chic1"))->getVal();
+				double fracNP_chic2_=((RooRealVar*)args->find("fracNP_chic2"))->getVal();
+				double fracSignal_chic1_=((RooRealVar*)args->find("fracSignal_chic1"))->getVal();
+
+				ws->var("BK_p1")->setVal(BK_p1_);
+				ws->var("CBmass1")->setVal(CBmass1_);
+				ws->var("CBsigma1")->setVal(CBsigma1_);
+				ws->var("NP_TauBkg")->setVal(NP_TauBkg_);
+				ws->var("NP_TauChic")->setVal(NP_TauChic_);
+				ws->var("fBkgNP")->setVal(fBkgNP_);
+				ws->var("fracBackground")->setVal(fracBackground_);
+				ws->var("fracNP_chic0")->setVal(fracNP_chic0_);
+				ws->var("fracNP_chic1")->setVal(fracNP_chic1_);
+				ws->var("fracNP_chic2")->setVal(fracNP_chic2_);
+				ws->var("fracSignal_chic1")->setVal(fracSignal_chic1_);
+
+
+			    double nBackground=ev*(ws->var("fracBackground")->getVal()+ws->var("jpsi_fBkg")->getVal());
+			    double nChic=ev-nBackground;
+			    double nChic0=nChic*ws->var("fracSignal_chic0")->getVal();
+			    double nChic1=nChic*ws->var("fracSignal_chic1")->getVal();
+			    double nChic2=nChic-nChic0-nChic1;
+			    double nChic0NP=nChic0*ws->var("fracNP_chic0")->getVal();
+			    double nChic0PR=nChic0-nChic0NP;
+			    double nChic1NP=nChic1*ws->var("fracNP_chic1")->getVal();
+			    double nChic1PR=nChic1-nChic1NP;
+			    double nChic2NP=nChic2*ws->var("fracNP_chic2")->getVal();
+			    double nChic2PR=nChic2-nChic2NP;
+
+			    RooAbsReal* real_fTotInLSB = fullMassPdf->createIntegral(RooArgSet(*mass), NormSet(RooArgSet(*mass)), Range("LSB"));
+			    RooAbsReal* real_fTotInRSB = fullMassPdf->createIntegral(RooArgSet(*mass), NormSet(RooArgSet(*mass)), Range("RSB"));
+			    RooAbsReal* real_fTotInSR1 = fullMassPdf->createIntegral(RooArgSet(*mass), NormSet(RooArgSet(*mass)), Range("SR1"));
+			    RooAbsReal* real_fTotInSR2 = fullMassPdf->createIntegral(RooArgSet(*mass), NormSet(RooArgSet(*mass)), Range("SR2"));
+			    double fTotInLSB=real_fTotInLSB->getVal();
+			    double fTotInRSB=real_fTotInRSB->getVal();
+			    double fTotInSR1=real_fTotInSR1->getVal();
+			    double fTotInSR2=real_fTotInSR2->getVal();
+
+			    RooAbsReal* real_fBackgroundInLSB = ws->pdf("M_background")->createIntegral(RooArgSet(*mass), NormSet(RooArgSet(*mass)), Range("LSB"));
+			    RooAbsReal* real_fBackgroundInRSB = ws->pdf("M_background")->createIntegral(RooArgSet(*mass), NormSet(RooArgSet(*mass)), Range("RSB"));
+			    RooAbsReal* real_fBackgroundInSR1 = ws->pdf("M_background")->createIntegral(RooArgSet(*mass), NormSet(RooArgSet(*mass)), Range("SR1"));
+			    RooAbsReal* real_fBackgroundInSR2 = ws->pdf("M_background")->createIntegral(RooArgSet(*mass), NormSet(RooArgSet(*mass)), Range("SR2"));
+			    double fBackgroundInLSB=real_fBackgroundInLSB->getVal();
+			    double fBackgroundInRSB=real_fBackgroundInRSB->getVal();
+			    double fBackgroundInSR1=real_fBackgroundInSR1->getVal();
+			    double fBackgroundInSR2=real_fBackgroundInSR2->getVal();
+
+			    RooAbsReal* real_fChic0InLSB = ws->pdf("M_chic0")->createIntegral(RooArgSet(*mass), NormSet(RooArgSet(*mass)), Range("LSB"));
+			    RooAbsReal* real_fChic0InRSB = ws->pdf("M_chic0")->createIntegral(RooArgSet(*mass), NormSet(RooArgSet(*mass)), Range("RSB"));
+			    RooAbsReal* real_fChic0InSR1 = ws->pdf("M_chic0")->createIntegral(RooArgSet(*mass), NormSet(RooArgSet(*mass)), Range("SR1"));
+			    RooAbsReal* real_fChic0InSR2 = ws->pdf("M_chic0")->createIntegral(RooArgSet(*mass), NormSet(RooArgSet(*mass)), Range("SR2"));
+			    double fChic0InLSB=real_fChic0InLSB->getVal();
+			    double fChic0InRSB=real_fChic0InRSB->getVal();
+			    double fChic0InSR1=real_fChic0InSR1->getVal();
+			    double fChic0InSR2=real_fChic0InSR2->getVal();
+
+			    RooAbsReal* real_fChic1InLSB = ws->pdf("M_chic1")->createIntegral(RooArgSet(*mass), NormSet(RooArgSet(*mass)), Range("LSB"));
+			    RooAbsReal* real_fChic1InRSB = ws->pdf("M_chic1")->createIntegral(RooArgSet(*mass), NormSet(RooArgSet(*mass)), Range("RSB"));
+			    RooAbsReal* real_fChic1InSR1 = ws->pdf("M_chic1")->createIntegral(RooArgSet(*mass), NormSet(RooArgSet(*mass)), Range("SR1"));
+			    RooAbsReal* real_fChic1InSR2 = ws->pdf("M_chic1")->createIntegral(RooArgSet(*mass), NormSet(RooArgSet(*mass)), Range("SR2"));
+			    double fChic1InLSB=real_fChic1InLSB->getVal();
+			    double fChic1InRSB=real_fChic1InRSB->getVal();
+			    double fChic1InSR1=real_fChic1InSR1->getVal();
+			    double fChic1InSR2=real_fChic1InSR2->getVal();
+
+			    RooAbsReal* real_fChic2InLSB = ws->pdf("M_chic2")->createIntegral(RooArgSet(*mass), NormSet(RooArgSet(*mass)), Range("LSB"));
+			    RooAbsReal* real_fChic2InRSB = ws->pdf("M_chic2")->createIntegral(RooArgSet(*mass), NormSet(RooArgSet(*mass)), Range("RSB"));
+			    RooAbsReal* real_fChic2InSR1 = ws->pdf("M_chic2")->createIntegral(RooArgSet(*mass), NormSet(RooArgSet(*mass)), Range("SR1"));
+			    RooAbsReal* real_fChic2InSR2 = ws->pdf("M_chic2")->createIntegral(RooArgSet(*mass), NormSet(RooArgSet(*mass)), Range("SR2"));
+			    double fChic2InLSB=real_fChic2InLSB->getVal();
+			    double fChic2InRSB=real_fChic2InRSB->getVal();
+			    double fChic2InSR1=real_fChic2InSR1->getVal();
+			    double fChic2InSR2=real_fChic2InSR2->getVal();
+
+			    double fracBackgroundInLSB=nBackground*fBackgroundInLSB / (nBackground*fBackgroundInLSB + nChic0*fChic0InLSB + nChic1*fChic1InLSB + nChic2*fChic2InLSB);
+			    double fracBackgroundInRSB=nBackground*fBackgroundInRSB / (nBackground*fBackgroundInRSB + nChic0*fChic0InRSB + nChic1*fChic1InRSB + nChic2*fChic2InRSB);
+			    double fracBackgroundInSR1=nBackground*fBackgroundInSR1 / (nBackground*fBackgroundInSR1 + nChic0*fChic0InSR1 + nChic1*fChic1InSR1 + nChic2*fChic2InSR1);
+			    double fracBackgroundInSR2=nBackground*fBackgroundInSR2 / (nBackground*fBackgroundInSR2 + nChic0*fChic0InSR2 + nChic1*fChic1InSR2 + nChic2*fChic2InSR2);
+
+			    double fracChic0InLSB=nChic0*fChic0InLSB / (nBackground*fBackgroundInLSB + nChic0*fChic0InLSB + nChic1*fChic1InLSB + nChic2*fChic2InLSB);
+			    double fracChic0InRSB=nChic0*fChic0InRSB / (nBackground*fBackgroundInRSB + nChic0*fChic0InRSB + nChic1*fChic1InRSB + nChic2*fChic2InRSB);
+			    double fracChic0InSR1=nChic0*fChic0InSR1 / (nBackground*fBackgroundInSR1 + nChic0*fChic0InSR1 + nChic1*fChic1InSR1 + nChic2*fChic2InSR1);
+			    double fracChic0InSR2=nChic0*fChic0InSR2 / (nBackground*fBackgroundInSR2 + nChic0*fChic0InSR2 + nChic1*fChic1InSR2 + nChic2*fChic2InSR2);
+
+			    double fracChic1InLSB=nChic1*fChic1InLSB / (nBackground*fBackgroundInLSB + nChic0*fChic0InLSB + nChic1*fChic1InLSB + nChic2*fChic2InLSB);
+			    double fracChic1InRSB=nChic1*fChic1InRSB / (nBackground*fBackgroundInRSB + nChic0*fChic0InRSB + nChic1*fChic1InRSB + nChic2*fChic2InRSB);
+			    double fracChic1InSR1=nChic1*fChic1InSR1 / (nBackground*fBackgroundInSR1 + nChic0*fChic0InSR1 + nChic1*fChic1InSR1 + nChic2*fChic2InSR1);
+			    double fracChic1InSR2=nChic1*fChic1InSR2 / (nBackground*fBackgroundInSR2 + nChic0*fChic0InSR2 + nChic1*fChic1InSR2 + nChic2*fChic2InSR2);
+
+			    double fracChic2InLSB=nChic2*fChic2InLSB / (nBackground*fBackgroundInLSB + nChic0*fChic0InLSB + nChic1*fChic1InLSB + nChic2*fChic2InLSB);
+			    double fracChic2InRSB=nChic2*fChic2InRSB / (nBackground*fBackgroundInRSB + nChic0*fChic0InRSB + nChic1*fChic1InRSB + nChic2*fChic2InRSB);
+			    double fracChic2InSR1=nChic2*fChic2InSR1 / (nBackground*fBackgroundInSR1 + nChic0*fChic0InSR1 + nChic1*fChic1InSR1 + nChic2*fChic2InSR1);
+			    double fracChic2InSR2=nChic2*fChic2InSR2 / (nBackground*fBackgroundInSR2 + nChic0*fChic0InSR2 + nChic1*fChic1InSR2 + nChic2*fChic2InSR2);
+
+			    RooAbsReal* real_fBackgroundInPR = ws->pdf("L_background")->createIntegral(RooArgSet(*ct), NormSet(RooArgSet(*ct)), Range("PR"));
+			    RooAbsReal* real_fBackgroundInNP = ws->pdf("L_background")->createIntegral(RooArgSet(*ct), NormSet(RooArgSet(*ct)), Range("NP"));
+			    double fBackgroundInPR=real_fBackgroundInPR->getVal();
+			    double fBackgroundInNP=real_fBackgroundInNP->getVal();
+
+			    RooAbsReal* real_fPRChicInPR = ws->pdf("L_TotalPromptLifetime")->createIntegral(RooArgSet(*ct), NormSet(RooArgSet(*ct)), Range("PR"));
+			    RooAbsReal* real_fPRChicInNP = ws->pdf("L_TotalPromptLifetime")->createIntegral(RooArgSet(*ct), NormSet(RooArgSet(*ct)), Range("NP"));
+			    double fPRChicInPR=real_fPRChicInPR->getVal();
+			    double fPRChicInNP=real_fPRChicInNP->getVal();
+
+			    RooAbsReal* real_fNPChic0InPR = ws->pdf("L_chic0_NP")->createIntegral(RooArgSet(*ct), NormSet(RooArgSet(*ct)), Range("PR"));
+			    RooAbsReal* real_fNPChic0InNP = ws->pdf("L_chic0_NP")->createIntegral(RooArgSet(*ct), NormSet(RooArgSet(*ct)), Range("NP"));
+			    double fNPChic0InPR=real_fNPChic0InPR->getVal();
+			    double fNPChic0InNP=real_fNPChic0InNP->getVal();
+
+			    RooAbsReal* real_fNPChic1InPR = ws->pdf("L_chic1_NP")->createIntegral(RooArgSet(*ct), NormSet(RooArgSet(*ct)), Range("PR"));
+			    RooAbsReal* real_fNPChic1InNP = ws->pdf("L_chic1_NP")->createIntegral(RooArgSet(*ct), NormSet(RooArgSet(*ct)), Range("NP"));
+			    double fNPChic1InPR=real_fNPChic1InPR->getVal();
+			    double fNPChic1InNP=real_fNPChic1InNP->getVal();
+
+			    RooAbsReal* real_fNPChic2InPR = ws->pdf("L_chic2_NP")->createIntegral(RooArgSet(*ct), NormSet(RooArgSet(*ct)), Range("PR"));
+			    RooAbsReal* real_fNPChic2InNP = ws->pdf("L_chic2_NP")->createIntegral(RooArgSet(*ct), NormSet(RooArgSet(*ct)), Range("NP"));
+			    double fNPChic2InPR=real_fNPChic2InPR->getVal();
+			    double fNPChic2InNP=real_fNPChic2InNP->getVal();
+
+			    double nPRChic0InPRLSB = nChic0PR*fChic0InLSB*fPRChicInPR;
+			    double nPRChic0InPRRSB = nChic0PR*fChic0InRSB*fPRChicInPR;
+			    double nPRChic0InPRSR1 = nChic0PR*fChic0InSR1*fPRChicInPR;
+			    double nPRChic0InPRSR2 = nChic0PR*fChic0InSR2*fPRChicInPR;
+			    double nPRChic0InNPLSB = nChic0PR*fChic0InLSB*fPRChicInNP;
+			    double nPRChic0InNPRSB = nChic0PR*fChic0InRSB*fPRChicInNP;
+			    double nPRChic0InNPSR1 = nChic0PR*fChic0InSR1*fPRChicInNP;
+			    double nPRChic0InNPSR2 = nChic0PR*fChic0InSR2*fPRChicInNP;
+
+			    double nNPChic0InPRLSB = nChic0NP*fChic0InLSB*fNPChic0InPR;
+			    double nNPChic0InPRRSB = nChic0NP*fChic0InRSB*fNPChic0InPR;
+			    double nNPChic0InPRSR1 = nChic0NP*fChic0InSR1*fNPChic0InPR;
+			    double nNPChic0InPRSR2 = nChic0NP*fChic0InSR2*fNPChic0InPR;
+			    double nNPChic0InNPLSB = nChic0NP*fChic0InLSB*fNPChic0InNP;
+			    double nNPChic0InNPRSB = nChic0NP*fChic0InRSB*fNPChic0InNP;
+			    double nNPChic0InNPSR1 = nChic0NP*fChic0InSR1*fNPChic0InNP;
+			    double nNPChic0InNPSR2 = nChic0NP*fChic0InSR2*fNPChic0InNP;
+
+			    double nPRChic1InPRLSB = nChic1PR*fChic1InLSB*fPRChicInPR;
+			    double nPRChic1InPRRSB = nChic1PR*fChic1InRSB*fPRChicInPR;
+			    double nPRChic1InPRSR1 = nChic1PR*fChic1InSR1*fPRChicInPR;
+			    double nPRChic1InPRSR2 = nChic1PR*fChic1InSR2*fPRChicInPR;
+			    double nPRChic1InNPLSB = nChic1PR*fChic1InLSB*fPRChicInNP;
+			    double nPRChic1InNPRSB = nChic1PR*fChic1InRSB*fPRChicInNP;
+			    double nPRChic1InNPSR1 = nChic1PR*fChic1InSR1*fPRChicInNP;
+			    double nPRChic1InNPSR2 = nChic1PR*fChic1InSR2*fPRChicInNP;
+
+			    double nNPChic1InPRLSB = nChic1NP*fChic1InLSB*fNPChic1InPR;
+			    double nNPChic1InPRRSB = nChic1NP*fChic1InRSB*fNPChic1InPR;
+			    double nNPChic1InPRSR1 = nChic1NP*fChic1InSR1*fNPChic1InPR;
+			    double nNPChic1InPRSR2 = nChic1NP*fChic1InSR2*fNPChic1InPR;
+			    double nNPChic1InNPLSB = nChic1NP*fChic1InLSB*fNPChic1InNP;
+			    double nNPChic1InNPRSB = nChic1NP*fChic1InRSB*fNPChic1InNP;
+			    double nNPChic1InNPSR1 = nChic1NP*fChic1InSR1*fNPChic1InNP;
+			    double nNPChic1InNPSR2 = nChic1NP*fChic1InSR2*fNPChic1InNP;
+
+			    double nPRChic2InPRLSB = nChic2PR*fChic2InLSB*fPRChicInPR;
+			    double nPRChic2InPRRSB = nChic2PR*fChic2InRSB*fPRChicInPR;
+			    double nPRChic2InPRSR1 = nChic2PR*fChic2InSR1*fPRChicInPR;
+			    double nPRChic2InPRSR2 = nChic2PR*fChic2InSR2*fPRChicInPR;
+			    double nPRChic2InNPLSB = nChic2PR*fChic2InLSB*fPRChicInNP;
+			    double nPRChic2InNPRSB = nChic2PR*fChic2InRSB*fPRChicInNP;
+			    double nPRChic2InNPSR1 = nChic2PR*fChic2InSR1*fPRChicInNP;
+			    double nPRChic2InNPSR2 = nChic2PR*fChic2InSR2*fPRChicInNP;
+
+			    double nNPChic2InPRLSB = nChic2NP*fChic2InLSB*fNPChic2InPR;
+			    double nNPChic2InPRRSB = nChic2NP*fChic2InRSB*fNPChic2InPR;
+			    double nNPChic2InPRSR1 = nChic2NP*fChic2InSR1*fNPChic2InPR;
+			    double nNPChic2InPRSR2 = nChic2NP*fChic2InSR2*fNPChic2InPR;
+			    double nNPChic2InNPLSB = nChic2NP*fChic2InLSB*fNPChic2InNP;
+			    double nNPChic2InNPRSB = nChic2NP*fChic2InRSB*fNPChic2InNP;
+			    double nNPChic2InNPSR1 = nChic2NP*fChic2InSR1*fNPChic2InNP;
+			    double nNPChic2InNPSR2 = nChic2NP*fChic2InSR2*fNPChic2InNP;
+
+			    double nBackgroundInPRLSB = nBackground*fBackgroundInLSB*fBackgroundInPR;
+			    double nBackgroundInPRRSB = nBackground*fBackgroundInRSB*fBackgroundInPR;
+			    double nBackgroundInPRSR1 = nBackground*fBackgroundInSR1*fBackgroundInPR;
+			    double nBackgroundInPRSR2 = nBackground*fBackgroundInSR2*fBackgroundInPR;
+			    double nBackgroundInNPLSB = nBackground*fBackgroundInLSB*fBackgroundInNP;
+			    double nBackgroundInNPRSB = nBackground*fBackgroundInRSB*fBackgroundInNP;
+			    double nBackgroundInNPSR1 = nBackground*fBackgroundInSR1*fBackgroundInNP;
+			    double nBackgroundInNPSR2 = nBackground*fBackgroundInSR2*fBackgroundInNP;
+
+			    double nPRChic1InPRSR1_Err = TMath::Sqrt(nPRChic1InPRSR1);
+			    double nPRChic2InPRSR2_Err = TMath::Sqrt(nPRChic2InPRSR2);
+
+			    double nTotInPRLSB = nPRChic0InPRLSB + nPRChic1InPRLSB + nPRChic2InPRLSB + nNPChic0InPRLSB + nNPChic1InPRLSB + nNPChic2InPRLSB + nBackgroundInPRLSB;
+			    double fracPRChic0InPRLSB = nPRChic0InPRLSB / nTotInPRLSB ;
+			    double fracNPChic0InPRLSB = nNPChic0InPRLSB / nTotInPRLSB ;
+			    double fracPRChic1InPRLSB = nPRChic1InPRLSB / nTotInPRLSB ;
+			    double fracNPChic1InPRLSB = nNPChic1InPRLSB / nTotInPRLSB ;
+			    double fracPRChic2InPRLSB = nPRChic2InPRLSB / nTotInPRLSB ;
+			    double fracNPChic2InPRLSB = nNPChic2InPRLSB / nTotInPRLSB ;
+			    double fracBackgroundInPRLSB = nBackgroundInPRLSB / nTotInPRLSB ;
+
+			    double nTotInPRRSB = nPRChic0InPRRSB + nPRChic1InPRRSB + nPRChic2InPRRSB + nNPChic0InPRRSB + nNPChic1InPRRSB + nNPChic2InPRRSB + nBackgroundInPRRSB;
+			    double fracPRChic0InPRRSB = nPRChic0InPRRSB / nTotInPRRSB ;
+			    double fracNPChic0InPRRSB = nNPChic0InPRRSB / nTotInPRRSB ;
+			    double fracPRChic1InPRRSB = nPRChic1InPRRSB / nTotInPRRSB ;
+			    double fracNPChic1InPRRSB = nNPChic1InPRRSB / nTotInPRRSB ;
+			    double fracPRChic2InPRRSB = nPRChic2InPRRSB / nTotInPRRSB ;
+			    double fracNPChic2InPRRSB = nNPChic2InPRRSB / nTotInPRRSB ;
+			    double fracBackgroundInPRRSB = nBackgroundInPRRSB / nTotInPRRSB ;
+
+			    double nTotInPRSR1 = nPRChic0InPRSR1 + nPRChic1InPRSR1 + nPRChic2InPRSR1 + nNPChic0InPRSR1 + nNPChic1InPRSR1 + nNPChic2InPRSR1 + nBackgroundInPRSR1;
+			    double fracPRChic0InPRSR1 = nPRChic0InPRSR1 / nTotInPRSR1 ;
+			    double fracNPChic0InPRSR1 = nNPChic0InPRSR1 / nTotInPRSR1 ;
+			    double fracPRChic1InPRSR1 = nPRChic1InPRSR1 / nTotInPRSR1 ;
+			    double fracNPChic1InPRSR1 = nNPChic1InPRSR1 / nTotInPRSR1 ;
+			    double fracPRChic2InPRSR1 = nPRChic2InPRSR1 / nTotInPRSR1 ;
+			    double fracNPChic2InPRSR1 = nNPChic2InPRSR1 / nTotInPRSR1 ;
+			    double fracBackgroundInPRSR1 = nBackgroundInPRSR1 / nTotInPRSR1 ;
+
+			    double nTotInPRSR2 = nPRChic0InPRSR2 + nPRChic1InPRSR2 + nPRChic2InPRSR2 + nNPChic0InPRSR2 + nNPChic1InPRSR2 + nNPChic2InPRSR2 + nBackgroundInPRSR2;
+			    double fracPRChic0InPRSR2 = nPRChic0InPRSR2 / nTotInPRSR2 ;
+			    double fracNPChic0InPRSR2 = nNPChic0InPRSR2 / nTotInPRSR2 ;
+			    double fracPRChic1InPRSR2 = nPRChic1InPRSR2 / nTotInPRSR2 ;
+			    double fracNPChic1InPRSR2 = nNPChic1InPRSR2 / nTotInPRSR2 ;
+			    double fracPRChic2InPRSR2 = nPRChic2InPRSR2 / nTotInPRSR2 ;
+			    double fracNPChic2InPRSR2 = nNPChic2InPRSR2 / nTotInPRSR2 ;
+			    double fracBackgroundInPRSR2 = nBackgroundInPRSR2 / nTotInPRSR2 ;
+
+			    double nTotInNPLSB = nPRChic0InNPLSB + nPRChic1InNPLSB + nPRChic2InNPLSB + nNPChic0InNPLSB + nNPChic1InNPLSB + nNPChic2InNPLSB + nBackgroundInNPLSB;
+			    double fracPRChic0InNPLSB = nPRChic0InNPLSB / nTotInNPLSB ;
+			    double fracNPChic0InNPLSB = nNPChic0InNPLSB / nTotInNPLSB ;
+			    double fracPRChic1InNPLSB = nPRChic1InNPLSB / nTotInNPLSB ;
+			    double fracNPChic1InNPLSB = nNPChic1InNPLSB / nTotInNPLSB ;
+			    double fracPRChic2InNPLSB = nPRChic2InNPLSB / nTotInNPLSB ;
+			    double fracNPChic2InNPLSB = nNPChic2InNPLSB / nTotInNPLSB ;
+			    double fracBackgroundInNPLSB = nBackgroundInNPLSB / nTotInNPLSB ;
+
+			    double nTotInNPRSB = nPRChic0InNPRSB + nPRChic1InNPRSB + nPRChic2InNPRSB + nNPChic0InNPRSB + nNPChic1InNPRSB + nNPChic2InNPRSB + nBackgroundInNPRSB;
+			    double fracPRChic0InNPRSB = nPRChic0InNPRSB / nTotInNPRSB ;
+			    double fracNPChic0InNPRSB = nNPChic0InNPRSB / nTotInNPRSB ;
+			    double fracPRChic1InNPRSB = nPRChic1InNPRSB / nTotInNPRSB ;
+			    double fracNPChic1InNPRSB = nNPChic1InNPRSB / nTotInNPRSB ;
+			    double fracPRChic2InNPRSB = nPRChic2InNPRSB / nTotInNPRSB ;
+			    double fracNPChic2InNPRSB = nNPChic2InNPRSB / nTotInNPRSB ;
+			    double fracBackgroundInNPRSB = nBackgroundInNPRSB / nTotInNPRSB ;
+
+			    double nTotInNPSR1 = nPRChic0InNPSR1 + nPRChic1InNPSR1 + nPRChic2InNPSR1 + nNPChic0InNPSR1 + nNPChic1InNPSR1 + nNPChic2InNPSR1 + nBackgroundInNPSR1;
+			    double fracPRChic0InNPSR1 = nPRChic0InNPSR1 / nTotInNPSR1 ;
+			    double fracNPChic0InNPSR1 = nNPChic0InNPSR1 / nTotInNPSR1 ;
+			    double fracPRChic1InNPSR1 = nPRChic1InNPSR1 / nTotInNPSR1 ;
+			    double fracNPChic1InNPSR1 = nNPChic1InNPSR1 / nTotInNPSR1 ;
+			    double fracPRChic2InNPSR1 = nPRChic2InNPSR1 / nTotInNPSR1 ;
+			    double fracNPChic2InNPSR1 = nNPChic2InNPSR1 / nTotInNPSR1 ;
+			    double fracBackgroundInNPSR1 = nBackgroundInNPSR1 / nTotInNPSR1 ;
+
+			    double nTotInNPSR2 = nPRChic0InNPSR2 + nPRChic1InNPSR2 + nPRChic2InNPSR2 + nNPChic0InNPSR2 + nNPChic1InNPSR2 + nNPChic2InNPSR2 + nBackgroundInNPSR2;
+			    double fracPRChic0InNPSR2 = nPRChic0InNPSR2 / nTotInNPSR2 ;
+			    double fracNPChic0InNPSR2 = nNPChic0InNPSR2 / nTotInNPSR2 ;
+			    double fracPRChic1InNPSR2 = nPRChic1InNPSR2 / nTotInNPSR2 ;
+			    double fracNPChic1InNPSR2 = nNPChic1InNPSR2 / nTotInNPSR2 ;
+			    double fracPRChic2InNPSR2 = nPRChic2InNPSR2 / nTotInNPSR2 ;
+			    double fracNPChic2InNPSR2 = nNPChic2InNPSR2 / nTotInNPSR2 ;
+			    double fracBackgroundInNPSR2 = nBackgroundInNPSR2 / nTotInNPSR2 ;
+
+
+
+				hist_fracPRChic0InPRSR1->Fill(fracPRChic0InPRSR1);
+				hist_fracNPChic0InPRSR1->Fill(fracNPChic0InPRSR1);
+				hist_fracPRChic1InPRSR1->Fill(fracPRChic1InPRSR1);
+				hist_fracNPChic1InPRSR1->Fill(fracNPChic1InPRSR1);
+				hist_fracPRChic2InPRSR1->Fill(fracPRChic2InPRSR1);
+				hist_fracNPChic2InPRSR1->Fill(fracNPChic2InPRSR1);
+				hist_fracBackgroundInPRSR1->Fill(fracBackgroundInPRSR1);
+				hist_fracPRChic0InNPSR1->Fill(fracPRChic0InNPSR1);
+				hist_fracNPChic0InNPSR1->Fill(fracNPChic0InNPSR1);
+				hist_fracPRChic1InNPSR1->Fill(fracPRChic1InNPSR1);
+				hist_fracNPChic1InNPSR1->Fill(fracNPChic1InNPSR1);
+				hist_fracPRChic2InNPSR1->Fill(fracPRChic2InNPSR1);
+				hist_fracNPChic2InNPSR1->Fill(fracNPChic2InNPSR1);
+				hist_fracBackgroundInNPSR1->Fill(fracBackgroundInNPSR1);
+
+				hist_fracPRChic0InPRSR2->Fill(fracPRChic0InPRSR2);
+				hist_fracNPChic0InPRSR2->Fill(fracNPChic0InPRSR2);
+				hist_fracPRChic1InPRSR2->Fill(fracPRChic1InPRSR2);
+				hist_fracNPChic1InPRSR2->Fill(fracNPChic1InPRSR2);
+				hist_fracPRChic2InPRSR2->Fill(fracPRChic2InPRSR2);
+				hist_fracNPChic2InPRSR2->Fill(fracNPChic2InPRSR2);
+				hist_fracBackgroundInPRSR2->Fill(fracBackgroundInPRSR2);
+				hist_fracPRChic0InNPSR2->Fill(fracPRChic0InNPSR2);
+				hist_fracNPChic0InNPSR2->Fill(fracNPChic0InNPSR2);
+				hist_fracPRChic1InNPSR2->Fill(fracPRChic1InNPSR2);
+				hist_fracNPChic1InNPSR2->Fill(fracNPChic1InNPSR2);
+				hist_fracPRChic2InNPSR2->Fill(fracPRChic2InNPSR2);
+				hist_fracNPChic2InNPSR2->Fill(fracNPChic2InNPSR2);
+				hist_fracBackgroundInNPSR2->Fill(fracBackgroundInNPSR2);
+
+				hist_fracPRChic0InPRLSB->Fill(fracPRChic0InPRLSB);
+				hist_fracNPChic0InPRLSB->Fill(fracNPChic0InPRLSB);
+				hist_fracPRChic1InPRLSB->Fill(fracPRChic1InPRLSB);
+				hist_fracNPChic1InPRLSB->Fill(fracNPChic1InPRLSB);
+				hist_fracPRChic2InPRLSB->Fill(fracPRChic2InPRLSB);
+				hist_fracNPChic2InPRLSB->Fill(fracNPChic2InPRLSB);
+				hist_fracBackgroundInPRLSB->Fill(fracBackgroundInPRLSB);
+				hist_fracPRChic0InNPLSB->Fill(fracPRChic0InNPLSB);
+				hist_fracNPChic0InNPLSB->Fill(fracNPChic0InNPLSB);
+				hist_fracPRChic1InNPLSB->Fill(fracPRChic1InNPLSB);
+				hist_fracNPChic1InNPLSB->Fill(fracNPChic1InNPLSB);
+				hist_fracPRChic2InNPLSB->Fill(fracPRChic2InNPLSB);
+				hist_fracNPChic2InNPLSB->Fill(fracNPChic2InNPLSB);
+				hist_fracBackgroundInNPLSB->Fill(fracBackgroundInNPLSB);
+
+				hist_fracPRChic0InPRRSB->Fill(fracPRChic0InPRRSB);
+				hist_fracNPChic0InPRRSB->Fill(fracNPChic0InPRRSB);
+				hist_fracPRChic1InPRRSB->Fill(fracPRChic1InPRRSB);
+				hist_fracNPChic1InPRRSB->Fill(fracNPChic1InPRRSB);
+				hist_fracPRChic2InPRRSB->Fill(fracPRChic2InPRRSB);
+				hist_fracNPChic2InPRRSB->Fill(fracNPChic2InPRRSB);
+				hist_fracBackgroundInPRRSB->Fill(fracBackgroundInPRRSB);
+				hist_fracPRChic0InNPRSB->Fill(fracPRChic0InNPRSB);
+				hist_fracNPChic0InNPRSB->Fill(fracNPChic0InNPRSB);
+				hist_fracPRChic1InNPRSB->Fill(fracPRChic1InNPRSB);
+				hist_fracNPChic1InNPRSB->Fill(fracNPChic1InNPRSB);
+				hist_fracPRChic2InNPRSB->Fill(fracPRChic2InNPRSB);
+				hist_fracNPChic2InNPRSB->Fill(fracNPChic2InNPRSB);
+				hist_fracBackgroundInNPRSB->Fill(fracBackgroundInNPRSB);
+
+			}
+
+
+			err_fracPRChic0InPRSR1  = hist_fracPRChic0InPRSR1->GetRMS();
+			err_fracNPChic0InPRSR1  = hist_fracNPChic0InPRSR1->GetRMS();
+			err_fracPRChic1InPRSR1  = hist_fracPRChic1InPRSR1->GetRMS();
+			err_fracNPChic1InPRSR1  = hist_fracNPChic1InPRSR1->GetRMS();
+			err_fracPRChic2InPRSR1  = hist_fracPRChic2InPRSR1->GetRMS();
+			err_fracNPChic2InPRSR1  = hist_fracNPChic2InPRSR1->GetRMS();
+			err_fracBackgroundInPRSR1  = hist_fracBackgroundInPRSR1->GetRMS();
+			err_fracPRChic0InNPSR1  = hist_fracPRChic0InNPSR1->GetRMS();
+			err_fracNPChic0InNPSR1  = hist_fracNPChic0InNPSR1->GetRMS();
+			err_fracPRChic1InNPSR1  = hist_fracPRChic1InNPSR1->GetRMS();
+			err_fracNPChic1InNPSR1  = hist_fracNPChic1InNPSR1->GetRMS();
+			err_fracPRChic2InNPSR1  = hist_fracPRChic2InNPSR1->GetRMS();
+			err_fracNPChic2InNPSR1  = hist_fracNPChic2InNPSR1->GetRMS();
+			err_fracBackgroundInNPSR1  = hist_fracBackgroundInNPSR1->GetRMS();
+
+			err_fracPRChic0InPRSR2  = hist_fracPRChic0InPRSR2->GetRMS();
+			err_fracNPChic0InPRSR2  = hist_fracNPChic0InPRSR2->GetRMS();
+			err_fracPRChic1InPRSR2  = hist_fracPRChic1InPRSR2->GetRMS();
+			err_fracNPChic1InPRSR2  = hist_fracNPChic1InPRSR2->GetRMS();
+			err_fracPRChic2InPRSR2  = hist_fracPRChic2InPRSR2->GetRMS();
+			err_fracNPChic2InPRSR2  = hist_fracNPChic2InPRSR2->GetRMS();
+			err_fracBackgroundInPRSR2  = hist_fracBackgroundInPRSR2->GetRMS();
+			err_fracPRChic0InNPSR2  = hist_fracPRChic0InNPSR2->GetRMS();
+			err_fracNPChic0InNPSR2  = hist_fracNPChic0InNPSR2->GetRMS();
+			err_fracPRChic1InNPSR2  = hist_fracPRChic1InNPSR2->GetRMS();
+			err_fracNPChic1InNPSR2  = hist_fracNPChic1InNPSR2->GetRMS();
+			err_fracPRChic2InNPSR2  = hist_fracPRChic2InNPSR2->GetRMS();
+			err_fracNPChic2InNPSR2  = hist_fracNPChic2InNPSR2->GetRMS();
+			err_fracBackgroundInNPSR2  = hist_fracBackgroundInNPSR2->GetRMS();
+
+			err_fracPRChic0InPRLSB  = hist_fracPRChic0InPRLSB->GetRMS();
+			err_fracNPChic0InPRLSB  = hist_fracNPChic0InPRLSB->GetRMS();
+			err_fracPRChic1InPRLSB  = hist_fracPRChic1InPRLSB->GetRMS();
+			err_fracNPChic1InPRLSB  = hist_fracNPChic1InPRLSB->GetRMS();
+			err_fracPRChic2InPRLSB  = hist_fracPRChic2InPRLSB->GetRMS();
+			err_fracNPChic2InPRLSB  = hist_fracNPChic2InPRLSB->GetRMS();
+			err_fracBackgroundInPRLSB  = hist_fracBackgroundInPRLSB->GetRMS();
+			err_fracPRChic0InNPLSB  = hist_fracPRChic0InNPLSB->GetRMS();
+			err_fracNPChic0InNPLSB  = hist_fracNPChic0InNPLSB->GetRMS();
+			err_fracPRChic1InNPLSB  = hist_fracPRChic1InNPLSB->GetRMS();
+			err_fracNPChic1InNPLSB  = hist_fracNPChic1InNPLSB->GetRMS();
+			err_fracPRChic2InNPLSB  = hist_fracPRChic2InNPLSB->GetRMS();
+			err_fracNPChic2InNPLSB  = hist_fracNPChic2InNPLSB->GetRMS();
+			err_fracBackgroundInNPLSB  = hist_fracBackgroundInNPLSB->GetRMS();
+
+			err_fracPRChic0InPRRSB  = hist_fracPRChic0InPRRSB->GetRMS();
+			err_fracNPChic0InPRRSB  = hist_fracNPChic0InPRRSB->GetRMS();
+			err_fracPRChic1InPRRSB  = hist_fracPRChic1InPRRSB->GetRMS();
+			err_fracNPChic1InPRRSB  = hist_fracNPChic1InPRRSB->GetRMS();
+			err_fracPRChic2InPRRSB  = hist_fracPRChic2InPRRSB->GetRMS();
+			err_fracNPChic2InPRRSB  = hist_fracNPChic2InPRRSB->GetRMS();
+			err_fracBackgroundInPRRSB  = hist_fracBackgroundInPRRSB->GetRMS();
+			err_fracPRChic0InNPRSB  = hist_fracPRChic0InNPRSB->GetRMS();
+			err_fracNPChic0InNPRSB  = hist_fracNPChic0InNPRSB->GetRMS();
+			err_fracPRChic1InNPRSB  = hist_fracPRChic1InNPRSB->GetRMS();
+			err_fracNPChic1InNPRSB  = hist_fracNPChic1InNPRSB->GetRMS();
+			err_fracPRChic2InNPRSB  = hist_fracPRChic2InNPRSB->GetRMS();
+			err_fracNPChic2InNPRSB  = hist_fracNPChic2InNPRSB->GetRMS();
+			err_fracBackgroundInNPRSB  = hist_fracBackgroundInNPRSB->GetRMS();
+
+			cout<<"err_fracPRChic1InPRSR1 = "<<err_fracPRChic1InPRSR1<<endl;
+			cout<<"err_fracNPChic1InPRSR1 = "<<err_fracNPChic1InPRSR1<<endl;
+			cout<<"err_fracBackgroundInPRSR1 = "<<err_fracBackgroundInPRSR1<<endl;
+
+			cout<<"fracPRChic1InPRSR1 mean check: "<<hist_fracPRChic1InPRSR1->GetMean()-ws->var("var_fracPRChic1InPRSR1")->getVal()<<endl;
+			cout<<"fracNPChic1InPRSR1 mean check: "<<hist_fracNPChic1InPRSR1->GetMean()-ws->var("var_fracNPChic1InPRSR1")->getVal()<<endl;
+			cout<<"fracBackgroundInPRSR1 mean check: "<<hist_fracBackgroundInPRSR1->GetMean()-ws->var("var_fracBackgroundInPRSR1")->getVal()<<endl;
+
+			cout<<"err_fracPRChic2InPRSR2 = "<<err_fracPRChic2InPRSR2<<endl;
+			cout<<"err_fracNPChic2InPRSR2 = "<<err_fracNPChic2InPRSR2<<endl;
+			cout<<"err_fracBackgroundInPRSR2 = "<<err_fracBackgroundInPRSR2<<endl;
+
+			cout<<"fracPRChic2InPRSR2 mean check: "<<hist_fracPRChic2InPRSR2->GetMean()-ws->var("var_fracPRChic2InPRSR2")->getVal()<<endl;
+			cout<<"fracNPChic2InPRSR2 mean check: "<<hist_fracNPChic2InPRSR2->GetMean()-ws->var("var_fracNPChic2InPRSR2")->getVal()<<endl;
+			cout<<"fracBackgroundInPRSR2 mean check: "<<hist_fracBackgroundInPRSR2->GetMean()-ws->var("var_fracBackgroundInPRSR2")->getVal()<<endl;
+
+		    ws->var("var_fracPRChic0InPRSR1")->setError(err_fracPRChic0InPRSR1);
+		    ws->var("var_fracNPChic0InPRSR1")->setError(err_fracNPChic0InPRSR1);
+		    ws->var("var_fracPRChic1InPRSR1")->setError(err_fracPRChic1InPRSR1);
+		    ws->var("var_fracNPChic1InPRSR1")->setError(err_fracNPChic1InPRSR1);
+		    ws->var("var_fracPRChic2InPRSR1")->setError(err_fracPRChic2InPRSR1);
+		    ws->var("var_fracNPChic2InPRSR1")->setError(err_fracNPChic2InPRSR1);
+		    ws->var("var_fracBackgroundInPRSR1")->setError(err_fracBackgroundInPRSR1);
+		    ws->var("var_fracPRChic0InNPSR1")->setError(err_fracPRChic0InNPSR1);
+		    ws->var("var_fracNPChic0InNPSR1")->setError(err_fracNPChic0InNPSR1);
+		    ws->var("var_fracPRChic1InNPSR1")->setError(err_fracPRChic1InNPSR1);
+		    ws->var("var_fracNPChic1InNPSR1")->setError(err_fracNPChic1InNPSR1);
+		    ws->var("var_fracPRChic2InNPSR1")->setError(err_fracPRChic2InNPSR1);
+		    ws->var("var_fracNPChic2InNPSR1")->setError(err_fracNPChic2InNPSR1);
+		    ws->var("var_fracBackgroundInNPSR1")->setError(err_fracBackgroundInNPSR1);
+
+		    ws->var("var_fracPRChic0InPRSR2")->setError(err_fracPRChic0InPRSR2);
+		    ws->var("var_fracNPChic0InPRSR2")->setError(err_fracNPChic0InPRSR2);
+		    ws->var("var_fracPRChic1InPRSR2")->setError(err_fracPRChic1InPRSR2);
+		    ws->var("var_fracNPChic1InPRSR2")->setError(err_fracNPChic1InPRSR2);
+		    ws->var("var_fracPRChic2InPRSR2")->setError(err_fracPRChic2InPRSR2);
+		    ws->var("var_fracNPChic2InPRSR2")->setError(err_fracNPChic2InPRSR2);
+		    ws->var("var_fracBackgroundInPRSR2")->setError(err_fracBackgroundInPRSR2);
+		    ws->var("var_fracPRChic0InNPSR2")->setError(err_fracPRChic0InNPSR2);
+		    ws->var("var_fracNPChic0InNPSR2")->setError(err_fracNPChic0InNPSR2);
+		    ws->var("var_fracPRChic1InNPSR2")->setError(err_fracPRChic1InNPSR2);
+		    ws->var("var_fracNPChic1InNPSR2")->setError(err_fracNPChic1InNPSR2);
+		    ws->var("var_fracPRChic2InNPSR2")->setError(err_fracPRChic2InNPSR2);
+		    ws->var("var_fracNPChic2InNPSR2")->setError(err_fracNPChic2InNPSR2);
+		    ws->var("var_fracBackgroundInNPSR2")->setError(err_fracBackgroundInNPSR2);
+
+		    ws->var("var_fracPRChic0InPRLSB")->setError(err_fracPRChic0InPRLSB);
+		    ws->var("var_fracNPChic0InPRLSB")->setError(err_fracNPChic0InPRLSB);
+		    ws->var("var_fracPRChic1InPRLSB")->setError(err_fracPRChic1InPRLSB);
+		    ws->var("var_fracNPChic1InPRLSB")->setError(err_fracNPChic1InPRLSB);
+		    ws->var("var_fracPRChic2InPRLSB")->setError(err_fracPRChic2InPRLSB);
+		    ws->var("var_fracNPChic2InPRLSB")->setError(err_fracNPChic2InPRLSB);
+		    ws->var("var_fracBackgroundInPRLSB")->setError(err_fracBackgroundInPRLSB);
+		    ws->var("var_fracPRChic0InNPLSB")->setError(err_fracPRChic0InNPLSB);
+		    ws->var("var_fracNPChic0InNPLSB")->setError(err_fracNPChic0InNPLSB);
+		    ws->var("var_fracPRChic1InNPLSB")->setError(err_fracPRChic1InNPLSB);
+		    ws->var("var_fracNPChic1InNPLSB")->setError(err_fracNPChic1InNPLSB);
+		    ws->var("var_fracPRChic2InNPLSB")->setError(err_fracPRChic2InNPLSB);
+		    ws->var("var_fracNPChic2InNPLSB")->setError(err_fracNPChic2InNPLSB);
+		    ws->var("var_fracBackgroundInNPLSB")->setError(err_fracBackgroundInNPLSB);
+
+		    ws->var("var_fracPRChic0InPRRSB")->setError(err_fracPRChic0InPRRSB);
+		    ws->var("var_fracNPChic0InPRRSB")->setError(err_fracNPChic0InPRRSB);
+		    ws->var("var_fracPRChic1InPRRSB")->setError(err_fracPRChic1InPRRSB);
+		    ws->var("var_fracNPChic1InPRRSB")->setError(err_fracNPChic1InPRRSB);
+		    ws->var("var_fracPRChic2InPRRSB")->setError(err_fracPRChic2InPRRSB);
+		    ws->var("var_fracNPChic2InPRRSB")->setError(err_fracNPChic2InPRRSB);
+		    ws->var("var_fracBackgroundInPRRSB")->setError(err_fracBackgroundInPRRSB);
+		    ws->var("var_fracPRChic0InNPRSB")->setError(err_fracPRChic0InNPRSB);
+		    ws->var("var_fracNPChic0InNPRSB")->setError(err_fracNPChic0InNPRSB);
+		    ws->var("var_fracPRChic1InNPRSB")->setError(err_fracPRChic1InNPRSB);
+		    ws->var("var_fracNPChic1InNPRSB")->setError(err_fracNPChic1InNPRSB);
+		    ws->var("var_fracPRChic2InNPRSB")->setError(err_fracPRChic2InNPRSB);
+		    ws->var("var_fracNPChic2InNPRSB")->setError(err_fracNPChic2InNPRSB);
+		    ws->var("var_fracBackgroundInNPRSB")->setError(err_fracBackgroundInNPRSB);
+
+			ws->var("BK_p1")->setVal(BK_p1_buff);
+			ws->var("CBmass1")->setVal(CBmass1_buff);
+			ws->var("CBsigma1")->setVal(CBsigma1_buff);
+			ws->var("NP_TauBkg")->setVal(NP_TauBkg_buff);
+			ws->var("NP_TauChic")->setVal(NP_TauChic_buff);
+			ws->var("fBkgNP")->setVal(fBkgNP_buff);
+			ws->var("fracBackground")->setVal(fracBackground_buff);
+			ws->var("fracNP_chic0")->setVal(fracNP_chic0_buff);
+			ws->var("fracNP_chic1")->setVal(fracNP_chic1_buff);
+			ws->var("fracNP_chic2")->setVal(fracNP_chic2_buff);
+			ws->var("fracSignal_chic1")->setVal(fracSignal_chic1_buff);
+
+		} // doCtauUncer
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 //Define fullPdf with correct fractions in each mass region
 
-    RooAddPdf ML_fullModel_SR1= RooAddPdf("ML_fullModel_SR1","ML_fullModel_SR1",RooArgList(*ws->pdf("ML_background"),*ws->pdf("ML_comb_background"),*ws->pdf("ML_chic0"),*ws->pdf("ML_chic1"),*ws->pdf("ML_chic2")),RooArgList(var_fracJpsiBackgroundInSR1, var_fracCombBackgroundInSR1, var_fracChic0InSR1, var_fracChic1InSR1, var_fracChic2InSR1)); ws->import(ML_fullModel_SR1);
-    RooAddPdf ML_fullModel_SR2= RooAddPdf("ML_fullModel_SR2","ML_fullModel_SR2",RooArgList(*ws->pdf("ML_background"),*ws->pdf("ML_comb_background"),*ws->pdf("ML_chic0"),*ws->pdf("ML_chic1"),*ws->pdf("ML_chic2")),RooArgList(var_fracJpsiBackgroundInSR2, var_fracCombBackgroundInSR2, var_fracChic0InSR2, var_fracChic1InSR2, var_fracChic2InSR2)); ws->import(ML_fullModel_SR2);
-    RooAddPdf ML_fullModel_LSB= RooAddPdf("ML_fullModel_LSB","ML_fullModel_LSB",RooArgList(*ws->pdf("ML_background"),*ws->pdf("ML_comb_background"),*ws->pdf("ML_chic0"),*ws->pdf("ML_chic1"),*ws->pdf("ML_chic2")),RooArgList(var_fracJpsiBackgroundInLSB, var_fracCombBackgroundInLSB, var_fracChic0InLSB, var_fracChic1InLSB, var_fracChic2InLSB)); ws->import(ML_fullModel_LSB);
-    RooAddPdf ML_fullModel_RSB= RooAddPdf("ML_fullModel_RSB","ML_fullModel_RSB",RooArgList(*ws->pdf("ML_background"),*ws->pdf("ML_comb_background"),*ws->pdf("ML_chic0"),*ws->pdf("ML_chic1"),*ws->pdf("ML_chic2")),RooArgList(var_fracJpsiBackgroundInRSB, var_fracCombBackgroundInRSB, var_fracChic0InRSB, var_fracChic1InRSB, var_fracChic2InRSB)); ws->import(ML_fullModel_RSB);
+    RooAddPdf ML_fullModel_SR1= RooAddPdf("ML_fullModel_SR1","ML_fullModel_SR1",RooArgList(*ws->pdf("ML_background"),*ws->pdf("ML_comb_background"),*ws->pdf("ML_chic0"),*ws->pdf("ML_chic1"),*ws->pdf("ML_chic2")),RooArgList(*ws->var("var_fracJpsiBackgroundInSR1"), *ws->var("var_fracCombBackgroundInSR1"), *ws->var("var_fracChic0InSR1"), *ws->var("var_fracChic1InSR1"), *ws->var("var_fracChic2InSR1"))); ws->import(ML_fullModel_SR1);
+    RooAddPdf ML_fullModel_SR2= RooAddPdf("ML_fullModel_SR2","ML_fullModel_SR2",RooArgList(*ws->pdf("ML_background"),*ws->pdf("ML_comb_background"),*ws->pdf("ML_chic0"),*ws->pdf("ML_chic1"),*ws->pdf("ML_chic2")),RooArgList(*ws->var("var_fracJpsiBackgroundInSR2"), *ws->var("var_fracCombBackgroundInSR2"), *ws->var("var_fracChic0InSR2"), *ws->var("var_fracChic1InSR2"), *ws->var("var_fracChic2InSR2"))); ws->import(ML_fullModel_SR2);
+    RooAddPdf ML_fullModel_LSB= RooAddPdf("ML_fullModel_LSB","ML_fullModel_LSB",RooArgList(*ws->pdf("ML_background"),*ws->pdf("ML_comb_background"),*ws->pdf("ML_chic0"),*ws->pdf("ML_chic1"),*ws->pdf("ML_chic2")),RooArgList(*ws->var("var_fracJpsiBackgroundInLSB"), *ws->var("var_fracCombBackgroundInLSB"), *ws->var("var_fracChic0InLSB"), *ws->var("var_fracChic1InLSB"), *ws->var("var_fracChic2InLSB"))); ws->import(ML_fullModel_LSB);
+    RooAddPdf ML_fullModel_RSB= RooAddPdf("ML_fullModel_RSB","ML_fullModel_RSB",RooArgList(*ws->pdf("ML_background"),*ws->pdf("ML_comb_background"),*ws->pdf("ML_chic0"),*ws->pdf("ML_chic1"),*ws->pdf("ML_chic2")),RooArgList(*ws->var("var_fracJpsiBackgroundInRSB"), *ws->var("var_fracCombBackgroundInRSB"), *ws->var("var_fracChic0InRSB"), *ws->var("var_fracChic1InRSB"), *ws->var("var_fracChic2InRSB"))); ws->import(ML_fullModel_RSB);
 
     /*
     RooRealVar var_fracPRChic0InSR1("var_fracPRChic0InSR1","var_fracPRChic0InSR1",ws->var("var_fracChic0InSR1")->getVal()*(1-ws->var("fracNP_chic0")->getVal())); if(!ws->var("var_fracPRChic0InSR1")) ws->import(var_fracPRChic0InSR1); else ws->var("var_fracPRChic0InSR1")->setVal(ws->var("var_fracChic0InSR1")->getVal()*(1-ws->var("fracNP_chic0")->getVal()));
@@ -1181,22 +1997,11 @@ void DefineRegionsAndFractions(const std::string &infilename, int rapBin, int pt
     RooRealVar var_fPRSR2InSR2("var_fPRSR2InSR2","var_fPRSR2InSR2",fPRSR2InSR2); if(!ws->var("var_fPRSR2InSR2")) ws->import(var_fPRSR2InSR2); else ws->var("var_fPRSR2InSR2")->setVal(fPRSR2InSR2);
     RooRealVar var_fNPSR2InSR2("var_fNPSR2InSR2","var_fNPSR2InSR2",fNPSR2InSR2); if(!ws->var("var_fNPSR2InSR2")) ws->import(var_fNPSR2InSR2); else ws->var("var_fNPSR2InSR2")->setVal(fNPSR2InSR2);
 
-    RooRealVar var_nPRChic1InPRSR1("var_nPRChic1InPRSR1","var_nPRChic1InPRSR1",nPRChic1InPRSR1); var_nPRChic1InPRSR1.setError(nPRChic1InPRSR1_Err); if(!ws->var("var_nPRChic1InPRSR1")) ws->import(var_nPRChic1InPRSR1); else {ws->var("var_nPRChic1InPRSR1")->setVal(nPRChic1InPRSR1); ws->var("var_nPRChic1InPRSR1")->setError(nPRChic1InPRSR1_Err);}
-    RooRealVar var_nPRChic2InPRSR2("var_nPRChic2InPRSR2","var_nPRChic2InPRSR2",nPRChic2InPRSR2); var_nPRChic2InPRSR2.setError(nPRChic2InPRSR2_Err); if(!ws->var("var_nPRChic2InPRSR2")) ws->import(var_nPRChic2InPRSR2); else {ws->var("var_nPRChic2InPRSR2")->setVal(nPRChic2InPRSR2); ws->var("var_nPRChic2InPRSR2")->setError(nPRChic2InPRSR2_Err);}
+    RooRealVar var_nPRChic1InPRSR1("var_nPRChic1InPRSR1","var_nPRChic1InPRSR1",nPRChic1InPRSR1_); var_nPRChic1InPRSR1.setError(nPRChic1InPRSR1_Err_); if(!ws->var("var_nPRChic1InPRSR1")) ws->import(var_nPRChic1InPRSR1); else {ws->var("var_nPRChic1InPRSR1")->setVal(nPRChic1InPRSR1_); ws->var("var_nPRChic1InPRSR1")->setError(nPRChic1InPRSR1_Err_);}
+    RooRealVar var_nPRChic2InPRSR2("var_nPRChic2InPRSR2","var_nPRChic2InPRSR2",nPRChic2InPRSR2_); var_nPRChic2InPRSR2.setError(nPRChic2InPRSR2_Err_); if(!ws->var("var_nPRChic2InPRSR2")) ws->import(var_nPRChic2InPRSR2); else {ws->var("var_nPRChic2InPRSR2")->setVal(nPRChic2InPRSR2_); ws->var("var_nPRChic2InPRSR2")->setError(nPRChic2InPRSR2_Err_);}
 
 
 
-    double relerr_fracSignal_chic1 = ws->var("fracSignal_chic1")->getError()/ws->var("fracSignal_chic1")->getVal();
-    double relerr_fracNP_chic1 = ws->var("fracNP_chic1")->getError()/ws->var("fracNP_chic1")->getVal();
-    double relerr_fracPR_chic1 = relerr_fracNP_chic1;
-    double relerr_fracSignal_chic2 = relerr_fracSignal_chic1;
-    double relerr_fracNP_chic2 = relerr_fracNP_chic1;
-    double relerr_fracPR_chic2 = relerr_fracNP_chic2;
-
-    double relerr_fracSignal_chic1_times_relerr_fracNP_chic1 = TMath::Sqrt(relerr_fracSignal_chic1*relerr_fracSignal_chic1+relerr_fracNP_chic1*relerr_fracNP_chic1);
-    double relerr_fracSignal_chic1_times_relerr_fracPR_chic1 = TMath::Sqrt(relerr_fracSignal_chic1*relerr_fracSignal_chic1+relerr_fracPR_chic1*relerr_fracPR_chic1);
-    double relerr_fracSignal_chic2_times_relerr_fracNP_chic2 = TMath::Sqrt(relerr_fracSignal_chic2*relerr_fracSignal_chic2+relerr_fracNP_chic2*relerr_fracNP_chic2);
-    double relerr_fracSignal_chic2_times_relerr_fracPR_chic2 = TMath::Sqrt(relerr_fracSignal_chic2*relerr_fracSignal_chic2+relerr_fracPR_chic2*relerr_fracPR_chic2);
 
     double relerr_ratio_PR_chic2_over_chic1 = TMath::Sqrt(relerr_fracSignal_chic2_times_relerr_fracPR_chic2*relerr_fracSignal_chic2_times_relerr_fracPR_chic2+relerr_fracSignal_chic1_times_relerr_fracPR_chic1*relerr_fracSignal_chic1_times_relerr_fracPR_chic1);
     double relerr_ratio_NP_chic2_over_chic1 = TMath::Sqrt(relerr_fracSignal_chic2_times_relerr_fracNP_chic2*relerr_fracSignal_chic2_times_relerr_fracNP_chic2+relerr_fracSignal_chic1_times_relerr_fracNP_chic1*relerr_fracSignal_chic1_times_relerr_fracNP_chic1);

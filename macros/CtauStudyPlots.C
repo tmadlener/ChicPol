@@ -51,7 +51,7 @@ void CtauStudyPlots(){
 	  char savename[200];
 	  sprintf(saveDir,"polFit/Figures/CtauStudy");
 	  gSystem->mkdir(saveDir);
-	  sprintf(PlotID,"2014May26_PlotLargerRegions");
+	  sprintf(PlotID,"2014June4_PunziCheck");
 	  sprintf(saveDir,"%s/%s",saveDir,PlotID);
 	  gSystem->mkdir(saveDir);
 
@@ -90,6 +90,16 @@ void CtauStudyPlots(){
 		TH1D* h_ctauerrneg_2012[nPT+1];
 		double h_ctauerrneg_min=0.;
 		double h_ctauerrneg_max=ctauerrBorder;
+
+		TH1D* h_ctauerrPR_2011[nPT+1];
+		TH1D* h_ctauerrPR_2012[nPT+1];
+		double h_ctauerrPR_min=0.;
+		double h_ctauerrPR_max=ctauerrBorder;
+
+		TH1D* h_ctauerrNP_2011[nPT+1];
+		TH1D* h_ctauerrNP_2012[nPT+1];
+		double h_ctauerrNP_min=0.;
+		double h_ctauerrNP_max=ctauerrBorder;
 
 		TH1D* h_ctausig_2011[nPT+1];
 		TH1D* h_ctausig_2012[nPT+1];
@@ -132,6 +142,10 @@ void CtauStudyPlots(){
 			h_ctauerrneg_2012[iPT] = new TH1D(Form("h_ctauerrneg_2012_pt%d",iPT), Form("h_ctauerrneg_2012_pt%d",iPT), nBins, h_ctauerrneg_min, h_ctauerrneg_max);
 			h_ctausig_2011[iPT] = new TH1D(Form("h_ctausig_2011_pt%d",iPT), Form("h_ctausig_2011_pt%d",iPT), nBins, h_ctausig_min, h_ctausig_max);
 			h_ctausig_2012[iPT] = new TH1D(Form("h_ctausig_2012_pt%d",iPT), Form("h_ctausig_2012_pt%d",iPT), nBins, h_ctausig_min, h_ctausig_max);
+			h_ctauerrPR_2011[iPT] = new TH1D(Form("h_ctauerrPR_2011_pt%d",iPT), Form("h_ctauerrPR_2011_pt%d",iPT), nBins, h_ctauerrPR_min, h_ctauerrPR_max);
+			h_ctauerrPR_2012[iPT] = new TH1D(Form("h_ctauerrPR_2012_pt%d",iPT), Form("h_ctauerrPR_2012_pt%d",iPT), nBins, h_ctauerrPR_min, h_ctauerrPR_max);
+			h_ctauerrNP_2011[iPT] = new TH1D(Form("h_ctauerrNP_2011_pt%d",iPT), Form("h_ctauerrNP_2011_pt%d",iPT), nBins, h_ctauerrNP_min, h_ctauerrNP_max);
+			h_ctauerrNP_2012[iPT] = new TH1D(Form("h_ctauerrNP_2012_pt%d",iPT), Form("h_ctauerrNP_2012_pt%d",iPT), nBins, h_ctauerrNP_min, h_ctauerrNP_max);
 
 			h_Lxy_2011[iPT] = new TH1D(Form("h_Lxy_2011_pt%d",iPT), Form("h_Lxy_2011_pt%d",iPT), nBins, h_Lxy_min, h_Lxy_max);
 			h_Lxy_2012[iPT] = new TH1D(Form("h_Lxy_2012_pt%d",iPT), Form("h_Lxy_2012_pt%d",iPT), nBins, h_Lxy_min, h_Lxy_max);
@@ -186,10 +200,10 @@ void CtauStudyPlots(){
 
 			std::cout << "number of entries 2012 = " << nentries2012 << std::endl;
 
-			int nentries=200000;
+			int nentries=400000;
 
-			//nentries2011=nentries;
-			//nentries2012=nentries;
+			nentries2011=nentries;
+			nentries2012=nentries;
 
 
 			//loop over the events
@@ -227,6 +241,8 @@ void CtauStudyPlots(){
 						h_ctauerr_2011[iPT]->Fill(ctauerr);
 						if(ctau>0&&ctau<ctauBorder) h_ctauerrpos_2011[iPT]->Fill(ctauerr);
 						if(ctau<0&&ctau>-ctauBorder) h_ctauerrneg_2011[iPT]->Fill(ctauerr);
+						if(TMath::Abs(ctau)<ctauBorder) h_ctauerrPR_2011[iPT]->Fill(ctauerr);
+						if(ctau>ctauBorder) h_ctauerrNP_2011[iPT]->Fill(ctauerr);
 						h_ctausig_2011[iPT]->Fill(ctau/ctauerr);
 						h_Lxy_2011[iPT]->Fill(ctau*Jpsi->Pt()/Jpsi->M());
 						h_ctausig_vs_ctauerr_2011[iPT]->Fill(ctau/ctauerr,ctauerr);
@@ -273,6 +289,8 @@ void CtauStudyPlots(){
 						h_ctauerr_2012[iPT]->Fill(ctauerr);
 						if(ctau>0&&ctau<ctauBorder) h_ctauerrpos_2012[iPT]->Fill(ctauerr);
 						if(ctau<0&&ctau>-ctauBorder) h_ctauerrneg_2012[iPT]->Fill(ctauerr);
+						if(TMath::Abs(ctau)<ctauBorder) h_ctauerrPR_2012[iPT]->Fill(ctauerr);
+						if(ctau>ctauBorder) h_ctauerrNP_2012[iPT]->Fill(ctauerr);
 						h_ctausig_2012[iPT]->Fill(ctau/ctauerr);
 						h_Lxy_2012[iPT]->Fill(ctau*Jpsi->Pt()/Jpsi->M());
 						h_ctausig_vs_ctauerr_2012[iPT]->Fill(ctau/ctauerr,ctauerr);
@@ -346,6 +364,20 @@ void CtauStudyPlots(){
 			Plot1DHistoComp(h_ctauerrneg_2012[iPT], h_ctauerrpos_2012[iPT], xTitle, savename, tex1, tex2, yMax, Normalize);
 
 
+			sprintf(tex1,Form("|l| < %1.2f",ctauBorder));
+			sprintf(tex2,Form("l > %1.2f",ctauBorder));
+
+			sprintf(xTitle,"#sigma_{l}");
+			sprintf(savename,"%s/Comp_ctauerr_PRNP2011_pT%d",saveDir, iPT);
+			Normalize=true;
+			Plot1DHistoComp(h_ctauerrPR_2011[iPT], h_ctauerrNP_2011[iPT], xTitle, savename, tex1, tex2, yMax, Normalize);
+
+			sprintf(xTitle,"#sigma_{l}");
+			sprintf(savename,"%s/Comp_ctauerr_PRNP2012_pT%d",saveDir, iPT);
+			Normalize=true;
+			Plot1DHistoComp(h_ctauerrPR_2012[iPT], h_ctauerrNP_2012[iPT], xTitle, savename, tex1, tex2, yMax, Normalize);
+
+
 
 
 
@@ -414,6 +446,10 @@ void CtauStudyPlots(){
 			delete h_ctauerrpos_2012[iPT];
 			delete h_ctauerrneg_2011[iPT];
 			delete h_ctauerrneg_2012[iPT];
+			delete h_ctauerrPR_2011[iPT];
+			delete h_ctauerrPR_2012[iPT];
+			delete h_ctauerrNP_2011[iPT];
+			delete h_ctauerrNP_2012[iPT];
 			delete h_ctausig_2011[iPT];
 			delete h_ctausig_2012[iPT];
 			delete h_Lxy_2011[iPT];

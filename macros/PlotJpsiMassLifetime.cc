@@ -245,12 +245,12 @@ double plotMass(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool SpeedP
 	int JpsiFitColor=633;
 
 	cout<<"plot data"<<endl;
-	data->plotOn(massFrame,MarkerSize(onia::markerSize_ML));
+	data->plotOn(massFrame,MarkerSize(onia::markerSize_ML), Name("myHist"));
 	cout<<"plot FullmassPdf"<<endl;
 	FullmassPdf->plotOn(massFrame,
 			Normalization(nEntries,2),
 			LineWidth(2),
-			LineColor(JpsiFitColor)
+			LineColor(JpsiFitColor), Name("myCurve")
 			);
 
 	//------get chi2------------SHOULD be DONE after PLOTTING------
@@ -260,7 +260,8 @@ double plotMass(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool SpeedP
 	int ndof_Mass=nBins_Mass-parsFit;  //num of degree of freedom
 	double chi2_Mass=chi2Pre_Mass*ndof_Mass;
 
-	RooHist* hpull_mass = massFrame->pullHist() ;
+	RooHist* hpull_mass = massFrame->pullHist("myHist","myCurve",kTRUE);
+
 	hpull_mass->SetMarkerSize(0.8);
 	for(int i=0;i<hpull_mass->GetN();i++){
 		hpull_mass->SetPointEYlow(i,0.);
@@ -818,10 +819,9 @@ double plotLifeSig(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool Spe
 	RooAbsPdf *nonPromptSSD = (RooAbsPdf*)ws->pdf("jpsi_nonPromptSSD");
 	RooAbsPdf *backgroundlifetime = (RooAbsPdf*)ws->pdf("jpsi_backgroundlifetime");
 
-	RooAbsPdf *promptLifetime = (RooAbsPdf*)ws->pdf("jpsi_promptLifetime");
-	RooAbsPdf *promptLifetime2 = (RooAbsPdf*)ws->pdf("jpsi_promptLifetime2");
+	//RooAbsPdf *promptLifetime = (RooAbsPdf*)ws->pdf("jpsi_promptLifetime");
+	//RooAbsPdf *promptLifetime2 = (RooAbsPdf*)ws->pdf("jpsi_promptLifetime2");
 	//RooAbsPdf *promptLifetime3 = (RooAbsPdf*)ws->pdf("jpsi_promptLifetime3");
-
 
 
 
@@ -849,6 +849,8 @@ double plotLifeSig(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool Spe
 			NumCPU(1),
 			Name("myCurve"));
 
+
+
 	//------get chi2------------SHOULD DONE after PLOTTING------
 	parsFit=(fitRlt->floatParsFinal()).getSize(); //this used the full p.d.f.
 
@@ -857,8 +859,28 @@ double plotLifeSig(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool Spe
 	int ndof_LSig=nBins_LSig-parsFit;  //num of degree of freedom
 	double chi2_LSig=chi2Pre_LSig*ndof_LSig;
 
-	RooHist* hpull_ctauSig = ctauFrame->pullHist() ;
-	//RooHist* hpull_ctauSig = ctauFrame->pullHist("myHist","myCurve",kTRUE);
+	//RooHist* hpull_ctauSig = ctauFrame->pullHist() ;
+	RooHist* hpull_ctauSig = ctauFrame->pullHist("myHist","myCurve",kTRUE);
+
+	/*
+	 manual chi2 calculation
+
+	RooHist* hresid_ctauSig = ctauFrame->residHist("myHist","myCurve",true,kTRUE);
+
+	double chi2manual=0;
+	for(int iX=0;iX<hresid_ctauSig->GetN()+1;iX++){
+		double buffx, buffy;
+		hresid_ctauSig->GetPoint(iX, buffx, buffy);
+		chi2manual+=buffy*buffy;
+	}
+
+	chi2manual=TMath::Sqrt(chi2manual);
+	double chi2ndfmanual=chi2manual/double(ndof_LSig);
+	cout<<"chi2manual "<<chi2manual<<endl;
+	cout<<"ndof_LSig "<<ndof_LSig<<endl;
+	cout<<"chi2ndfmanual "<<chi2ndfmanual<<endl;
+
+	 */
 
 	//save pull distribution
 	TH1F* pull = new TH1F("pull","pull distribution", 100,-10.,10.);
@@ -880,41 +902,61 @@ double plotLifeSig(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool Spe
 
 	ctauFramePull->addPlotable(hpull_ctauSig,"P");
 
-	Prompt->plotOn(ctauFrame,
+
+	//Prompt->plotOn(ctauFrame,
+	//		ProjWData(*JpsictErr, *dataSRProj),
+	//		Normalization(fPrompt),
+	//		LineStyle(5),
+	//		LineColor(onia::ColorPRJpsi),
+	//		LineWidth(2), NumCPU(1));
+    //
+	//promptLifetime->plotOn(ctauFrame,
+	//		ProjWData(*JpsictErr, *dataSRProj),
+	//		Normalization(fPrompt*(1.-fracGauss2)),
+	//		LineStyle(5),
+	//		LineColor(onia::ColorPRJpsi),
+	//		LineWidth(1.), NumCPU(1));
+	//promptLifetime2->plotOn(ctauFrame,
+	//		ProjWData(*JpsictErr, *dataSRProj),
+	//		Normalization(fPrompt*fracGauss2),
+	//		LineStyle(5),
+	//		LineColor(onia::ColorPRJpsi),
+	//		LineWidth(1.), NumCPU(1));
+    //
+	//nonPromptSSD->plotOn(ctauFrame,
+	//		ProjWData(*JpsictErr, *dataSRProj),
+	//		Normalization(fNonPrompt),
+	//		LineStyle(2),
+	//		LineColor(onia::ColorNPJpsi),
+	//		LineWidth(2), NumCPU(1));
+    //
+	//backgroundlifetime->plotOn(ctauFrame,
+	//		ProjWData(*JpsictErr, *dataSRProj),
+	//		Normalization(fBkg),
+	//		LineStyle(7),
+	//		LineColor(onia::ColorMuMuBG),
+	//		LineWidth(2), NumCPU(1));
+
+	ModelLife->plotOn(ctauFrame,
+			Components("jpsi_TotalPromptLifetime"),
 			ProjWData(*JpsictErr, *dataSRProj),
-			Normalization(fPrompt),
 			LineStyle(5),
 			LineColor(onia::ColorPRJpsi),
 			LineWidth(2), NumCPU(1));
 
-	promptLifetime->plotOn(ctauFrame,
+	ModelLife->plotOn(ctauFrame,
+			Components("jpsi_nonPromptSSD"),
 			ProjWData(*JpsictErr, *dataSRProj),
-			Normalization(fPrompt*(1.-fracGauss2)),
-			LineStyle(5),
-			LineColor(onia::ColorPRJpsi),
-			LineWidth(1.), NumCPU(1));
-	promptLifetime2->plotOn(ctauFrame,
-			ProjWData(*JpsictErr, *dataSRProj),
-			Normalization(fPrompt*fracGauss2),
-			LineStyle(5),
-			LineColor(onia::ColorPRJpsi),
-			LineWidth(1.), NumCPU(1));
-
-	nonPromptSSD->plotOn(ctauFrame,
-			ProjWData(*JpsictErr, *dataSRProj),
-			Normalization(fNonPrompt),
 			LineStyle(2),
 			LineColor(onia::ColorNPJpsi),
 			LineWidth(2), NumCPU(1));
 
-	backgroundlifetime->plotOn(ctauFrame,
+	ModelLife->plotOn(ctauFrame,
+			Components("jpsi_backgroundlifetime"),
 			ProjWData(*JpsictErr, *dataSRProj),
-			Normalization(fBkg),
 			LineStyle(7),
 			LineColor(onia::ColorMuMuBG),
 			LineWidth(2), NumCPU(1));
-
-
 
 
 
@@ -1266,8 +1308,8 @@ double plotLifeBg(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool Spee
 	int ndof_LSig=nBins_LSig-parsFit;  //num of degree of freedom
 	double chi2_LSig=chi2Pre_LSig*ndof_LSig;
 
-	RooHist* hpull_ctauSig = ctauFrame->pullHist() ;
-	//RooHist* hpull_ctauSig = ctauFrame->pullHist("myHist","myCurve",kTRUE);
+	//RooHist* hpull_ctauSig = ctauFrame->pullHist() ;
+	RooHist* hpull_ctauSig = ctauFrame->pullHist("myHist","myCurve",kTRUE);
 
 	//save pull distribution
 	TH1F* pull = new TH1F("pull","pull distribution", 100,-10.,10.);
@@ -1289,27 +1331,49 @@ double plotLifeBg(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool Spee
 
 	ctauFramePull->addPlotable(hpull_ctauSig,"P");
 
-	Prompt->plotOn(ctauFrame,
+	//Prompt->plotOn(ctauFrame,
+	//		ProjWData(*JpsictErr, *dataSBProj),
+	//		Normalization(fPrompt),
+	//		LineStyle(5),
+	//		LineColor(onia::ColorPRJpsi),
+	//		LineWidth(2), NumCPU(1));
+    //
+	//nonPromptSSD->plotOn(ctauFrame,
+	//		ProjWData(*JpsictErr, *dataSBProj),
+	//		Normalization(fNonPrompt),
+	//		LineStyle(2),
+	//		LineColor(onia::ColorNPJpsi),
+	//		LineWidth(2), NumCPU(1));
+    //
+	//backgroundlifetime->plotOn(ctauFrame,
+	//		ProjWData(*JpsictErr, *dataSBProj),
+	//		Normalization(fBkg),
+	//		LineStyle(7),
+	//		LineColor(onia::ColorMuMuBG),
+	//		LineWidth(2), NumCPU(1));
+
+	ModelLife->plotOn(ctauFrame,
+			Components("jpsi_TotalPromptLifetime"),
 			ProjWData(*JpsictErr, *dataSBProj),
-			Normalization(fPrompt),
 			LineStyle(5),
 			LineColor(onia::ColorPRJpsi),
 			LineWidth(2), NumCPU(1));
 
-	nonPromptSSD->plotOn(ctauFrame,
+	ModelLife->plotOn(ctauFrame,
+			Components("jpsi_nonPromptSSD"),
 			ProjWData(*JpsictErr, *dataSBProj),
-			Normalization(fNonPrompt),
 			LineStyle(2),
 			LineColor(onia::ColorNPJpsi),
 			LineWidth(2), NumCPU(1));
 
-	backgroundlifetime->plotOn(ctauFrame,
+	if(SB==1) sprintf(modelchar,"jpsi_backgroundlifetimeLpre");
+	if(SB==2) sprintf(modelchar,"jpsi_backgroundlifetimeRpre");
+	ModelLife->plotOn(ctauFrame,
+			Components(modelchar),
 			ProjWData(*JpsictErr, *dataSBProj),
-			Normalization(fBkg),
 			LineStyle(7),
 			LineColor(onia::ColorMuMuBG),
 			LineWidth(2), NumCPU(1));
-
 
 
 	double Ymax = ctauFrame->GetMaximum();
@@ -1678,23 +1742,23 @@ if(plotModels){
 			Name("myCurve"));
 
 
-	Prompt->plotOn(ctauFrameLSB,
+	ModelLifeLSB->plotOn(ctauFrameLSB,
+			Components("jpsi_TotalPromptLifetime"),
 			ProjWData(*JpsictErr, *dataLSBProj),
-			Normalization(fPromptLSB),
 			LineStyle(5),
 			LineColor(onia::ColorPRJpsi),
 			LineWidth(2), NumCPU(1));
 
-	nonPromptSSD->plotOn(ctauFrameLSB,
+	ModelLifeLSB->plotOn(ctauFrameLSB,
+			Components("jpsi_nonPromptSSD"),
 			ProjWData(*JpsictErr, *dataLSBProj),
-			Normalization(fNonPromptLSB),
 			LineStyle(2),
 			LineColor(onia::ColorNPJpsi),
 			LineWidth(2), NumCPU(1));
 
-	backgroundlifetimeLSB->plotOn(ctauFrameLSB,
+	ModelLifeLSB->plotOn(ctauFrameLSB,
+			Components("jpsi_backgroundlifetimeLpre"),
 			ProjWData(*JpsictErr, *dataLSBProj),
-			Normalization(fBkgLSB),
 			LineStyle(7),
 			LineColor(onia::ColorMuMuBG),
 			LineWidth(2), NumCPU(1));
@@ -1704,7 +1768,6 @@ if(plotModels){
 	cout<<"Ymax: "<<Ymax<<endl;
 	ctauFrameLSB->SetMaximum(Ymax);
 	ctauFrameLSB->SetMinimum(1.1);
-
 
 
 
@@ -1745,23 +1808,23 @@ if(plotModels){
 			Name("myCurve"));
 
 
-	Prompt->plotOn(ctauFrameRSB,
+	ModelLifeRSB->plotOn(ctauFrameRSB,
+			Components("jpsi_TotalPromptLifetime"),
 			ProjWData(*JpsictErr, *dataRSBProj),
-			Normalization(fPromptRSB),
 			LineStyle(5),
 			LineColor(onia::ColorPRJpsi),
 			LineWidth(2), NumCPU(1));
 
-	nonPromptSSD->plotOn(ctauFrameRSB,
+	ModelLifeRSB->plotOn(ctauFrameRSB,
+			Components("jpsi_nonPromptSSD"),
 			ProjWData(*JpsictErr, *dataRSBProj),
-			Normalization(fNonPromptRSB),
 			LineStyle(2),
 			LineColor(onia::ColorNPJpsi),
 			LineWidth(2), NumCPU(1));
 
-	backgroundlifetimeRSB->plotOn(ctauFrameRSB,
+	ModelLifeRSB->plotOn(ctauFrameRSB,
+			Components("jpsi_backgroundlifetimeRpre"),
 			ProjWData(*JpsictErr, *dataRSBProj),
-			Normalization(fBkgRSB),
 			LineStyle(7),
 			LineColor(onia::ColorMuMuBG),
 			LineWidth(2), NumCPU(1));
@@ -1771,7 +1834,6 @@ if(plotModels){
 	cout<<"Ymax: "<<Ymax<<endl;
 	ctauFrameRSB->SetMaximum(Ymax);
 	ctauFrameRSB->SetMinimum(1.1);
-
 
 
 
@@ -1812,23 +1874,23 @@ if(plotModels){
 			Name("myCurve"));
 
 
-	Prompt->plotOn(ctauFrameSR,
+	ModelLifeSR->plotOn(ctauFrameSR,
+			Components("jpsi_TotalPromptLifetime"),
 			ProjWData(*JpsictErr, *dataSRProj),
-			Normalization(fPromptSR),
 			LineStyle(5),
 			LineColor(onia::ColorPRJpsi),
 			LineWidth(2), NumCPU(1));
 
-	nonPromptSSD->plotOn(ctauFrameSR,
+	ModelLifeSR->plotOn(ctauFrameSR,
+			Components("jpsi_nonPromptSSD"),
 			ProjWData(*JpsictErr, *dataSRProj),
-			Normalization(fNonPromptSR),
 			LineStyle(2),
 			LineColor(onia::ColorNPJpsi),
 			LineWidth(2), NumCPU(1));
 
-	backgroundlifetimeSR->plotOn(ctauFrameSR,
+	ModelLifeSR->plotOn(ctauFrameSR,
+			Components("jpsi_backgroundlifetime"),
 			ProjWData(*JpsictErr, *dataSRProj),
-			Normalization(fBkgSR),
 			LineStyle(7),
 			LineColor(onia::ColorMuMuBG),
 			LineWidth(2), NumCPU(1));
@@ -2047,8 +2109,12 @@ void latexFloatingLifetimePars(RooWorkspace *ws, TLatex* latex, int region){
 		latex->DrawLatex(left,top,Form("f^{RS}_{BG}  =  %.3f #pm %.3f",ws->var("jpsi_fBkgSSDR")->getVal(), ws->var("jpsi_fBkgSSDR")->getError()));
 		top-=textSize*stepsizeTimes;
 		}
-		if(!ws->var("jpsi_fBkgDSD")->isConstant()){
-		latex->DrawLatex(left,top,Form("f^{DS}_{BG}  =  %.3f #pm %.3f",ws->var("jpsi_fBkgDSD")->getVal(), ws->var("jpsi_fBkgDSD")->getError()));
+		//if(!ws->var("jpsi_fBkgDSD")->isConstant()){
+		//latex->DrawLatex(left,top,Form("f^{DS}_{BG}  =  %.3f #pm %.3f",ws->var("jpsi_fBkgDSD")->getVal(), ws->var("jpsi_fBkgDSD")->getError()));
+		//top-=textSize*stepsizeTimes;
+		//}
+		if(!ws->var("jpsi_fBkgSSDL")->isConstant()){
+		latex->DrawLatex(left,top,Form("f^{LS}_{BG}  =  %.3f #pm %.3f",ws->var("jpsi_fBkgSSDL")->getVal(), ws->var("jpsi_fBkgSSDL")->getError()));
 		top-=textSize*stepsizeTimes;
 		}
 		if(!ws->var("jpsi_bkgTauSSD")->isConstant()){

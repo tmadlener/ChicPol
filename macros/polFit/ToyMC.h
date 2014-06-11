@@ -30,7 +30,7 @@ const int nPtBins=5;
 const int nRapBins=1;
 
 //chic1
-double fracBackground[nRapBins][nPtBins]={{0.3,0.3,0.3,0.3,0.3}};
+double fracBackground[nRapBins][nPtBins]={{0.3,0.3,0.3,0.3,0.3}};//0.001
 double fracBackgrounderr[nRapBins][nPtBins]={{0.,0.,0.,0.,0.}};
 double ptCentre[nRapBins][nPtBins]={{12.5, 17.5, 22.5, 27.5, 40.}};
 int numEvents[nRapBins][nPtBins]={{20000, 20000, 10000, 5000, 4000}};

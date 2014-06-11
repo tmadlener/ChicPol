@@ -160,13 +160,13 @@ int main(int argc, char* argv[]){
 	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
 
 
-	WhatKindOfParIndex=4; sprintf(SaveName, "Chi2ndf_Lifetime_RSB"); sprintf(ParName, "var_chi2ndf_Lifetime_RSB"); sprintf(ParTitle,"#chi^{2} / ndf (lifetime RSB)"); sprintf(Folder, "jpsi_fitqual");  Ymin = 0.; Ymax = 3.; logY=false;
+	WhatKindOfParIndex=999; sprintf(SaveName, "Chi2ndf_Lifetime_RSB"); sprintf(ParName, "var_chi2ndf_Lifetime_RSB"); sprintf(ParTitle,"#chi^{2} / ndf (lifetime RSB)"); sprintf(Folder, "jpsi_fitqual");  Ymin = 0.; Ymax = 5.; logY=false;
 	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
-	WhatKindOfParIndex=4; sprintf(SaveName, "Chi2ndf_Lifetime_LSB"); sprintf(ParName, "var_chi2ndf_Lifetime_LSB"); sprintf(ParTitle,"#chi^{2} / ndf (lifetime LSB)"); sprintf(Folder, "jpsi_fitqual");  Ymin = 0.; Ymax = 3.; logY=false;
+	WhatKindOfParIndex=999; sprintf(SaveName, "Chi2ndf_Lifetime_LSB"); sprintf(ParName, "var_chi2ndf_Lifetime_LSB"); sprintf(ParTitle,"#chi^{2} / ndf (lifetime LSB)"); sprintf(Folder, "jpsi_fitqual");  Ymin = 0.; Ymax = 5.; logY=false;
 	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
-	WhatKindOfParIndex=4; sprintf(SaveName, "Chi2ndf_Lifetime_SR"); sprintf(ParName, "var_chi2ndf_Lifetime_SR"); sprintf(ParTitle,"#chi^{2} / ndf (lifetime SR)"); sprintf(Folder, "jpsi_fitqual");  Ymin = 0.; Ymax = 3.; logY=false;
+	WhatKindOfParIndex=999; sprintf(SaveName, "Chi2ndf_Lifetime_SR"); sprintf(ParName, "var_chi2ndf_Lifetime_SR"); sprintf(ParTitle,"#chi^{2} / ndf (lifetime SR)"); sprintf(Folder, "jpsi_fitqual");  Ymin = 0.; Ymax = 5.; logY=false;
 	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
-	WhatKindOfParIndex=4; sprintf(SaveName, "Chi2ndf_Mass"); sprintf(ParName, "var_jpsi_chi2ndf_mass"); sprintf(ParTitle,"#chi^{2} / ndf (mass)"); sprintf(Folder, "jpsi_fitqual");  Ymin = 0.; Ymax = 7.; logY=false;
+	WhatKindOfParIndex=999; sprintf(SaveName, "Chi2ndf_Mass"); sprintf(ParName, "var_jpsi_chi2ndf_mass"); sprintf(ParTitle,"#chi^{2} / ndf (mass)"); sprintf(Folder, "jpsi_fitqual");  Ymin = 0.; Ymax = 5.; logY=false;
 	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
 
 
@@ -191,11 +191,14 @@ int main(int argc, char* argv[]){
 	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
 	WhatKindOfParIndex=0; sprintf(SaveName, "BK_NP_TauBkg"); sprintf(ParName, "jpsi_bkgTauSSD"); sprintf(ParTitle,"#tau^{RS}_{BG} [mm]"); sprintf(Folder, "jpsi_lifetime");  Ymin = 0.3; Ymax = 0.45; logY=false;
 	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
-	WhatKindOfParIndex=0; sprintf(SaveName, "BK_fBkgDS"); sprintf(ParName, "jpsi_fBkgDSD"); sprintf(ParTitle,"f_{BG}^{DS}"); sprintf(Folder, "jpsi_lifetime");  Ymin = 0.; Ymax = 0.4; logY=false;
+	WhatKindOfParIndex=3; sprintf(SaveName, "BK_fBkgDS"); sprintf(ParName, "jpsi_fBkgDSD"); sprintf(ParTitle,"f_{BG}^{DS}"); sprintf(Folder, "jpsi_lifetime");  Ymin = 0.; Ymax = 0.4; logY=false;
 	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
 	WhatKindOfParIndex=0; sprintf(SaveName, "BK_fBkgRS"); sprintf(ParName, "jpsi_fBkgSSDR"); sprintf(ParTitle,"f_{BG}^{RS}"); sprintf(Folder, "jpsi_lifetime");  Ymin = 0.5; Ymax = 0.9; logY=false;
 	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
-	WhatKindOfParIndex=3; sprintf(SaveName, "BK_fBkgLS"); sprintf(ParName, "jpsi_fBkgSSDL"); sprintf(ParTitle,"f_{BG}^{LS}"); sprintf(Folder, "jpsi_lifetime");  Ymin = 0.; Ymax = 0.1; logY=false;
+	WhatKindOfParIndex=0; sprintf(SaveName, "BK_fBkgLS"); sprintf(ParName, "jpsi_fBkgSSDL"); sprintf(ParTitle,"f_{BG}^{LS}"); sprintf(Folder, "jpsi_lifetime");  Ymin = 0.; Ymax = 0.1; logY=false;
+	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
+
+	WhatKindOfParIndex=3; sprintf(SaveName, "fLSBpsi"); sprintf(ParName, "var_fLSBpsi"); sprintf(ParTitle,"f_{LSB}^{#psi}"); sprintf(Folder, "jpsi_fractions");  Ymin = 0.; Ymax = 1.; logY=false;
 	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
 
 	//jpsi_fNonPrompt
@@ -286,6 +289,7 @@ void PlotJpsiFitPar(int  nState, int rapMin, int rapMax, int ptMin, int ptMax, i
 
 	}
 
+	int nFixedBins=0;
 
 	for(int rapBin = rapMin; rapBin < rapMax+1; rapBin++){
 		int rapArrayIndex=rapBin-rapMin;
@@ -328,11 +332,17 @@ void PlotJpsiFitPar(int  nState, int rapMin, int rapMax, int ptMin, int ptMax, i
 				Par_Err[rapArrayIndex][ptArrayIndex] = 0.;
 			}
 
-			if(WhatKindOfParIndex==0){
-				if(!functionVar)
-					if(ws->var(ParName)->isConstant()) WhatKindOfParIndex=1;
-				if(functionVar)
+			if(WhatKindOfParIndex==0 || WhatKindOfParIndex==1){
+				if(!functionVar){
+					if(ws->var(ParName)->isConstant()){
+						WhatKindOfParIndex=1;
+						nFixedBins++;
+					}
+				}
+				if(functionVar){
 					WhatKindOfParIndex=1;
+					nFixedBins++;
+				}
 			}
 
 			cout<<"pTmean: "<<pTmean[rapArrayIndex][ptArrayIndex]<<" +-"<<pTmean_Err[rapArrayIndex][ptArrayIndex]<<endl;
@@ -343,6 +353,10 @@ void PlotJpsiFitPar(int  nState, int rapMin, int rapMax, int ptMin, int ptMax, i
 
 	cout<<"read all parameters"<<endl;
 
+	cout<<"nFixedBins "<<nFixedBins<<endl;
+	cout<<"ptMax-ptMin+1 "<<ptMax-ptMin+1<<endl;
+
+	if(WhatKindOfParIndex==1 && nFixedBins<ptMax-ptMin+1) WhatKindOfParIndex=4;
 
 	int box_Incl_FillStyle=3001;
 	int box_Incl_FillColor=416-7;
@@ -474,10 +488,11 @@ void PlotJpsiFitPar(int  nState, int rapMin, int rapMax, int ptMin, int ptMax, i
 	if(WhatKindOfParIndex==1) sprintf(WhatKindOfPar,"Fixed par.");
 	if(WhatKindOfParIndex==2) sprintf(WhatKindOfPar,"Constrained par.");
 	if(WhatKindOfParIndex==3) sprintf(WhatKindOfPar,"Derived par.");
+	if(WhatKindOfParIndex==4) sprintf(WhatKindOfPar,"Part. fixed par.");
 
 	left=0.65; top=2*bottomMarg;
     latex->SetTextColor(kRed);
-    if(WhatKindOfParIndex<4) latex->DrawLatex(left,top,Form(WhatKindOfPar));
+    if(WhatKindOfParIndex<5) latex->DrawLatex(left,top,Form(WhatKindOfPar));
 
 
 

@@ -82,7 +82,7 @@ void createWorkspace(const std::string &infilename, int nState, bool correctCtau
 
 
 
-
+/*
 	/// Read in 2011 data ctauErr-histos
 
 	char saveDir[200];
@@ -122,7 +122,7 @@ void createWorkspace(const std::string &infilename, int nState, bool correctCtau
 	cout<<"opened hists"<<endl;
 
 	/// Finished reading in 2011 data ctauErr-histos
-
+*/
 
 
 	// loop through events in tree and save them to dataset
@@ -135,8 +135,8 @@ void createWorkspace(const std::string &infilename, int nState, bool correctCtau
 		double M_jpsi =jpsi->M();
 		double pt_jpsi =jpsi->Pt();
 		double y_jpsi =jpsi->Rapidity();
-		//double M =chic_rf->M();
-		double M =chic->M()-jpsi->M()+onia::MpsiPDG;
+		double M =chic_rf->M();
+		//double M =chic->M()-jpsi->M()+onia::MpsiPDG;
 		double y=chic->Rapidity();
 		double pt=chic->Pt();
 
@@ -173,7 +173,7 @@ void createWorkspace(const std::string &infilename, int nState, bool correctCtau
 		//	lifetimeErr/=resCorrFactor;
 
 
-
+/*
 		int iRAPindex=0;
 		int iPTindex=0;
 		int iLindex=0;
@@ -207,7 +207,7 @@ void createWorkspace(const std::string &infilename, int nState, bool correctCtau
 			std::cout << "Test output: lifetimeErr " << lifetimeErr << " randomly drawn from from " << h_ctauerr_2011[iRAPindex][iPTindex][iLindex]->GetName() <<  std::endl;
 		}
 
-
+*/
 
 		if (
 				M > chicMass->getMin() && M < chicMass->getMax()
@@ -252,7 +252,7 @@ void createWorkspace(const std::string &infilename, int nState, bool correctCtau
 
 	}//ientries
 
-	infile->Close();
+	//infile->Close();
 
 	cout << "entries entering all bins " << fullData->sumEntries() << endl;
 	cout << "numEntriesTotal " << numEntriesTotal << endl;
