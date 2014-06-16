@@ -245,7 +245,7 @@ int main(int argc, char* argv[]){
 	WhatKindOfParIndex=3; sprintf(SaveName, "Def_Ctau_NPMin"); sprintf(ParName, "var_NPMin"); sprintf(ParTitle,"l^{NP}_{low} [mm]"); sprintf(Folder, "chic_regions");  Ymin = -0.1; Ymax = 0.1; logY=false;
 	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
 
-	WhatKindOfParIndex=3; sprintf(SaveName, "Def_Ctau_Resolution"); sprintf(ParName, "var_ctres"); sprintf(ParTitle,"#sigma_{l} [mm]"); sprintf(Folder, "chic_regions");  Ymin = 0.; Ymax = 0.03; logY=false;
+	WhatKindOfParIndex=3; sprintf(SaveName, "Def_Ctau_Resolution"); sprintf(ParName, "var_ctres"); sprintf(ParTitle,"#hat{#sigma}_{l} [mm]"); sprintf(Folder, "chic_regions");  Ymin = 0.; Ymax = 0.03; logY=false;
 	PlotChiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
 
 	WhatKindOfParIndex=3; sprintf(SaveName, "N_PRChic1_in_PRSR1"); sprintf(ParName, "var_nPRChic1InPRSR1"); sprintf(ParTitle,"N^{PRSR1}_{PR#chi_{c1}}"); sprintf(Folder, "chic_regions");  Ymin = 700; Ymax = 5e4; logY=true;
