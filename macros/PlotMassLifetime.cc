@@ -870,7 +870,7 @@ double plotMass(RooWorkspace *ws, int rapBin, int ptBin, int nState){
 
 
 		left=0.15; top=0.885; textSize=0.030; latex->SetTextSize(textSize);
-		if(rapBin==0) latex->DrawLatex(left,top,Form("|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[2]));
+		if(rapBin==0) latex->DrawLatex(left,top,Form("|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[onia::kNbRapForPTBins]));
 		else if(rapBin==1) latex->DrawLatex(left,top,Form("|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[rapBin]));
 		else latex->DrawLatex(left,top,Form("%.1f < |y%s| < %.1f",onia::rapForPTRange[rapBin-1],onia::KinParticleChar,onia::rapForPTRange[rapBin]));
 		top-=step;
@@ -1326,7 +1326,7 @@ double plotLifetime(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool Sp
 
 
 		left=0.54; top=0.885; textSize=0.030; latex->SetTextSize(textSize);
-		if(rapBin==0) latex->DrawLatex(left,top,Form("|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[2]));
+		if(rapBin==0) latex->DrawLatex(left,top,Form("|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[onia::kNbRapForPTBins]));
 		else if(rapBin==1) latex->DrawLatex(left,top,Form("|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[rapBin]));
 		else latex->DrawLatex(left,top,Form("%.1f < |y%s| < %.1f",onia::rapForPTRange[rapBin-1],onia::KinParticleChar,onia::rapForPTRange[rapBin]));
 		top-=step;
@@ -1735,7 +1735,7 @@ double plotLifetimeSR1(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 
 
 		left=0.54; top=0.885; textSize=0.030; latex->SetTextSize(textSize);
-		if(rapBin==0) latex->DrawLatex(left,top,Form("|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[2]));
+		if(rapBin==0) latex->DrawLatex(left,top,Form("|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[onia::kNbRapForPTBins]));
 		else if(rapBin==1) latex->DrawLatex(left,top,Form("|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[rapBin]));
 		else latex->DrawLatex(left,top,Form("%.1f < |y%s| < %.1f",onia::rapForPTRange[rapBin-1],onia::KinParticleChar,onia::rapForPTRange[rapBin]));
 		top-=step;
@@ -2171,7 +2171,7 @@ double plotLifetimeSR2(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 
 
 		left=0.54; top=0.885; textSize=0.030; latex->SetTextSize(textSize);
-		if(rapBin==0) latex->DrawLatex(left,top,Form("|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[2]));
+		if(rapBin==0) latex->DrawLatex(left,top,Form("|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[onia::kNbRapForPTBins]));
 		else if(rapBin==1) latex->DrawLatex(left,top,Form("|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[rapBin]));
 		else latex->DrawLatex(left,top,Form("%.1f < |y%s| < %.1f",onia::rapForPTRange[rapBin-1],onia::KinParticleChar,onia::rapForPTRange[rapBin]));
 		top-=step;
@@ -2594,7 +2594,7 @@ double plotLifetimeLSB(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 
 
 		left=0.54; top=0.885; textSize=0.030; latex->SetTextSize(textSize);
-		if(rapBin==0) latex->DrawLatex(left,top,Form("|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[2]));
+		if(rapBin==0) latex->DrawLatex(left,top,Form("|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[onia::kNbRapForPTBins]));
 		else if(rapBin==1) latex->DrawLatex(left,top,Form("|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[rapBin]));
 		else latex->DrawLatex(left,top,Form("%.1f < |y%s| < %.1f",onia::rapForPTRange[rapBin-1],onia::KinParticleChar,onia::rapForPTRange[rapBin]));
 		top-=step;
@@ -3034,7 +3034,7 @@ double plotLifetimeRSB(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool
 
 
 		left=0.54; top=0.885; textSize=0.030; latex->SetTextSize(textSize);
-		if(rapBin==0) latex->DrawLatex(left,top,Form("|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[2]));
+		if(rapBin==0) latex->DrawLatex(left,top,Form("|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[onia::kNbRapForPTBins]));
 		else if(rapBin==1) latex->DrawLatex(left,top,Form("|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[rapBin]));
 		else latex->DrawLatex(left,top,Form("%.1f < |y%s| < %.1f",onia::rapForPTRange[rapBin-1],onia::KinParticleChar,onia::rapForPTRange[rapBin]));
 		top-=step;

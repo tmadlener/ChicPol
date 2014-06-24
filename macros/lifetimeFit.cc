@@ -127,6 +127,7 @@ void buildLifetimePDF(RooWorkspace *ws, int rapBin, int ptBin){
 	//smoothHists=1;
 
 	bool noPunzi=false;
+	//if(rapBin==1) noPunzi=false;
 	if(noPunzi){
 		nbinsHistsPR=1;
 		nbinsHistsNP=1;
@@ -137,12 +138,12 @@ void buildLifetimePDF(RooWorkspace *ws, int rapBin, int ptBin){
 	bool ctauerrmodelBGuseAllData=false;
 	bool ctauerrmodelAlluseSameData=false;
 
-	double ceiling=1e-7;//1e-10
+	double floor=1e-7;//1e-10
 
 	TH1F* h_ctauerrModelPR = new TH1F("h_ctauerrModelPR","h_ctauerrModelPR", nbinsHistsPR, ctauerrModelMin, ctauerrModelMax);
 	if(!ctauerrmodelAlluseSameData) dataSR_PR->fillHistogram(h_ctauerrModelPR,RooArgList(*ws->var("JpsictErr")));
 	else dataSR->fillHistogram(h_ctauerrModelPR,RooArgList(*ws->var("JpsictErr")));
-    for(int iX=0;iX<h_ctauerrModelPR->GetNbinsX()+1;iX++){ if(h_ctauerrModelPR->GetBinContent(iX)<ceiling) h_ctauerrModelPR->SetBinContent(iX,ceiling); }
+    for(int iX=0;iX<h_ctauerrModelPR->GetNbinsX()+1;iX++){ if(h_ctauerrModelPR->GetBinContent(iX)<floor) h_ctauerrModelPR->SetBinContent(iX,floor); }
 	RooDataHist* rdh_ctauerrModelPR = new RooDataHist("rdh_ctauerrModelPR","rdh_ctauerrModelPR", RooArgList(*ws->var("JpsictErr")), h_ctauerrModelPR);
 	RooHistPdf* pdf_ctauerrModelPR = new RooHistPdf("pdf_ctauerrModelPR","pdf_ctauerrModelPR", RooArgSet(*ws->var("JpsictErr")), *rdh_ctauerrModelPR, smoothHists);
     ws->import(*pdf_ctauerrModelPR);
@@ -150,7 +151,7 @@ void buildLifetimePDF(RooWorkspace *ws, int rapBin, int ptBin){
 	TH1F* h_ctauerrModelNP = new TH1F("h_ctauerrModelNP","h_ctauerrModelNP", nbinsHistsNP, ctauerrModelMin, ctauerrModelMax);
 	if(!ctauerrmodelAlluseSameData) dataSR_NP->fillHistogram(h_ctauerrModelNP,RooArgList(*ws->var("JpsictErr")));
 	else dataSR->fillHistogram(h_ctauerrModelNP,RooArgList(*ws->var("JpsictErr")));
-    for(int iX=0;iX<h_ctauerrModelNP->GetNbinsX()+1;iX++){ if(h_ctauerrModelNP->GetBinContent(iX)<ceiling) h_ctauerrModelNP->SetBinContent(iX,ceiling); }
+    for(int iX=0;iX<h_ctauerrModelNP->GetNbinsX()+1;iX++){ if(h_ctauerrModelNP->GetBinContent(iX)<floor) h_ctauerrModelNP->SetBinContent(iX,floor); }
 	RooDataHist* rdh_ctauerrModelNP = new RooDataHist("rdh_ctauerrModelNP","rdh_ctauerrModelNP", RooArgList(*ws->var("JpsictErr")), h_ctauerrModelNP);
 	RooHistPdf* pdf_ctauerrModelNP = new RooHistPdf("pdf_ctauerrModelNP","pdf_ctauerrModelNP", RooArgSet(*ws->var("JpsictErr")), *rdh_ctauerrModelNP, smoothHists);
     ws->import(*pdf_ctauerrModelNP);
@@ -176,7 +177,7 @@ void buildLifetimePDF(RooWorkspace *ws, int rapBin, int ptBin){
 		h_ctauerrModelBG = new TH1F("h_ctauerrModelBG","h_ctauerrModelBG", nbinsHistsPR, ctauerrModelMin, ctauerrModelMax);
 		dataSR->fillHistogram(h_ctauerrModelBG,RooArgList(*ws->var("JpsictErr")));
 	}
-    for(int iX=0;iX<h_ctauerrModelBG->GetNbinsX()+1;iX++){ if(h_ctauerrModelBG->GetBinContent(iX)<ceiling) h_ctauerrModelBG->SetBinContent(iX,ceiling); }
+    for(int iX=0;iX<h_ctauerrModelBG->GetNbinsX()+1;iX++){ if(h_ctauerrModelBG->GetBinContent(iX)<floor) h_ctauerrModelBG->SetBinContent(iX,floor); }
 	RooDataHist* rdh_ctauerrModelBG = new RooDataHist("rdh_ctauerrModelBG","rdh_ctauerrModelBG", RooArgList(*ws->var("JpsictErr")), h_ctauerrModelBG);
 	RooHistPdf* pdf_ctauerrModelBG = new RooHistPdf("pdf_ctauerrModelBG","pdf_ctauerrModelBG", RooArgSet(*ws->var("JpsictErr")), *rdh_ctauerrModelBG, smoothHists);
     ws->import(*pdf_ctauerrModelBG);
@@ -464,11 +465,17 @@ void doFit(RooWorkspace *ws, int nState, double BkgRatio3Sig, double fracBkgInLS
 	//ws->var("jpsi_ctResolution")->setConstant(kTRUE);
 	//ws->var("jpsi_fracGauss2")->setConstant(kTRUE);
 
+
+
+
 	ws->var("jpsi_ctResolution2")->setVal(1.55);
 	ws->var("jpsi_ctResolution2")->setConstant(kTRUE);
 
 	ws->var("jpsi_bkgTauDSD")->setVal(0.013);
 	ws->var("jpsi_bkgTauDSD")->setConstant(kTRUE);
+
+
+
 
 	//RooAbsPdf *ModelLifeSR = (RooAbsPdf*)ws->pdf("jpsi_fulllifetimeSR");
 	//RooAbsPdf *ModelLifeLSB = (RooAbsPdf*)ws->pdf("jpsi_backgroundlifetimeL");

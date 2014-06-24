@@ -16,17 +16,17 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1, 7=chic
 for FidCuts in 11;do #defines the set of cuts to be used, see macros/polFit/effsAndCuts.h
 cd $Cdir
 
-COPY_AND_COMPILE=1
+COPY_AND_COMPILE=0
 
 rapMin=1     #takes bins, not actual values
 rapMax=1     #if you only want to process 1 y bin, rapMax = rapMin
-ptMin=6      #takes bins, not acutal values
-ptMax=6      #if you only want to process 1 pt bin, ptMax = ptMin
+ptMin=0      #takes bins, not acutal values
+ptMax=0      #if you only want to process 1 pt bin, ptMax = ptMin
 
 Plotting=1   #plotting macro: 1 = plot all, 2 = plot mass, 3 = plot lifetime
 			 #plotting macro: 4 = plot lifetimeSR1, 5 = plot lifetimeSR2, 6 = plot lifetimeLSB, 7 = plot lifetimeRSB, 8 = plot lifetimeFullRegion
 
-PlottingJpsi=1   #plotting macro: 1 = plot all, 2 = plot mass, 3 = plot lifetimeSBs, 4= lifetimeSR, 5= PlotMassRap, 6= plot lifetime, 7=pedagogical
+PlottingJpsi=2   #plotting macro: 1 = plot all, 2 = plot mass, 3 = plot lifetimeSBs, 4= lifetimeSR, 5= PlotMassRap, 6= plot lifetime, 7=pedagogical
 
 PlottingDataDists=2 #0...all, 1...1D plots, 2...2D plots
 
@@ -80,6 +80,7 @@ polDataPath=${basedir}/Psi/Data/${DataID}
 #JobID=DebugCtau_ModelCtauErr2011_May26
 #JobID=DebugCtau_June4_PunziCheck
 JobID=LastFitImprovments_June7_ConstrainBGl_ConstrainHighPt
+#JobID=DebugCtau_June17_PunziCheck2011
 
 
 ################ EXECUTABLES #################
@@ -90,13 +91,13 @@ execute_runChiData=0			           		#independent of rapMin, rapMax, ptMin, ptMax
 execute_runWorkspace=0	    					#independent of rapMin, rapMax, ptMin, ptMax
 execute_runMassFit=0				    	    #can be executed for different pt and y bins
 execute_runLifetimeFit=0    				    #can be executed for different pt and y bins
-execute_runPlotJpsiMassLifetime=0    			#can be executed for different pt and y bins
+execute_runPlotJpsiMassLifetime=1    			#can be executed for different pt and y bins
 execut_PlotJpsiFitPar=0              			#can be executed for different pt and y bins
 execute_runChiMassLifetimeFit=0		  	    	#can be executed for different pt and y bins
 execute_runDefineRegionsAndFractions=0			#can be executed for different pt and y bins
 execute_runPlotMassLifetime=0    				#can be executed for different pt and y bins
 execut_PlotFitPar=0              				#can be executed for different pt and y bins
-execute_runPlotDataDistributions=1 		 		#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
+execute_runPlotDataDistributions=0 		 		#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
 
 execute_runBkgHistos=0           				#can be executed for different pt and y bins
 execute_PlotCosThetaPhiBG=0 		 			#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)

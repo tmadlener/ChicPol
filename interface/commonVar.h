@@ -29,6 +29,8 @@ namespace onia{
   bool KinParticleChi = true;
   const char *KinParticleChar = "^{#chi}";
   bool KinParticleChiButJpsiRap = false;
+  //bool KinParticleChi = false;
+  //const char *KinParticleChar = "^{#psi}";
 
   //chi mass ranges
   const double chimassMin = 3.325;
@@ -36,6 +38,7 @@ namespace onia{
   //When running on 2011 Jpsi data:
   //const double chimassMin = 2.;
   //const double chimassMax = 4.;
+
   const double massChiSBMin = chimassMin;
   const double massChiSBMax = chimassMax;
 
@@ -66,18 +69,19 @@ namespace onia{
 
 
   // Binning
-  const int kNbRapForPTBins = 2;
-  double rapForPTRange[kNbRapForPTBins+1] = {0., 1.2, 1.5};
-  double rapRange[2*kNbRapForPTBins+1] = {-1.5, -1.2, 0., 1.2, 1.5};
-  //double rapForPTRange[kNbRapForPTBins+1] = {0., 0.6, 1.2};
-  //double rapRange[2*kNbRapForPTBins+1] = {-1.2, -0.6, 0., 0.6, 1.2};
+  //const int kNbRapForPTBins = 2;
+  //double rapForPTRange[kNbRapForPTBins+1] = {0., 1.2, 1.5};
+  //double rapRange[2*kNbRapForPTBins+1] = {-1.5, -1.2, 0., 1.2, 1.5};
+  const int kNbRapForPTBins = 1;
+  double rapForPTRange[kNbRapForPTBins+1] = {0., 1.2};
+  double rapRange[2*kNbRapForPTBins+1] = {-1.2, 0., 1.2};
 
   //Jpsi
   const int kNbPTMaxBins = 6;
-  const int kNbPTBins[kNbRapForPTBins+1] = {kNbPTMaxBins, kNbPTMaxBins, kNbPTMaxBins};//all y, y1
+  const int kNbPTBins[kNbRapForPTBins+1] = {kNbPTMaxBins, kNbPTMaxBins};//all y, y1
   double pTRange[kNbRapForPTBins+1][kNbPTMaxBins+1] = {
     {10., 15., 20., 25., 30., 50., 100.},//all rapidities
-    {10., 15., 20., 25., 30., 50., 100.},//mid-rapidity
+    //{10., 15., 20., 25., 30., 50., 100.},//mid-rapidity
     {10., 15., 20., 25., 30., 50., 100.}};//forward rapidity
 
 
@@ -131,7 +135,7 @@ namespace onia{
   int colour_pT[] = {1, 2, 3, 4, 6, 7, 8, 49, 38, 46, 12, 40, 50};
   int marker_pT[] = {20, 21, 25, 22, 23, 26, 27, 28, 29, 30, 20, 20, 50};
   int colour_rapForPTBins[] = {1, 30, 4, 2, 3, kMagenta+1};
-  int marker_rapForPTBins[] = {20, 21, 25, 20, 22, 29};
+  int marker_rapForPTBins[] = {20, 25, 21, 20, 22, 29};
 
   //Chic plots:
 	int colorBackground=1;

@@ -150,7 +150,7 @@ int main(int argc, char* argv[]){
 
 
 
-	WhatKindOfParIndex=0; sprintf(SaveName, "bkgLambda_jpsi"); sprintf(ParName, "bkgLambda_jpsi"); sprintf(ParTitle,"#lambda_{BG} [GeV^{-1}]"); sprintf(Folder, "jpsi_mass");  Ymin = -5.; Ymax = 0.; logY=false;
+	WhatKindOfParIndex=123321; sprintf(SaveName, "bkgLambda_jpsi"); sprintf(ParName, "bkgLambda_jpsi"); sprintf(ParTitle,"#lambda_{BG} [GeV^{-1}]"); sprintf(Folder, "jpsi_mass");  Ymin = 0.; Ymax = 5.; logY=false;
 	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
 	WhatKindOfParIndex=0; sprintf(SaveName, "fracBkg_jpsi"); sprintf(ParName, "fracBkg_jpsi"); sprintf(ParTitle,"f^{#psi}_{#mu#muBG}"); sprintf(Folder, "jpsi_mass");  Ymin = 0.05; Ymax = 0.12; logY=false;
 	PlotJpsiFitPar(nState, rapMin, rapMax, ptMin, ptMax, rapFixTo, ptFixTo, AddInclusiveResult, Ymin, Ymax, ParName, ParTitle, Folder, SaveName, logY, WhatKindOfParIndex);
@@ -225,6 +225,7 @@ void PlotJpsiFitPar(int  nState, int rapMin, int rapMax, int ptMin, int ptMax, i
 
 	double Xmin = 0.,  Xmax = 0.;
 	Xmin = 5.001;    Xmax = 54.999;
+	//Xmin = 5.001;    Xmax = 84.999;
 
 
 
@@ -232,7 +233,12 @@ void PlotJpsiFitPar(int  nState, int rapMin, int rapMax, int ptMin, int ptMax, i
 
 
 
-
+	bool changeSign=false;
+	if(WhatKindOfParIndex==123321){
+		WhatKindOfParIndex=0;
+		changeSign=true;
+		cout<<"changeSign of this parameter: "<<ParName<<endl;
+	}
 
 	double pTmean[RapBins][PtBins];
 	double pTmean_Err[RapBins][PtBins];
@@ -284,6 +290,9 @@ void PlotJpsiFitPar(int  nState, int rapMin, int rapMax, int ptMin, int ptMax, i
 			Par_Incl = ws->function(ParName)->getVal();
 			Par_Incl_Err = 0.;
 		}
+
+		if(changeSign) Par_Incl*=-1.;
+
 		cout<<"Inclusive pTmean: "<<pTmean_Incl<<" +-"<<pTmean_Incl_Err<<endl;
 		cout<<"Inclusive "<<ParName<<": "<<Par_Incl<<" +-"<<Par_Incl_Err<<endl;
 
@@ -344,6 +353,8 @@ void PlotJpsiFitPar(int  nState, int rapMin, int rapMax, int ptMin, int ptMax, i
 					nFixedBins++;
 				}
 			}
+
+			if(changeSign) Par[rapArrayIndex][ptArrayIndex]*=-1.;
 
 			cout<<"pTmean: "<<pTmean[rapArrayIndex][ptArrayIndex]<<" +-"<<pTmean_Err[rapArrayIndex][ptArrayIndex]<<endl;
 			cout<<ParName<<": "<<Par[rapArrayIndex][ptArrayIndex]<<" +-"<<Par_Err[rapArrayIndex][ptArrayIndex]<<endl;
@@ -417,6 +428,8 @@ void PlotJpsiFitPar(int  nState, int rapMin, int rapMax, int ptMin, int ptMax, i
 		if(rapBin==0) legend->AddEntry(graph_Par[rapArrayIndex],Form("|y%s| < %1.1f", onia::KinParticleChar, onia::rapForPTRange[onia::kNbRapForPTBins]),"lp");
 		else if(rapBin==1) legend->AddEntry(graph_Par[rapArrayIndex],Form("|y%s| < %1.1f", onia::KinParticleChar, onia::rapForPTRange[1]),"lp");
 		else if(rapBin>1) legend->AddEntry(graph_Par[rapArrayIndex],Form("%1.1f < |y%s| < %1.1f", onia::rapForPTRange[rapBin-1], onia::KinParticleChar, onia::rapForPTRange[rapBin]),"lp");
+		//if(rapBin==0) legend->AddEntry(graph_Par[rapArrayIndex],Form("no Punzi terms"),"lp");
+		//else if(rapBin==1) legend->AddEntry(graph_Par[rapArrayIndex],Form("with Punzi terms"),"lp");
 	}
 
 
@@ -533,6 +546,7 @@ void PlotJpsiRegionFracs(int  nState, int rapBin, int ptMin, int ptMax, double Y
 
 	double Xmin = 0.,  Xmax = 0.;
 	Xmin = 5.001;    Xmax = 54.999;
+	//Xmin = 5.001;    Xmax = 84.999;
 
 	char RegName[200];
 	if(RegionCode==1) sprintf(RegName,"LSB");

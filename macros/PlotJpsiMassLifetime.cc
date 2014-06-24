@@ -374,7 +374,7 @@ double plotMass(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool SpeedP
 		textSize=0.03; latex->SetTextSize(textSize);
 
 
-		if(rapBin==0) latex->DrawLatex(left,top,Form("%.1f < |y%s| < %.1f",onia::rapForPTRange[rapBin],onia::KinParticleChar,onia::rapForPTRange[2]));
+		if(rapBin==0) latex->DrawLatex(left,top,Form("%.1f < |y%s| < %.1f",onia::rapForPTRange[rapBin],onia::KinParticleChar,onia::rapForPTRange[onia::kNbRapForPTBins]));
 		else if(rapBin==1) latex->DrawLatex(left,top,Form("|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[rapBin]));
 		else latex->DrawLatex(left,top,Form("%.1f < |y%s| < %.1f",onia::rapForPTRange[rapBin-1],onia::KinParticleChar,onia::rapForPTRange[rapBin]));
 		top-=step;
@@ -439,7 +439,7 @@ double plotMass(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool SpeedP
 			top-=step;
 		}
 		if(!ws->var("bkgLambda_jpsi")->isConstant()){
-			latex->DrawLatex(left,top,Form("#lambda_{BG} =  %.3f #pm %.3f GeV^{-1}",lambda, lambdaErr)); // change to has positive value
+			latex->DrawLatex(left,top,Form("#lambda_{BG} =  %.3f #pm %.3f GeV^{-1}",-1.*lambda, lambdaErr)); // change to has positive value
 			top-=step;
 		}
 		if(!ws->var("fracBkg_jpsi")->isConstant()){
@@ -579,7 +579,7 @@ double plotMassRap(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool Spe
 	else
 		sprintf(ptchar,"%.0f < p%s_{T} < %.0f GeV",onia::pTRange[rapBin][ptBin-1],onia::KinParticleChar,onia::pTRange[rapBin][ptBin]);
 
-	if(rapBin==0) sprintf(rapchar,"%.1f < |y%s| < %.1f",onia::rapForPTRange[rapBin],onia::KinParticleChar,onia::rapForPTRange[2]);
+	if(rapBin==0) sprintf(rapchar,"%.1f < |y%s| < %.1f",onia::rapForPTRange[rapBin],onia::KinParticleChar,onia::rapForPTRange[onia::kNbRapForPTBins]);
 	else if(rapBin==1) sprintf(rapchar,"|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[rapBin]);
 	else sprintf(rapchar,"%.1f < |y%s| < %.1f",onia::rapForPTRange[rapBin-1],onia::KinParticleChar,onia::rapForPTRange[rapBin]);
 
@@ -1099,7 +1099,7 @@ double plotLifeSig(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool Spe
 		//top-=step;
 		textSize=0.03; latex->SetTextSize(textSize);
 
-		if(rapBin==0) latex->DrawLatex(left,top,Form("|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[2]));
+		if(rapBin==0) latex->DrawLatex(left,top,Form("|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[onia::kNbRapForPTBins]));
 		else if(rapBin==1) latex->DrawLatex(left,top,Form("|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[rapBin]));
 		else latex->DrawLatex(left,top,Form("%.1f < |y%s| < %.1f",onia::rapForPTRange[rapBin-1],onia::KinParticleChar,onia::rapForPTRange[rapBin]));
 		top-=step;
@@ -1444,7 +1444,7 @@ double plotLifeBg(RooWorkspace *ws, int rapBin, int ptBin, int nState, bool Spee
 		LifetimeLegendSig->Draw();
 
 		left=0.54; top=0.885; textSize=0.030; latex->SetTextSize(textSize);
-		if(rapBin==0) latex->DrawLatex(left,top,Form("|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[2]));
+		if(rapBin==0) latex->DrawLatex(left,top,Form("|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[onia::kNbRapForPTBins]));
 		else if(rapBin==1) latex->DrawLatex(left,top,Form("|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[rapBin]));
 		else latex->DrawLatex(left,top,Form("%.1f < |y%s| < %.1f",onia::rapForPTRange[rapBin-1],onia::KinParticleChar,onia::rapForPTRange[rapBin]));
 		top-=step;
@@ -2005,7 +2005,7 @@ if(plotModels){
     lineSigHigh->Draw("same");
 
     left=0.8; top=0.855; textSize=0.060; latex->SetTextSize(textSize);
-    if(rapBin==0) latex->DrawLatex(left,top,Form("|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[2]));
+    if(rapBin==0) latex->DrawLatex(left,top,Form("|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[onia::kNbRapForPTBins]));
     else if(rapBin==1) latex->DrawLatex(left,top,Form("|y%s| < %.1f",onia::KinParticleChar,onia::rapForPTRange[rapBin]));
     else latex->DrawLatex(left,top,Form("%.1f < |y%s| < %.1f",onia::rapForPTRange[rapBin-1],onia::KinParticleChar,onia::rapForPTRange[rapBin]));
     step=textSize*1.6;

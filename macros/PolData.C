@@ -46,12 +46,12 @@ void PolData::Loop(int nState, bool rejectCowboys, int FidCuts, bool MC, bool Re
   //double rndNumber;
   //ifstream rndFile; rndFile.open("/afs/ihep.ac.cn/users/z/zhangll/fs/work/polarization/PsiPol2011/macros/random.txt");
 
-	nentries = 10000000;
+	//nentries = 10000000;
 
 	//loop over the events
-	for (Long64_t jentry=0; jentry<nentries; jentry++) {
+	//for (Long64_t jentry=0; jentry<nentries; jentry++) {
 
-	//for (Long64_t jentry=0; jentry<nentries/2; jentry++) {  // first half
+	for (Long64_t jentry=0; jentry<nentries/2; jentry++) {  // first half
 	//for (Long64_t jentry=nentries/2; jentry<nentries; jentry++) {  // second half
 	
 	//for (Long64_t jentry=0; jentry<nentries/4; jentry++) {  //  one quarter
