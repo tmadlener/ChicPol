@@ -92,7 +92,7 @@ execute_runWorkspace=0	    					#independent of rapMin, rapMax, ptMin, ptMax
 execute_runMassFit=0				    	    #can be executed for different pt and y bins
 execute_runLifetimeFit=0    				    #can be executed for different pt and y bins
 execute_runPlotJpsiMassLifetime=1    			#can be executed for different pt and y bins
-execut_PlotJpsiFitPar=0              			#can be executed for different pt and y bins
+execute_PlotJpsiFitPar=0              			#can be executed for different pt and y bins
 execute_runChiMassLifetimeFit=0		  	    	#can be executed for different pt and y bins
 execute_runDefineRegionsAndFractions=0			#can be executed for different pt and y bins
 execute_runPlotMassLifetime=0    				#can be executed for different pt and y bins
@@ -266,7 +266,7 @@ cp runPlotJpsiMassLifetime runPlotJpsiMassLifetime_$[nState-3]S_rap${rapMin}_pt$
 rm runPlotJpsiMassLifetime_$[nState-3]S_rap${rapMin}_pt${ptMin}
 fi
 
-if [ ${execut_PlotJpsiFitPar} -eq 1 ]
+if [ ${execute_PlotJpsiFitPar} -eq 1 ]
 then
 ./PlotJpsiFitPar nState=${nState} doCtauUncer=${doCtauUncer} rapMin=${rapMin} rapMax=${rapMax} ptMin=${ptMin} ptMax=${ptMax} rapFixTo=${rapFixTo} ptFixTo=${ptFixTo} AddInclusiveResult=${AddInclusiveResult}
 fi

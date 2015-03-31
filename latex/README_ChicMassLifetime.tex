@@ -1,0 +1,173 @@
+\documentclass{article}
+\usepackage[applemac]{inputenc}
+\usepackage{amsmath}
+\usepackage{textcomp}
+\pagestyle{plain}  
+\usepackage{graphicx}
+\usepackage{multicol}
+\usepackage{geometry}
+\geometry{a4paper,left=25mm,right=25mm, top=3.5cm, bottom=3.5cm}
+\usepackage{parcolumns}
+\usepackage{subfigure}
+ \usepackage{booktabs}
+ \usepackage{topcapt}
+\usepackage{setspace}
+
+ 
+\begin{document}
+\title{\textsc{Readme}:\\$\chi_{cJ}$ mass-lifetime analysis}
+\author{Valentin Kn\"unz\\HEPHY - Institute for High Energy Physics, Vienna}
+\date{\today}
+\maketitle  
+
+
+\tableofcontents
+\newpage
+
+
+\section{$\chi_c$ mass-lifetime analysis: Overview}
+
+This \textsc{Readme} explains how to manage the framework that extracts the prompt $\chi_{cJ}$ yields, employing an analysis of the $\mu\mu\gamma$ mass and $\mu\mu$ lifetime dimensions. This is the first step of the preparation of the inputs for the analysis of the prompt $\chi_{c1,2}$ polarizations. The corresponding framework for the extraction of the polarization exists, was originally developed and documented for the $\Upsilon$ analysis
+\\\hspace*{10pt}$\to$ https://github.com/knuenz/CMS/tree/PRL/Polarization/UpsilonPol2011/
+\\\hspace*{10pt}$\to$ documentation: latex/README.pdf
+\\It was then adapted for the $\psi$ analysis
+\\\hspace*{10pt}$\to$ https://github.com/zhlinl/usercode/tree/master/Polarization/PsiPol2011
+\\The files present in this framework correspond to the ones developed for the $\psi$ analysis. It will have to be slightly adapted for the $\chi$ analysis. However, this \textsc{Readme} is restricted to explain the mass-lifetime analysis framework of the $\chi_c$ system.
+
+\subsection{Directory Structure}
+The base directory will be referred to as \emph{basedir}. The basedir contains three folders:
+\begin{itemize}
+\item{\emph{interface} - Standard files commonVar.h and rootIncludes.inc, defining the common values of the analysis (e.g. bins)}
+\item{\emph{latex} - All latex files for the production of summary files of the produced plots}
+\item{\emph{macros} - This is the folder containing the relevant code. All source code files and scripts used for the mass-lifetime analysis are in this folder. All source code files and scripts used for the fits (data and ToyMC) are in the subfolder \emph{polFit}}
+\end{itemize}
+
+\subsection{General Comments}
+
+The framework should work \emph{out of the box}, no need to change any directories (other than the input data TTrees). There is one single script (\emph{macros/PrepareTTree.sh}), that steers everything (if no further options have to be implemented, that is all you have to look at, no need to look at the source code). The script is executed by ``sh PrepareTTree.sh'' .
+
+\subsection{The Individual Steps}
+
+The mass-lifetime analysis framework is composed of a sequence of several steps whose execution can be switched on/off by setting the execute\_... flags to 1/0. The individual steps are listed here:
+
+\begin{itemize}
+\item {\bf runChiData}
+\item {\bf runWorkspace}
+\item {\bf runMassFit}
+\item {\bf runLifetimeFit}
+\item {\bf runPlotJpsiMassLifetime}
+\item {\bf PlotJpsiFitPar}
+\item {\bf runChiMassLifetimeFit}
+\item {\bf runDefineRegionsAndFractions}
+\item {\bf runPlotMassLifetime}
+\item {\bf PlotFitPar}
+\item {\bf runPlotDataDistributions}
+\end{itemize}
+
+
+
+\section{$\chi_c$ mass-lifetime analysis: Details}
+
+\subsection{runChiData}  
+
+This macro takes as input the TTree produced by Alessandro Degano, applies a set of cuts defined in interface/commonVar.h, and produces a simplified output TTree, containing events that pass the criteria, storing the 4-vectors (TLorentz\-Vector) of both muons, the dimuon, the photon and the chi candidate. In all cases, the updated 4-vectors after the kinematic vertex fit (KVF) is also saved. Furthermore, the lifetime variable Jpsict and its uncertainty JpsictErr is saved.
+\\{\bf Source code:} (basedir/macros) runChiData.cc, PolChiData.C, PolChiData.h
+\\{\bf Input:} PrepareTTree - inputTree1
+\\{\bf Output:} basedir/ID/tmpfiles/selEvents\_data.root
+\\(with ID = SetOfCuts\{FidCuts\}\_\{JobID\})
+\\{\bf Settings:} (PrepareTTree) MC (if MC input is to be used)
+
+\subsection{runWorkspace}
+
+This macro takes the produced TTree, splits the events in the individual $p_T$ and rapidity bins, creates a RooWorkspace for each bin, and saves the data as a RooDataSet.
+\\{\bf Source code:} (basedir/macros) runWorkspace.cc, createWorkspace.C
+\\{\bf Input:} basedir/ID/tmpfiles/selEvents\_data.root
+\\{\bf Output:} basedir/ID/tmpfiles/backupWorkSpace/ws\_createWorkspace\_Chi\_rapX\_ptY.root
+\\{\bf Settings:} (PrepareTTree) correctCtau (change definition of lifetime variable)
+
+\subsection{runMassFit}
+
+This macro performs a fit to the dimuon mass spectrum.
+\\Special feature: Shape parameters of signal Crystal-Ball function (RooCBShape::sigMassShape\_jpsi) vary with dimuon rapidity.
+\\RooWorkspace is updated with the fit variables
+\\Rapidity-dependent $J/\psi$ mass signal and sideband regions are defined.
+\\{\bf Source code:} (basedir/macros) runMassFit.cc, massFit.cc
+\\{\bf Input:} basedir/ID/tmpfiles/backupWorkSpace/ws\_createWorkspace\_Chi\_rapX\_ptY.root
+\\{\bf Output:} basedir/ID/tmpfiles/backupWorkSpace/ws\_ MassFit\_Jpsi\_rapX\_ptY.root
+
+\subsection{runLifetimeFit}
+
+Lifetime analysis, simultaneous maximum likelihood fit of data within the three $J/\psi$ mass regions. \\Special feature: Punzi-effect taken into account (e.g. PROD::jpsi\_TotalPromptLifetime)
+RooWorkspace is updated
+\\{\bf Source code:} (basedir/macros) runLifetimeFit.cc, lifetimeFit.cc
+\\{\bf Input:} basedir/ID/tmpfiles/backupWorkSpace/ws\_ MassFit\_Jpsi\_rapX\_ptY.root
+\\{\bf Output:} basedir/ID/tmpfiles/backupWorkSpace/ws\_ MassLifetimeFit\_Jpsi\_rapX\_ptY.root
+
+\subsection{runPlotJpsiMassLifetime}
+
+Plots data and models projected on $J/\psi$ mass and lifetime in all considered regions (Integrated, $\psi$ LSB, SR, RSB regions)
+\\{\bf Source code:} (basedir/macros) runPlotJpsiMassLifetime.cc, PlotJpsiMassLifetime.cc
+\\{\bf Input:} basedir/ID/tmpfiles/backupWorkSpace/ws\_ MassLifetimeFit\_Jpsi\_rapX\_ptY.root
+\\{\bf Output:} Plots in basedir/DataFiles/ID/Fit/jpsiFit/
+\\{\bf Settings:} (PrepareTTree)  PlottingJpsi (define which plots are produced)
+
+\subsection{PlotJpsiFitPar}
+
+Plots fit parameters (free, fixed, constrained) and their uncertainties as function of $p_T$
+\\{\bf Source code:} (basedir/macros) PlotJpsiFitPar.cc
+\\{\bf Input:} basedir/DataFiles/ID/tmpfiles/backupWorkSpace/ws\_ MassLifetimeFit\_Jpsi\_rapX\_ptY.root
+\\{\bf Output:} Plots in basedir/DataFiles/ID/Fit/parameter/
+
+\subsection{runChiMassLifetimeFit}
+
+This macro performs the 2D mass lifetime analysis of the $\chi$ system, exploiting information from the previous fits to the $J/\psi$ lifetime dimension.
+\\{\bf Source code:} (basedir/macros) runChiMassLifetimeFit.cc, chiMassLifetimeFit.cc
+\\{\bf Input:} basedir/DataFiles/ID/tmpfiles/backupWorkSpace/ws\_ MassLifetimeFit\_Jpsi\_rapX\_ptY.root
+\\{\bf Output:} basedir/DataFiles/ID/tmpfiles/backupWorkSpace/ws\_ MassLifetimeFit\_Chi\_rapX\_ptY.root
+\\{\bf Settings:} (PrepareTTree) runChiMassFitOnly (ignore lifetime dimension)
+
+\subsection{runDefineRegionsAndFractions}
+
+Definition of 8 $\chi$ mass-lifetime regions.
+\\Calculation of the fractions of the individual contributions in the individual regions.
+\\Calculation of several other quantities
+\\Storage of calculated quantities in the RooWorkspace
+\\{\bf Source code:} (basedir/macros) runDefineRegionsAndFractions.cc, DefineRegionsAndFractions.cc
+\\{\bf Input:} basedir/DataFiles/ID/tmpfiles/backupWorkSpace/ws\_ MassLifetimeFit\_Chi\_rapX\_ptY.root
+\\{\bf Output:} basedir/DataFiles/ID/tmpfiles/backupWorkSpace/ws\_DefineRegionsAndFractions\_Chi\_rapX\_ptY.root
+
+\subsection{runPlotMassLifetime}
+
+Plots data and models projected on $\chi$ mass and lifetime in all considered regions
+\\{\bf Source code:} (basedir/macros) runPlotMassLifetime.cc, PlotMassLifetime.cc
+\\{\bf Input:} basedir/DataFiles/ID/tmpfiles/backupWorkSpace/ws\_DefineRegionsAndFractions\_Chi\_rapX\_ptY.root
+\\{\bf Output:} Plots in basedir/DataFiles/ID/Fit/parameter/
+\\{\bf Settings:} (PrepareTTree) Plotting (define which plots are produced)
+
+\subsection{PlotFitPar}
+
+Plots fit parameters (free, fixed, constrained) and their uncertainties as function of $p_T$
+\\{\bf Source code:} (basedir/macros) PlotFitPar.cc
+\\{\bf Input:} basedir/DataFiles/ID/tmpfiles/backupWorkSpace/ws\_DefineRegionsAndFractions\_Chi\_rapX\_ptY.root
+\\{\bf Output:} Plots in basedir/DataFiles/ID/Figures/PlotDataDistributions/
+
+\subsection{runPlotDataDistributions}
+
+Production of plots of several (mostly kinematic) quantities of the data set, comparing the individual regions
+\\{\bf Source code:} (basedir/macros) runPlotDataDistributions.cc, PlotDataDistributions.cc
+\\{\bf Input:} basedir/DataFiles/ID/tmpfiles/backupWorkSpace/ws\_DefineRegionsAndFractions\_Chi\_rapX\_ptY.root
+\\{\bf Output:} Plots in basedir/DataFiles/ID/Figures/PlotDataDistributions/
+\\{\bf Settings:} (PrepareTTree)  PlottingDataDists (define which plots are produced)
+
+\subsection{Additional macros}
+
+{\bf runBkgHistos, PlotCosThetaPhiBG, PlotCosThetaPhiDistribution:}
+\\These macros have not been adapted yet from the existing analyses to the $\chi$ analysis, and constitute the only missing link to the polarization extraction framework. The purpose of these remaining macros is to define the background model (depending on the chosen strategy, a superposition of $\mu\mu\gamma$ combinatorial BG and NP charmonia, properly weighted with the information from the DefineRegionsAndFractions step), as well as to plot the angular distributions of the selected data (in the PRSRs) and the angular distributions of the background model.
+\\{\bf Input:} basedir/DataFiles/ID/tmpfiles/backupWorkSpace/ws\_DefineRegionsAndFractions\_Chi\_rapX\_ptY.root
+
+\vspace*{15pt}
+\noindent{\bf runData}:
+\\This macro can be used to substitute runChiData, in case the TTrees of the 2011 $\Upsilon$ or $\psi$ analyses need to be used as input for the framework, e.g. for studies of the initial dimuon mass and lifetime analysis and the Punzi effect.
+
+
+\end{document}
