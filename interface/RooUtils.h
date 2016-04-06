@@ -18,7 +18,7 @@ RooRealVar*  getVarFromWorkspace(RooWorkspace* ws, std::string varName, double& 
 
 /// Get an object from a TFile
 /// @param fileName Name of TFile to open
-/// @param keName Name of object in TFile to get  
+/// @param keName Name of object in TFile to get
 /// @return fetched object
 /// @throws An error string if file not there or key not available
 template <class T>

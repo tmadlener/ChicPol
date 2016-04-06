@@ -4,19 +4,20 @@
 namespace onia{
 
   // beam energy in GeV
-  const double pbeam = 3500.;
+  // const double pbeam = 3500.; // 2011
+  const double pbeam = 4000.; // 2012
   // masses
   const double Mprot = 0.9382720;
   const double muMass = 0.105658;
-	const double MpsiPDG = 3.096916;
-	const double Mups1SPDG = 9.46030;
-	const double Mchi0PDG = 3.41475;
-	const double Mchi1PDG = 3.51066;
-	const double Mchi2PDG = 3.55620;
+  const double MpsiPDG = 3.096916;
+  const double Mups1SPDG = 9.46030;
+  const double Mchi0PDG = 3.41475;
+  const double Mchi1PDG = 3.51066;
+  const double Mchi2PDG = 3.55620;
   const double Ebeam = sqrt( pbeam*pbeam + Mprot*Mprot );
   const TLorentzVector beam1_LAB( 0., 0., pbeam, Ebeam );
   const TLorentzVector beam2_LAB( 0., 0., -pbeam, Ebeam );
-	
+
   // dimuon mass ranges
   const double massMin = 2.85;
   const double massMax = 3.3;
@@ -24,17 +25,20 @@ namespace onia{
   const double nSigBkgLow = 4.0;
   const double nSigBkgHigh = 3.5;
 
-
   //Measure polarization as function of which particle-kinemarics
   bool KinParticleChi = true;
   const char *KinParticleChar = "^{#chi}";
   bool KinParticleChiButJpsiRap = false;
+  //bool KinParticleChi = false;
+  //const char *KinParticleChar = "^{#psi}";
 
   //chi mass ranges
   const double chimassMin = 3.325;
   const double chimassMax = 3.725;
+  //When running on 2011 Jpsi data:
   //const double chimassMin = 2.;
   //const double chimassMax = 4.;
+
   const double massChiSBMin = chimassMin;
   const double massChiSBMax = chimassMax;
 
@@ -65,21 +69,26 @@ namespace onia{
 
 
   // Binning
-  const int kNbRapForPTBins = 2;
-  double rapForPTRange[kNbRapForPTBins+1] = {0., 1.2, 1.5};
-  double rapRange[2*kNbRapForPTBins+1] = {-1.5, -1.2, 0., 1.2, 1.5};
-  //double rapForPTRange[kNbRapForPTBins+1] = {0., 0.6, 1.2};
-  //double rapRange[2*kNbRapForPTBins+1] = {-1.2, -0.6, 0., 0.6, 1.2};
+  //const int kNbRapForPTBins = 2;
+  //double rapForPTRange[kNbRapForPTBins+1] = {0., 1.2, 1.5};
+  //double rapRange[2*kNbRapForPTBins+1] = {-1.5, -1.2, 0., 1.2, 1.5};
+  const int kNbRapForPTBins = 1;
+  double rapForPTRange[kNbRapForPTBins+1] = {0., 1.2};
+  double rapRange[2*kNbRapForPTBins+1] = {-1.2, 0., 1.2};
 
-  //Jpsi
-  const int kNbPTMaxBins = 6;
-  const int kNbPTBins[kNbRapForPTBins+1] = {kNbPTMaxBins, kNbPTMaxBins, kNbPTMaxBins};//all y, y1
+  //chic
+  const int kNbPTMaxBins = 5;
+  //const int kNbPTMaxBins = 4;
+  const int kNbPTBins[kNbRapForPTBins+1] = {kNbPTMaxBins, kNbPTMaxBins};//all y, y1
   double pTRange[kNbRapForPTBins+1][kNbPTMaxBins+1] = {
-    {10., 15., 20., 25., 30., 50., 100.},//all rapidities
-    {10., 15., 20., 25., 30., 50., 100.},//mid-rapidity
-    {10., 15., 20., 25., 30., 50., 100.}};//forward rapidity
-
-
+      {10., 15., 20., 25., 30., 50.},//all rapidities
+      {10., 15., 20., 25., 30., 50.}};//forward rapidity
+      //chic1
+      //{10., 14., 18., 22., 30., 50.},//all rapidities
+      //{10., 14., 18., 22., 30., 50.}};
+      //chic2
+      //{10., 14., 20., 25., 50.},//all rapidities
+      //{10., 14., 20., 25., 50.}};
 
   //// Binning
   //const int kNbRapForPTBins = 15;
@@ -111,7 +120,7 @@ namespace onia{
   const int kNbFrames = 6;
   const char *frameLabel[kNbFrames] = {"CS", "HX", "PHX", "sGJ", "GJ1", "GJ2"};
   enum {CS, HX, PHX, sGJ, GJ1, GJ2};
-  
+
 
   //polarization variables
   const int kNbPolVar = 2; //cosTheta, phi
@@ -119,7 +128,7 @@ namespace onia{
   //cosTheta
   const int kNbBinsCosT = 16;
   double cosTMin = -1., cosTMax = 1.;
-  //phi for pol. 
+  //phi for pol.
   const int kNbBinsPhiPol = 16;
   double phiPolMin = -180., phiPolMax = 180.;
 
@@ -130,7 +139,7 @@ namespace onia{
   int colour_pT[] = {1, 2, 3, 4, 6, 7, 8, 49, 38, 46, 12, 40, 50};
   int marker_pT[] = {20, 21, 25, 22, 23, 26, 27, 28, 29, 30, 20, 20, 50};
   int colour_rapForPTBins[] = {1, 30, 4, 2, 3, kMagenta+1};
-  int marker_rapForPTBins[] = {20, 21, 25, 20, 22, 29};
+  int marker_rapForPTBins[] = {20, 25, 21, 20, 22, 29};
 
   //Chic plots:
 	int colorBackground=1;
