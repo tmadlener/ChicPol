@@ -22,7 +22,7 @@ TLorentzVector *lepP, *photon, *jpsi, *chic, *lepN;
 TLorentzVector *lepP_rf, *photon_rf, *jpsi_rf, *chic_rf, *lepN_rf;
 
 
-void PolChiData::Loop(int nState, bool rejectCowboys, int FidCuts, bool MC, bool RequestTrigger, bool removeEta0p2_0p3, bool cutDeltaREllDpt, bool correctCtau) {
+void PolChiData::Loop(int nState, bool rejectCowboys, int FidCuts, bool MC, bool RequestTrigger, bool removeEta0p2_0p3, bool cutDeltaREllDpt, bool correctCtau, bool useRefittedChic) {
 
   if (fChain == 0) return;
 
@@ -65,13 +65,13 @@ void PolChiData::Loop(int nState, bool rejectCowboys, int FidCuts, bool MC, bool
     Long64_t ientry = LoadTree(jentry);
     if (ientry < 0) break;
     nb = fChain->GetEntry(jentry);
-		
+
     //fChain->GetEvent(1);
 
 
     // Define VARIABLES
     //TODO: change variable definitions once real file is available
-		
+
     //4-momentum vectors
     lepP = muonP_p4;
     lepN = muonN_p4;
@@ -85,6 +85,11 @@ void PolChiData::Loop(int nState, bool rejectCowboys, int FidCuts, bool MC, bool
     photon_rf = rf1S_photon_p4;
     chic_rf = rf1S_chi_p4;
 
+    // store the (redundant) non-refitted chic in the chic_rf Branch if desired in order to have it consistently used in later steps
+    if (!useRefittedChic) {
+      chic_rf = chic;
+    }
+
     //lepP -> 	SetXYZM(1.,1.,1.,1.);
     //lepN -> 	SetXYZM(1.,1.,1.,1.);
     //jpsi -> 	SetXYZM(1.,1.,1.,1.);
@@ -92,7 +97,6 @@ void PolChiData::Loop(int nState, bool rejectCowboys, int FidCuts, bool MC, bool
     //chic -> 	SetXYZM(1.,1.,1.,1.);
 
     //MuonVars
-
     double etaMuPos = lepP->PseudoRapidity();
     double etaMuNeg = lepN->PseudoRapidity();
     double pTMuPos = lepP->Pt();
@@ -101,7 +105,6 @@ void PolChiData::Loop(int nState, bool rejectCowboys, int FidCuts, bool MC, bool
     double pMuNeg = lepN->P();
 
     //DimuonVars
-
     double onia_mass = jpsi->M();
     double onia_pt = jpsi->Pt();
     double onia_P = jpsi->P();
@@ -126,15 +129,10 @@ void PolChiData::Loop(int nState, bool rejectCowboys, int FidCuts, bool MC, bool
     massMin = onia::MpsiPDG-onia::nSigMass*sigmaRap;
     massMax = onia::MpsiPDG+onia::nSigMass*sigmaRap;
 
-
-
-
     // count all events
     Reco_StatEv->Fill(0.5);
 
-
     //Muon CUTS
-
     //apply fiducial cuts
     bool muonsInAcc = kFALSE;
     if(isMuonInAcceptance(FidCuts-1, pTMuPos, etaMuPos) && isMuonInAcceptance(FidCuts-1, pTMuNeg, etaMuNeg)){
@@ -180,9 +178,7 @@ void PolChiData::Loop(int nState, bool rejectCowboys, int FidCuts, bool MC, bool
     // count events after gamma cuts
     Reco_StatEv->Fill(3.5);
 
-
     //Chic CUTS
-
     if(dz>onia::cut_dz) continue;
     if(probFit1S<onia::cut_probFit) continue;
 

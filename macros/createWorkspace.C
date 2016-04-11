@@ -8,7 +8,7 @@
 
 using namespace RooFit;
 
-void createWorkspace(const std::string &infilename, int nState, bool correctCtau, bool drawRapPt2D){
+void createWorkspace(const std::string &infilename, int nState, bool correctCtau, bool drawRapPt2D, bool useRefittedChic = true){
   gROOT->SetStyle("Plain");
   gStyle->SetTitleBorderSize(0);
 
@@ -26,8 +26,12 @@ void createWorkspace(const std::string &infilename, int nState, bool correctCtau
   // Set branch addresses in tree to be able to import tree to roofit
   TLorentzVector* chic = new TLorentzVector;
   tree->SetBranchAddress("chic",&chic);
+
+  // only use the refitted chic if is demanded, else set the 4-vector to the one of the non-refitted to avoid errors.
   TLorentzVector* chic_rf = new TLorentzVector;
-  tree->SetBranchAddress("chic_rf",&chic_rf);
+  if (useRefittedChic) { tree->SetBranchAddress("chic_rf", &chic_rf); }
+  else { chic_rf = chic; }
+
   TLorentzVector* jpsi = new TLorentzVector;
   tree->SetBranchAddress("jpsi",&jpsi);
   double lifetime = 0;
@@ -67,7 +71,7 @@ void createWorkspace(const std::string &infilename, int nState, bool correctCtau
   //JpsictErr->setBins(100);
   JpsictErr->setBins(10000,"cache");
 
-  // The list of data variables    
+  // The list of data variables
   RooArgList dataVars(*JpsiMass,*JpsiPt,*JpsiRap,*chicMass,*chicRap,*chicPt,*Jpsict,*JpsictErr);
 
   // construct dataset to contain events
@@ -135,8 +139,9 @@ void createWorkspace(const std::string &infilename, int nState, bool correctCtau
     double M_jpsi =jpsi->M();
     double pt_jpsi =jpsi->Pt();
     double y_jpsi =jpsi->Rapidity();
-    double M =chic_rf->M();
-    //double M =chic->M()-jpsi->M()+onia::MpsiPDG;
+    // use the appropriate mass depending on the setting for the usage of the refitted mass
+    double M = useRefittedChic ? chic_rf->M() : chic->M() - jpsi->M() + onia::MpsiPDG;
+
     double y=chic->Rapidity();
     double pt=chic->Pt();
 
@@ -317,7 +322,7 @@ void createWorkspace(const std::string &infilename, int nState, bool correctCtau
       RooDataSet* binData = (RooDataSet*)fullData->reduce(cutString.str().c_str());
       std::stringstream name;
       name << "jpsi_data_rap" << iRap << "_pt" << iPT;
-      binData->SetNameTitle(name.str().c_str(), "Data For Fitting");    
+      binData->SetNameTitle(name.str().c_str(), "Data For Fitting");
 
       cout << "numEvents = " << binData->sumEntries() << endl;
 
@@ -381,7 +386,7 @@ void createWorkspace(const std::string &infilename, int nState, bool correctCtau
     double MassMin;
     double MassMax;
 
-    rap1p2 = new TH1D("rap1p2","rap1p2",30,1.2, 1.8); 
+    rap1p2 = new TH1D("rap1p2","rap1p2",30,1.2, 1.8);
     if(nState==4){
       rapPt = new TH2D( "rapPt", "rapPt", 52,-1.3,1.3,144,0,72);
       MassMin=3.011;//massPsi1S-onia::nSigMass*sigma1S;

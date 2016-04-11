@@ -1,4 +1,4 @@
-#!/bin/chs
+#!/bin/bash
 
 ############ INPUTS ####################
 # source /afs/cern.ch/sw/lcg/external/gcc/4.3.2/x86_64-slc5/setup.sh
@@ -39,6 +39,7 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     rapFixTo=1
     ptFixTo=1
     doFractionUncer=true #chic
+    useRefittedChic=false # use the refitted mass for chic or use M_chic - M_jpsi + M_jpsi_pdg
 
     #PlotFitPar:::
     AddInclusiveResult=false #Inclusive defined by rapFixTo, ptFixTo
@@ -69,8 +70,8 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
 
     #following flags decide if the step is executed (1) or not (0):
     #IMPORTANT: for MC set execute_runWorkspace, execute_MassFit and execute_runLifetimeFit to 0
-    execute_runChiData=0			           		#independent of rapMin, rapMax, ptMin, ptMax
-    execute_runWorkspace=0	    					#independent of rapMin, rapMax, ptMin, ptMax
+    execute_runChiData=1			           		#independent of rapMin, rapMax, ptMin, ptMax
+    execute_runWorkspace=1	    					#independent of rapMin, rapMax, ptMin, ptMax
     execute_runMassFit=0				    	    #can be executed for different pt and y bins
     execute_runLifetimeFit=0    				    #can be executed for different pt and y bins
     execute_runPlotJpsiMassLifetime=0    			#can be executed for different pt and y bins
@@ -79,11 +80,11 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     execute_runDefineRegionsAndFractions=0			#can be executed for different pt and y bins
     execute_runPlotMassLifetime=0    				#can be executed for different pt and y bins
     execute_PlotFitPar=0              				#can be executed for different pt and y bins
-    execute_runPlotDataDistributions=1 		 		#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
-    execute_runBkgHistos=1           				#can be executed for different pt and y bins
-    execute_PlotCosThetaPhiBG=1 		 			#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
-    execute_PlotMassRapPtBG=1 		 			#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
-    execute_PlotCosThetaPhiDistribution=1 			#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
+    execute_runPlotDataDistributions=0		 		#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
+    execute_runBkgHistos=0           				#can be executed for different pt and y bins
+    execute_PlotCosThetaPhiBG=0 		 			#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
+    execute_PlotMassRapPtBG=0 		 			#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
+    execute_PlotCosThetaPhiDistribution=0 			#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
 
     #################################
     #PsiRelics:::
@@ -228,12 +229,12 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
 
     if [ ${execute_runChiData} -eq 1 ]
     then
-      ./runChiData ${inputTrees} rejectCowboys=${rejectCowboys} FidCuts=${FidCuts} nState=${nState} MC=${MC} RequestTrigger=${RequestTrigger} correctCtau=${correctCtau}
+      ./runChiData ${inputTrees} rejectCowboys=${rejectCowboys} FidCuts=${FidCuts} nState=${nState} MC=${MC} RequestTrigger=${RequestTrigger} correctCtau=${correctCtau} useRefittedChic=${useRefittedChic}
     fi
 
     if [ ${execute_runWorkspace} -eq 1 ]
     then
-      ./runWorkspace nState=${nState} correctCtau=${correctCtau} drawRapPt2D=${drawRapPt2D}
+      ./runWorkspace nState=${nState} correctCtau=${correctCtau} drawRapPt2D=${drawRapPt2D} useRefittedChic=${useRefittedChic}
     fi
 
     if [ ${execute_runMassFit} -eq 1 ]
