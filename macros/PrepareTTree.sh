@@ -62,7 +62,7 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
 
 
     #Define JobID
-    JobID=chic_11April2016_test # fChi1MassLow = 0.1
+    JobID=chic_11April2016_nonRefit # fChi1MassLow = 0.1
     # JobID=chic_30March2016_ML30 # fChi1MassLow = 0.3
 
 
@@ -70,8 +70,8 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
 
     #following flags decide if the step is executed (1) or not (0):
     #IMPORTANT: for MC set execute_runWorkspace, execute_MassFit and execute_runLifetimeFit to 0
-    execute_runChiData=1			           		#independent of rapMin, rapMax, ptMin, ptMax
-    execute_runWorkspace=1	    					#independent of rapMin, rapMax, ptMin, ptMax
+    execute_runChiData=0			           		#independent of rapMin, rapMax, ptMin, ptMax
+    execute_runWorkspace=0	    					#independent of rapMin, rapMax, ptMin, ptMax
     execute_runMassFit=0				    	    #can be executed for different pt and y bins
     execute_runLifetimeFit=0    				    #can be executed for different pt and y bins
     execute_runPlotJpsiMassLifetime=0    			#can be executed for different pt and y bins
@@ -83,7 +83,7 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     execute_runPlotDataDistributions=0		 		#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
     execute_runBkgHistos=0           				#can be executed for different pt and y bins
     execute_PlotCosThetaPhiBG=0 		 			#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
-    execute_PlotMassRapPtBG=0 		 			#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
+    execute_PlotMassRapPtBG=1 		 			#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
     execute_PlotCosThetaPhiDistribution=0 			#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
 
     #################################
