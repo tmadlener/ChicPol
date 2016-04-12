@@ -1,0 +1,17 @@
+# general file-endings
+*.log
+*.dat
+*.root
+*.pdf
+*.out
+
+# some directories to be ignored
+macros/DataFiles/*
+macros/DataFiles
+
+macros/polFit/EffFiles/*
+macros/polFit/EffFiles
+macros/polFit/FiguresData
+
+# this gets copied here by a shell-script but can be ignored. Defined in interface
+macros/polFit/rootIncludes.inc
