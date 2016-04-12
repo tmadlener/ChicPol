@@ -6,7 +6,7 @@ cd ..
 cd ..
 basedir=$PWD
 cd macros/polFit
-storagedir=/afs/hephy.at/work/t/tmadlener/ChiPol/testResults_newFW
+storagedir=/afs/hephy.at/work/t/tmadlener/ChiPol/results
 datadir_Start=${basedir}/macros/DataFiles
 # datadir_Start=/afs/hephy.at/user/t/tmadlener/CMSSW_5_3_11/src/ChiPol/macros/DataFiles
 
@@ -27,11 +27,11 @@ for nState in 6;do # chic1 = 6, chic2 = 7
   rapBinMin=1
   rapBinMax=1
   ptBinMin=1
-  ptBinMax=1
+  ptBinMax=5
 
   FidCuts=11
 
-  nEff=100001				  #1050 parametrized truth #100001 parametrization with sigmoid
+  nEff=1050				  #1050 parametrized truth #100001 parametrization with sigmoid
   #Jpsi #1101 MCtruthFineEta, 1080 MCTnPparam      #1030=soft-1060=tight-1070=mixed-111=soft-112=tight
   UseMCeff=false
 
@@ -54,9 +54,9 @@ for nState in 6;do # chic1 = 6, chic2 = 7
 
   # JobID=chic$[$nState-5]_30March2016_ML10_nEff100001 #fChi1MassLow = 0.1, sigmoid eff
   # JobID=chic$[$nState-5]_30March2016_ML30_defaultSett #fChi1MassLow = 0.3
-  JobID=chic$[$nState-5]_11April2016_runTest
+  JobID=chic$[$nState-5]_11April2016_nonRefit_MCEff
   # DataID=_chic_30March2016_ML10 # fChi1MassLow = 0.1
-  DataID=_chic_11April2016_test
+  DataID=_chic_11April2016_nonRefit
   # DataID=_chic_30March2016_ML30 # fChi1MassLow = 0.3
 
   datadir=${datadir_Start}/SetOfCuts${FidCuts}${DataID}/tmpFiles
