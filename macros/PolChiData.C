@@ -87,7 +87,7 @@ void PolChiData::Loop(int nState, bool rejectCowboys, int FidCuts, bool MC, bool
 
     // store the (redundant) non-refitted chic in the chic_rf Branch if desired in order to have it consistently used in later steps
     if (!useRefittedChic) {
-      chic_rf = chic;
+      chic_rf = chic->Clone();
     }
 
     //lepP -> 	SetXYZM(1.,1.,1.,1.);

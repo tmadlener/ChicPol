@@ -27,10 +27,10 @@ void createWorkspace(const std::string &infilename, int nState, bool correctCtau
   TLorentzVector* chic = new TLorentzVector;
   tree->SetBranchAddress("chic",&chic);
 
-  // only use the refitted chic if is demanded, else set the 4-vector to the one of the non-refitted to avoid errors.
+  // possible errors due to wrong acces when useRefittedChic == false should be caught by the storing of the
+  // chic in this Branch in runChiData
   TLorentzVector* chic_rf = new TLorentzVector;
-  if (useRefittedChic) { tree->SetBranchAddress("chic_rf", &chic_rf); }
-  else { chic_rf = chic; }
+  tree->SetBranchAddress("chic_rf", &chic_rf);
 
   TLorentzVector* jpsi = new TLorentzVector;
   tree->SetBranchAddress("jpsi",&jpsi);
