@@ -204,8 +204,8 @@ void PolChiData::Loop(int nState, bool rejectCowboys, int FidCuts, bool MC, bool
     //jpsictErr=h_JpsictErr->GetRandom();
 
     if(correctCtau){
-      double LifetimeCorrFactor = jpsi->Pt() / jpsi->M() * chic_rf->M() / chic->Pt();
-      //LifetimeCorrFactor = jpsi->Pt() / jpsi->M() * onia::Mchi1PDG / chic->Pt(); // correction with PDG mass
+      // double LifetimeCorrFactor = jpsi->Pt() / jpsi->M() * chic_rf->M() / chic->Pt();
+      double LifetimeCorrFactor = jpsi->Pt() / jpsi->M() * onia::Mchi1PDG / chic->Pt(); // correction with PDG mass
       jpsict    = jpsict    * LifetimeCorrFactor ;
       jpsictErr = jpsictErr * LifetimeCorrFactor ;
     }

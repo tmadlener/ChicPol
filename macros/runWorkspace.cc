@@ -22,14 +22,13 @@ int main(int argc, char* argv[]){
   bool useRefittedMass = true;
 
   // Loop over argument list
-  for (int i=1; i < argc; i++)
-    {
-      std::string arg = argv[i];
-      fromSplit("nState", arg, nState);
-      fromSplit("correctCtau", arg, correctCtau);
-      fromSplit("drawRapPt2D", arg, drawRapPt2D);
-      fromSplit("useRefittedMass", arg, useRefittedMass);
-    }
+  for (int i=1; i < argc; i++) {
+    std::string arg = argv[i];
+    fromSplit("nState", arg, nState);
+    fromSplit("correctCtau", arg, correctCtau);
+    fromSplit("drawRapPt2D", arg, drawRapPt2D);
+    fromSplit("useRefittedChic", arg, useRefittedMass);
+  }
 
   const std::string infilename = "tmpFiles/selEvents_data.root";
   createWorkspace(infilename, nState, correctCtau, drawRapPt2D, useRefittedMass);
