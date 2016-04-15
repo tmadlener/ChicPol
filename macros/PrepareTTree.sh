@@ -39,7 +39,7 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     rapFixTo=1
     ptFixTo=1
     doFractionUncer=true #chic
-    useRefittedChic=false # use the refitted mass for chic or use M_chic - M_jpsi + M_jpsi_pdg
+    useRefittedChic=true # use the refitted mass for chic or use M_chic - M_jpsi + M_jpsi_pdg
 
     #PlotFitPar:::
     AddInclusiveResult=false #Inclusive defined by rapFixTo, ptFixTo
@@ -62,7 +62,7 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
 
 
     #Define JobID
-    JobID=chic_11April2016_nonRefit_corrLifeTime # fChi1MassLow = 0.1
+    JobID=chic_11April2016_nonRefit_corrLifeTime_useRef_${useRefittedChic} # fChi1MassLow = 0.1
     # JobID=chic_30March2016_ML30 # fChi1MassLow = 0.3
 
 
@@ -70,10 +70,10 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
 
     #following flags decide if the step is executed (1) or not (0):
     #IMPORTANT: for MC set execute_runWorkspace, execute_MassFit and execute_runLifetimeFit to 0
-    execute_runChiData=1			           		#independent of rapMin, rapMax, ptMin, ptMax
-    execute_runWorkspace=1	    					#independent of rapMin, rapMax, ptMin, ptMax
-    execute_runMassFit=1				    	    #can be executed for different pt and y bins
-    execute_runLifetimeFit=1    				    #can be executed for different pt and y bins
+    execute_runChiData=0			           		#independent of rapMin, rapMax, ptMin, ptMax
+    execute_runWorkspace=0	    					#independent of rapMin, rapMax, ptMin, ptMax
+    execute_runMassFit=0				    	    #can be executed for different pt and y bins
+    execute_runLifetimeFit=0    				    #can be executed for different pt and y bins
     execute_runPlotJpsiMassLifetime=0    			#can be executed for different pt and y bins
     execute_PlotJpsiFitPar=0              			#can be executed for different pt and y bins
     execute_runChiMassLifetimeFit=0		  	    	#can be executed for different pt and y bins
@@ -81,7 +81,7 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     execute_runPlotMassLifetime=0    				#can be executed for different pt and y bins
     execute_PlotFitPar=0              				#can be executed for different pt and y bins
     execute_runPlotDataDistributions=0		 		#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
-    execute_runBkgHistos=0           				#can be executed for different pt and y bins
+    execute_runBkgHistos=1           				#can be executed for different pt and y bins
     execute_PlotCosThetaPhiBG=0 		 			#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
     execute_PlotMassRapPtBG=0 		 			#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
     execute_PlotCosThetaPhiDistribution=0 			#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
@@ -312,7 +312,7 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     if [ ${execute_runBkgHistos} -eq 1 ]
     then
       cp runBkgHistos runBkgHistos_$[nState-3]S_rap${rapMin}_pt${ptMin}
-      ./runBkgHistos_$[nState-3]S_rap${rapMin}_pt${ptMin} rapMin=${rapMin} rapMax=${rapMax} ptMin=${ptMin} ptMax=${ptMax} nState=${nState} MC=${MC} doCtauUncer=${doCtauUncer} PolLSB=${PolLSB} PolRSB=${PolRSB} PolNP=${PolNP} ctauScen=${ctauScen} FracLSB=${FracLSB} forceBinning=${forceBinning} folding=${folding} normApproach=${normApproach} scaleFracBg=${scaleFracBg} polDataPath=${polDataPath} subtractNP=${subtractNP}
+      ./runBkgHistos_$[nState-3]S_rap${rapMin}_pt${ptMin} rapMin=${rapMin} rapMax=${rapMax} ptMin=${ptMin} ptMax=${ptMax} nState=${nState} MC=${MC} doCtauUncer=${doCtauUncer} PolLSB=${PolLSB} PolRSB=${PolRSB} PolNP=${PolNP} ctauScen=${ctauScen} FracLSB=${FracLSB} forceBinning=${forceBinning} folding=${folding} normApproach=${normApproach} scaleFracBg=${scaleFracBg} polDataPath=${polDataPath} subtractNP=${subtractNP} useRefittedChic=${useRefittedChic}
       rm runBkgHistos_$[nState-3]S_rap${rapMin}_pt${ptMin}
     fi
 

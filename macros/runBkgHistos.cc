@@ -40,30 +40,31 @@ int main(int argc, char* argv[]){
     scaleFracBg = false,
     subtractNP = false;
   std::string polDataPath;
+  bool useRefittedChic = true;
 
   // Loop over argument list
-  for (int i=1; i < argc; i++)
-    {
-      std::string arg = argv[i];
-      fromSplit("rapMin", arg, rapMin);
-      fromSplit("rapMax", arg, rapMax);
-      fromSplit("ptMin", arg, ptMin);
-      fromSplit("ptMax", arg, ptMax);
-      fromSplit("nState", arg, nState);
-      fromSplit("ctauScen", arg, ctauScen);
-      fromSplit("FracLSB", arg, FracLSB);
-      fromSplit("MC", arg, MC);
-      fromSplit("doCtauUncer", arg, doCtauUncer);
-      fromSplit("PolLSB", arg, PolLSB);
-      fromSplit("PolRSB", arg, PolRSB);
-      fromSplit("PolNP", arg, PolNP);
-      fromSplit("forceBinning", arg, forceBinning);
-      fromSplit("folding", arg, folding);
-      fromSplit("normApproach", arg, normApproach);
-      fromSplit("scaleFracBg", arg, scaleFracBg);
-      fromSplit("polDataPath", arg, polDataPath);
-      fromSplit("subtractNP", arg, subtractNP);
-    }
+  for (int i=1; i < argc; i++) {
+    std::string arg = argv[i];
+    fromSplit("rapMin", arg, rapMin);
+    fromSplit("rapMax", arg, rapMax);
+    fromSplit("ptMin", arg, ptMin);
+    fromSplit("ptMax", arg, ptMax);
+    fromSplit("nState", arg, nState);
+    fromSplit("ctauScen", arg, ctauScen);
+    fromSplit("FracLSB", arg, FracLSB);
+    fromSplit("MC", arg, MC);
+    fromSplit("doCtauUncer", arg, doCtauUncer);
+    fromSplit("PolLSB", arg, PolLSB);
+    fromSplit("PolRSB", arg, PolRSB);
+    fromSplit("PolNP", arg, PolNP);
+    fromSplit("forceBinning", arg, forceBinning);
+    fromSplit("folding", arg, folding);
+    fromSplit("normApproach", arg, normApproach);
+    fromSplit("scaleFracBg", arg, scaleFracBg);
+    fromSplit("polDataPath", arg, polDataPath);
+    fromSplit("subtractNP", arg, subtractNP);
+    fromSplit("useRefittedChic", arg, useRefittedChic);
+  }
 
   std::cout << "-----------------------\n"
             << "Creating background model for \n"
@@ -87,7 +88,7 @@ int main(int argc, char* argv[]){
         temp << "tmpFiles/backupWorkSpace/ws_DefineRegionsAndFractions_Chi_rap" << iRap << "_pt" << iPT << ".root";
         std::string infilename = temp.str().c_str();
 
-        bkgHistos_chi(infilename.c_str(), iRap, iPT, folding, MC, PolLSB, PolRSB, PolNP, FracLSB, normApproach, subtractNP);
+        bkgHistos_chi(infilename.c_str(), iRap, iPT, folding, MC, PolLSB, PolRSB, PolNP, FracLSB, normApproach, subtractNP, useRefittedChic);
       }
     }
   }
