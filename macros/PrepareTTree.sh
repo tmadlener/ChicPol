@@ -39,7 +39,7 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     rapFixTo=1
     ptFixTo=1
     doFractionUncer=true #chic
-    useRefittedChic=true # use the refitted mass for chic or use M_chic - M_jpsi + M_jpsi_pdg
+    useRefittedChic=false # use the refitted mass for chic or use M_chic - M_jpsi + M_jpsi_pdg, NOTE: this will be set to false in bkgHistos_leptonBased.C if onia::KinParticleChi == false
 
     #PlotFitPar:::
     AddInclusiveResult=false #Inclusive defined by rapFixTo, ptFixTo

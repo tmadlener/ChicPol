@@ -14,7 +14,13 @@
 double rapSigma(double p0, double p1, double p2, double rap);
 
 //---------------------------------------------------------------------------------------------------------------
-void bkgHistos_chi(const std::string infilename, int rapBin, int ptBin, bool folding, bool MC, bool PolLSB, bool PolRSB, bool PolNP, int FracLSB, bool normApproach, bool subtractNP){
+void bkgHistos_chi(const std::string infilename, int rapBin, int ptBin, bool folding, bool MC, bool PolLSB, bool PolRSB, bool PolNP, int FracLSB, bool normApproach, bool subtractNP,
+                   bool useRefittedChic){
+
+  // tmadlener: If Jpsi kinematics are used, override this. mQ will then be used as the chic mass
+  if (!onia::KinParticleChi) {
+    useRefittedChic = false;
+  }
 
   const std::string
     datafilename = "tmpFiles/selEvents_data.root",
@@ -158,12 +164,22 @@ void bkgHistos_chi(const std::string infilename, int rapBin, int ptBin, bool fol
   intree->SetBranchAddress("chic_rf", &chic_rf);
   double jpsict = 0;
   intree->SetBranchAddress("Jpsict", &jpsict);
+  double mQ = 0;
+  intree->SetBranchAddress("mQ", &mQ); // set this regardless of its later use
   if(onia::KinParticleChi==false){
     intree->SetBranchAddress("jpsi", &particle);
     jpsi = particle;
     std::cout << "Jpsi kinematics used!" << std::endl;
   }else{
-    intree->SetBranchAddress("chic_rf", &particle);
+    // tmadlener, 15.04.2016:
+    // differentiat between use of refitted chic and non-refitted chic.
+    // If refitted chic is used, everything is obtained from it. If non-refitted chic is used mQ is used as mass
+    // other necessary changes are done after every intree->GetEntry(). They are marked with tmadlener.
+    if (useRefittedChic) {
+      intree->SetBranchAddress("chic_rf", &particle);
+    } else {
+      intree->SetBranchAddress("chic", &particle);
+    }
     chic_rf = particle;
     std::cout << "chi kinematics used!" << std::endl;
   }
@@ -625,6 +641,15 @@ void bkgHistos_chi(const std::string infilename, int rapBin, int ptBin, bool fol
     intree->GetEntry(iEntry);
     if(i % 100000 == 0) {std::cout << "entry " << i << " out of " << n << std::endl;}
 
+    // tmadlener, 15.04.2016:
+    // define tha mass to be used here. all Other properties are anyhow taken from the particle pointer which is already set to the correct particle
+    double usedChicMass = 0;
+    if (useRefittedChic) {
+      usedChicMass = usedChicMass;
+    } else {
+      usedChicMass = mQ;
+    }
+
     // ------------------------- TLorentzVecotrs -------------------------
     if(particle->Pt() >= onia::pTRange[rapBin][ptBin-1] &&
        particle->Pt() < onia::pTRange[rapBin][ptBin] &&
@@ -638,7 +663,7 @@ void bkgHistos_chi(const std::string infilename, int rapBin, int ptBin, bool fol
         //store TLorentzVectors of the two muons in the given pT and rap cell
         // left sideband
         if(PolLSB){
-          if(chic_rf->M() > massMinL && chic_rf->M() < massMaxL && jpsict > PRmin && jpsict < PRmax){
+          if(usedChicMass > massMinL && usedChicMass < massMaxL && jpsict > PRmin && jpsict < PRmax){
             outtree1->Fill();
             outtree2->Fill();
             pT_PSR1->Fill(particle->Pt());
@@ -649,7 +674,7 @@ void bkgHistos_chi(const std::string infilename, int rapBin, int ptBin, bool fol
         } // PolLSB
         // right sideband
         else if(PolRSB){
-          if(chic_rf->M() > massMinR && chic_rf->M() < massMaxR && jpsict > PRmin && jpsict < PRmax){
+          if(usedChicMass > massMinR && usedChicMass < massMaxR && jpsict > PRmin && jpsict < PRmax){
             outtree1->Fill();
             outtree2->Fill();
             pT_PSR1->Fill(particle->Pt());
@@ -660,12 +685,12 @@ void bkgHistos_chi(const std::string infilename, int rapBin, int ptBin, bool fol
         } // PolRSB
         // for non prompt data
         else if(PolNP){
-          if(chic_rf->M() > massMinSR1 && chic_rf->M() < massMaxSR1 && jpsict > NPmin && jpsict < NPmax){
+          if(usedChicMass > massMinSR1 && usedChicMass < massMaxSR1 && jpsict > NPmin && jpsict < NPmax){
             outtree1->Fill();
             pT_PSR1->Fill(particle->Pt());
             rap_PSR1->Fill(TMath::Abs(particle->Rapidity()));
           }
-          else if(chic_rf->M() > massMinSR2 && chic_rf->M() < massMaxSR2 && jpsict > NPmin && jpsict < NPmax){
+          else if(usedChicMass > massMinSR2 && usedChicMass < massMaxSR2 && jpsict > NPmin && jpsict < NPmax){
             outtree2->Fill();
             pT_PSR2->Fill(particle->Pt());
             rap_PSR2->Fill(TMath::Abs(particle->Rapidity()));
@@ -674,13 +699,13 @@ void bkgHistos_chi(const std::string infilename, int rapBin, int ptBin, bool fol
         // for prompt data and MC
         //store only events from signal region
         else if(MC){
-          if(chic_rf->M() > massMinSR1 && chic_rf->M() < massMaxSR1){
+          if(usedChicMass > massMinSR1 && usedChicMass < massMaxSR1){
             outtree1->Fill();
             pT_PSR1->Fill(particle->Pt());
             rap_PSR1->Fill(TMath::Abs(particle->Rapidity()));
             MCevents1++;
           }
-          else if(chic_rf->M() > massMinSR2 && chic_rf->M() < massMaxSR2){
+          else if(usedChicMass > massMinSR2 && usedChicMass < massMaxSR2){
             outtree2->Fill();
             pT_PSR2->Fill(particle->Pt());
             rap_PSR2->Fill(TMath::Abs(particle->Rapidity()));
@@ -688,13 +713,13 @@ void bkgHistos_chi(const std::string infilename, int rapBin, int ptBin, bool fol
           }
         }
         else{
-          if(chic_rf->M() > massMinSR1 && chic_rf->M() < massMaxSR1 && jpsict > PRmin && jpsict < PRmax){
+          if(usedChicMass > massMinSR1 && usedChicMass < massMaxSR1 && jpsict > PRmin && jpsict < PRmax){
             outtree1->Fill();
             pT_PSR1->Fill(particle->Pt());
             rap_PSR1->Fill(TMath::Abs(particle->Rapidity()));
             count1++;
           }
-          else if(chic_rf->M() > massMinSR2 && chic_rf->M() < massMaxSR2 && jpsict > PRmin && jpsict < PRmax){
+          else if(usedChicMass > massMinSR2 && usedChicMass < massMaxSR2 && jpsict > PRmin && jpsict < PRmax){
             outtree2->Fill();
             pT_PSR2->Fill(particle->Pt());
             rap_PSR2->Fill(TMath::Abs(particle->Rapidity()));
@@ -715,14 +740,14 @@ void bkgHistos_chi(const std::string infilename, int rapBin, int ptBin, bool fol
           rap_highct_L->Fill(TMath::Abs(particle->Rapidity()));
           rap_highct_R->Fill(TMath::Abs(particle->Rapidity()));
 
-          if(chic_rf->M() > massMinSR1 && chic_rf->M() < massMaxSR1){
+          if(usedChicMass > massMinSR1 && usedChicMass < massMaxSR1){
             MCindex = 0; // events in SR1 get index 0
             hNP1_pTRapMass->Fill(jpsi->Pt(), TMath::Abs(jpsi->Rapidity()), gRandom->Uniform(jpsiMassSigMin, jpsiMassSigMax));
             hSR1_pTRapMass->Fill(jpsi->Pt(), TMath::Abs(jpsi->Rapidity()), gRandom->Uniform(jpsiMassSigMin, jpsiMassSigMax));
             pT_NP1->Fill(particle->Pt());
             rap_NP1->Fill(TMath::Abs(particle->Rapidity()));
           }
-          else if(chic_rf->M() > massMinSR2 && chic_rf->M() < massMaxSR2){
+          else if(usedChicMass > massMinSR2 && usedChicMass < massMaxSR2){
             MCindex = 1; // events in SR2 get index 1
             hNP2_pTRapMass->Fill(jpsi->Pt(), TMath::Abs(jpsi->Rapidity()), gRandom->Uniform(jpsiMassSigMin, jpsiMassSigMax));
             hSR2_pTRapMass->Fill(jpsi->Pt(), TMath::Abs(jpsi->Rapidity()), gRandom->Uniform(jpsiMassSigMin, jpsiMassSigMax));
@@ -751,48 +776,48 @@ void bkgHistos_chi(const std::string infilename, int rapBin, int ptBin, bool fol
           // events with index 2 and 3 are from the prompt and non prompt chic1 signal region
           // events with index 4 and 5 are from the prompt and non prompt chic2 signal region
           // events with index 6 and 7 are from the prompt and non prompt right sideband
-          if(chic_rf->M() > massMinL && chic_rf->M() < massMaxL && jpsict > PRmin && jpsict < PRmax){
+          if(usedChicMass > massMinL && usedChicMass < massMaxL && jpsict > PRmin && jpsict < PRmax){
             index = 0;
             hBG1_pTRapMass_L->Fill(jpsi->Pt(), TMath::Abs(jpsi->Rapidity()), funcBGJpsi->GetRandom(jpsiMassSigMin, jpsiMassSigMax));
             hBG2_pTRapMass_L->Fill(jpsi->Pt(), TMath::Abs(jpsi->Rapidity()), funcBGJpsi->GetRandom(jpsiMassSigMin, jpsiMassSigMax));
             pT_L->Fill(particle->Pt());
             rap_L->Fill(TMath::Abs(particle->Rapidity()));
           }
-          else if(chic_rf->M() > massMinL && chic_rf->M() < massMaxL && jpsict > NPmin && jpsict < NPmax){
+          else if(usedChicMass > massMinL && usedChicMass < massMaxL && jpsict > NPmin && jpsict < NPmax){
             index = 1;
             hBG1_pTRapMass_highct_L->Fill(jpsi->Pt(), TMath::Abs(jpsi->Rapidity()), funcBGJpsi->GetRandom(jpsiMassSigMin, jpsiMassSigMax));
             hBG2_pTRapMass_highct_L->Fill(jpsi->Pt(), TMath::Abs(jpsi->Rapidity()), funcBGJpsi->GetRandom(jpsiMassSigMin, jpsiMassSigMax));
             pT_highct_L->Fill(particle->Pt());
             rap_highct_L->Fill(TMath::Abs(particle->Rapidity()));
           }
-          else if(chic_rf->M() > massMinSR1 && chic_rf->M() < massMaxSR1 && jpsict > PRmin && jpsict < PRmax){
+          else if(usedChicMass > massMinSR1 && usedChicMass < massMaxSR1 && jpsict > PRmin && jpsict < PRmax){
             index = 2;
             hSR1_pTRapMass->Fill(jpsi->Pt(), TMath::Abs(jpsi->Rapidity()), funcBGJpsi->GetRandom(jpsiMassSigMin, jpsiMassSigMax));
           }
-          else if(chic_rf->M() > massMinSR1 && chic_rf->M() < massMaxSR1 && jpsict > NPmin && jpsict < NPmax){
+          else if(usedChicMass > massMinSR1 && usedChicMass < massMaxSR1 && jpsict > NPmin && jpsict < NPmax){
             index = 3;
             hNP1_pTRapMass->Fill(jpsi->Pt(), TMath::Abs(jpsi->Rapidity()), funcBGJpsi->GetRandom(jpsiMassSigMin, jpsiMassSigMax));
             pT_NP1->Fill(particle->Pt());
             rap_NP1->Fill(TMath::Abs(particle->Rapidity()));
           }
-          else if(chic_rf->M() > massMinSR2 && chic_rf->M() < massMaxSR2 && jpsict > PRmin && jpsict < PRmax){
+          else if(usedChicMass > massMinSR2 && usedChicMass < massMaxSR2 && jpsict > PRmin && jpsict < PRmax){
             index = 4;
             hSR2_pTRapMass->Fill(jpsi->Pt(), TMath::Abs(jpsi->Rapidity()), funcBGJpsi->GetRandom(jpsiMassSigMin, jpsiMassSigMax));
           }
-          else if(chic_rf->M() > massMinSR2 && chic_rf->M() < massMaxSR2 && jpsict > NPmin && jpsict < NPmax){
+          else if(usedChicMass > massMinSR2 && usedChicMass < massMaxSR2 && jpsict > NPmin && jpsict < NPmax){
             index = 5;
             hNP2_pTRapMass->Fill(jpsi->Pt(), TMath::Abs(jpsi->Rapidity()), funcBGJpsi->GetRandom(jpsiMassSigMin, jpsiMassSigMax));
             pT_NP2->Fill(particle->Pt());
             rap_NP2->Fill(TMath::Abs(particle->Rapidity()));
           }
-          else if(chic_rf->M() > massMinR && chic_rf->M() < massMaxR && jpsict > PRmin && jpsict < PRmax){
+          else if(usedChicMass > massMinR && usedChicMass < massMaxR && jpsict > PRmin && jpsict < PRmax){
             index = 6;
             hBG1_pTRapMass_R->Fill(jpsi->Pt(), TMath::Abs(jpsi->Rapidity()), funcBGJpsi->GetRandom(jpsiMassSigMin, jpsiMassSigMax));
             hBG2_pTRapMass_R->Fill(jpsi->Pt(), TMath::Abs(jpsi->Rapidity()), funcBGJpsi->GetRandom(jpsiMassSigMin, jpsiMassSigMax));
             pT_R->Fill(particle->Pt());
             rap_R->Fill(TMath::Abs(particle->Rapidity()));
           }
-          else if(chic_rf->M() > massMinR && chic_rf->M() < massMaxR && jpsict > NPmin && jpsict < NPmax){
+          else if(usedChicMass > massMinR && usedChicMass < massMaxR && jpsict > NPmin && jpsict < NPmax){
             index = 7;
             hBG1_pTRapMass_highct_R->Fill(jpsi->Pt(), TMath::Abs(jpsi->Rapidity()), funcBGJpsi->GetRandom(jpsiMassSigMin, jpsiMassSigMax));
             hBG2_pTRapMass_highct_R->Fill(jpsi->Pt(), TMath::Abs(jpsi->Rapidity()), funcBGJpsi->GetRandom(jpsiMassSigMin, jpsiMassSigMax));
@@ -1042,6 +1067,15 @@ void bkgHistos_chi(const std::string infilename, int rapBin, int ptBin, bool fol
     intree->GetEntry(iEntry);
     if(i % 100000 == 0) std::cout << "entry " << i << " out of " << n << std::endl;
 
+    // tmadlener, 15.04.2016:
+    // define tha mass to be used here. all Other properties are anyhow taken from the particle pointer which is already set to the correct particle
+    double usedChicMass = 0;
+    if (useRefittedChic) {
+      usedChicMass = usedChicMass;
+    } else {
+      usedChicMass = mQ;
+    }
+
     if(particle->Pt() >= onia::pTRange[rapBin][ptBin-1] &&
        particle->Pt() < onia::pTRange[rapBin][ptBin] &&
        TMath::Abs(particle->Rapidity()) >= onia::rapForPTRange[rapBin-1] &&
@@ -1050,19 +1084,19 @@ void bkgHistos_chi(const std::string infilename, int rapBin, int ptBin, bool fol
       if(TMath::Abs(jpsi->M() - CBmass_p0) < onia::nSigMass * rapSigma(p0, p1, p2, jpsi->Rapidity()) ){
 
         if(!MC){
-          if(chic_rf->M() > massMinL && chic_rf->M() < massMaxL && jpsict > PRmin && jpsict < PRmax) index = 0;
-          else if(chic_rf->M() > massMinL && chic_rf->M() < massMaxL && jpsict > NPmin && jpsict < NPmax) index = 1;
-          else if(chic_rf->M() > massMinSR1 && chic_rf->M() < massMaxSR1 && jpsict > PRmin && jpsict < PRmax) index = 2;
-          else if(chic_rf->M() > massMinSR1 && chic_rf->M() < massMaxSR1 && jpsict > NPmin && jpsict < NPmax) index = 3;
-          else if(chic_rf->M() > massMinSR2 && chic_rf->M() < massMaxSR2 && jpsict > PRmin && jpsict < PRmax) index = 4;
-          else if(chic_rf->M() > massMinSR2 && chic_rf->M() < massMaxSR2 && jpsict > NPmin && jpsict < NPmax) index = 5;
-          else if(chic_rf->M() > massMinR && chic_rf->M() < massMaxR && jpsict > PRmin && jpsict < PRmax) index = 6;
-          else if(chic_rf->M() > massMinR && chic_rf->M() < massMaxR && jpsict > NPmin && jpsict < NPmax) index = 7;
+          if(usedChicMass > massMinL && usedChicMass < massMaxL && jpsict > PRmin && jpsict < PRmax) index = 0;
+          else if(usedChicMass > massMinL && usedChicMass < massMaxL && jpsict > NPmin && jpsict < NPmax) index = 1;
+          else if(usedChicMass > massMinSR1 && usedChicMass < massMaxSR1 && jpsict > PRmin && jpsict < PRmax) index = 2;
+          else if(usedChicMass > massMinSR1 && usedChicMass < massMaxSR1 && jpsict > NPmin && jpsict < NPmax) index = 3;
+          else if(usedChicMass > massMinSR2 && usedChicMass < massMaxSR2 && jpsict > PRmin && jpsict < PRmax) index = 4;
+          else if(usedChicMass > massMinSR2 && usedChicMass < massMaxSR2 && jpsict > NPmin && jpsict < NPmax) index = 5;
+          else if(usedChicMass > massMinR && usedChicMass < massMaxR && jpsict > PRmin && jpsict < PRmax) index = 6;
+          else if(usedChicMass > massMinR && usedChicMass < massMaxR && jpsict > NPmin && jpsict < NPmax) index = 7;
           else continue;
         }
         else{
-          if(chic_rf->M() > massMinSR1 && chic_rf->M() < massMaxSR1) MCindex = 0;
-          else if(chic_rf->M() > massMinSR2 && chic_rf->M() < massMaxSR2) MCindex = 1;
+          if(usedChicMass > massMinSR1 && usedChicMass < massMaxSR1) MCindex = 0;
+          else if(usedChicMass > massMinSR2 && usedChicMass < massMaxSR2) MCindex = 1;
         }
 
         ////////////////////////
@@ -1620,6 +1654,15 @@ void bkgHistos_chi(const std::string infilename, int rapBin, int ptBin, bool fol
       intree->GetEntry(iEntry);
       if(i % 100000 == 0) std::cout << "entry " << i << " out of " << n << std::endl;
 
+      // tmadlener, 15.04.2016:
+      // define tha mass to be used here. all Other properties are anyhow taken from the particle pointer which is already set to the correct particle
+      double usedChicMass = 0;
+      if (useRefittedChic) {
+        usedChicMass = usedChicMass;
+      } else {
+        usedChicMass = mQ;
+      }
+
       if(particle->Pt() >= onia::pTRange[rapBin][ptBin-1] &&
          particle->Pt() < onia::pTRange[rapBin][ptBin] &&
          TMath::Abs(particle->Rapidity()) >= onia::rapForPTRange[rapBin-1] &&
@@ -1628,7 +1671,7 @@ void bkgHistos_chi(const std::string infilename, int rapBin, int ptBin, bool fol
         if(TMath::Abs(jpsi->M() - CBmass_p0) < onia::nSigMass * rapSigma(p0, p1, p2, jpsi->Rapidity()) ){
 
           if(PolLSB){
-            if(chic_rf->M() > massMinL && chic_rf->M() < massMaxL && jpsict > PRmin && jpsict < PRmax){
+            if(usedChicMass > massMinL && usedChicMass < massMaxL && jpsict > PRmin && jpsict < PRmax){
               calcPol(*lepP, *lepN);
               for(int iFrame = 0; iFrame < onia::kNbFrames; iFrame++){
                 hSR1_cosThetaPhi[iFrame]->Fill(thisCosTh[iFrame], thisPhi[iFrame]);
@@ -1637,7 +1680,7 @@ void bkgHistos_chi(const std::string infilename, int rapBin, int ptBin, bool fol
             }
           } // PolLSB
           else if(PolRSB){
-            if(chic_rf->M() > massMinR && chic_rf->M() < massMaxR && jpsict > PRmin && jpsict < PRmax){
+            if(usedChicMass > massMinR && usedChicMass < massMaxR && jpsict > PRmin && jpsict < PRmax){
               calcPol(*lepP, *lepN);
               for(int iFrame = 0; iFrame < onia::kNbFrames; iFrame++){
                 hSR1_cosThetaPhi[iFrame]->Fill(thisCosTh[iFrame], thisPhi[iFrame]);
@@ -1646,24 +1689,24 @@ void bkgHistos_chi(const std::string infilename, int rapBin, int ptBin, bool fol
             }
           } // PolRSB
           else if(PolNP){
-            if(chic_rf->M() > massMinSR1 && chic_rf->M() < massMaxSR1 && jpsict > NPmin && jpsict < NPmax){
+            if(usedChicMass > massMinSR1 && usedChicMass < massMaxSR1 && jpsict > NPmin && jpsict < NPmax){
               calcPol(*lepP, *lepN);
               for(int iFrame = 0; iFrame < onia::kNbFrames; iFrame++)
                 hSR1_cosThetaPhi[iFrame]->Fill(thisCosTh[iFrame], thisPhi[iFrame]);
             }
-            else if(chic_rf->M() > massMinSR2 && chic_rf->M() < massMaxSR2 && jpsict > NPmin && jpsict < NPmax){
+            else if(usedChicMass > massMinSR2 && usedChicMass < massMaxSR2 && jpsict > NPmin && jpsict < NPmax){
               calcPol(*lepP, *lepN);
               for(int iFrame = 0; iFrame < onia::kNbFrames; iFrame++)
                 hSR2_cosThetaPhi[iFrame]->Fill(thisCosTh[iFrame], thisPhi[iFrame]);
             }
           } // PolNP
           else{
-            if(chic_rf->M() > massMinSR1 && chic_rf->M() < massMaxSR1 && jpsict > PRmin && jpsict < PRmax){
+            if(usedChicMass > massMinSR1 && usedChicMass < massMaxSR1 && jpsict > PRmin && jpsict < PRmax){
               calcPol(*lepP, *lepN);
               for(int iFrame = 0; iFrame < onia::kNbFrames; iFrame++)
                 hSR1_cosThetaPhi[iFrame]->Fill(thisCosTh[iFrame], thisPhi[iFrame]);
             }
-            else if(chic_rf->M() > massMinSR2 && chic_rf->M() < massMaxSR2 && jpsict > PRmin && jpsict < PRmax){
+            else if(usedChicMass > massMinSR2 && usedChicMass < massMaxSR2 && jpsict > PRmin && jpsict < PRmax){
               calcPol(*lepP, *lepN);
               for(int iFrame = 0; iFrame < onia::kNbFrames; iFrame++)
                 hSR2_cosThetaPhi[iFrame]->Fill(thisCosTh[iFrame], thisPhi[iFrame]);
