@@ -343,7 +343,7 @@ void buildLifetimePDF(RooWorkspace *ws, int rapBin, int ptBin){
   ws->factory("RooDecay::jpsi_backgroundFD(Jpsict,jpsi_bkgTauFD[.11,.01,0.3],jpsi_TotalPromptLifetime_punzi,RooDecay::Flipped)");
   ws->factory("RooDecay::jpsi_backgroundDSD(Jpsict,jpsi_bkgTauDSD[.016,0.001,0.05],jpsi_TotalPromptLifetime_punzi,RooDecay::DoubleSided)");
   //ws->factory("SUM::jpsi_backgroundlifetimeLpre(jpsi_fBkgSSDR_LSB[.4,0,1.]*jpsi_backgroundSSD,jpsi_fBkgDSD_LSB[.2,0,1.]*jpsi_backgroundDSD,jpsi_backgroundFD)");
-  ws->factory("SUM::jpsi_backgroundlifetimeLpre_punzi(jpsi_fBkgSSDR[.7,0.45,0.95]*jpsi_backgroundSSD,jpsi_fBkgSSDL[.05,0.,0.1]*jpsi_backgroundFD,jpsi_backgroundDSD)");
+  ws->factory("SUM::jpsi_backgroundlifetimeLpre_punzi(jpsi_fBkgSSDR[.7,0.45,0.95]*jpsi_backgroundSSD,jpsi_fBkgSSDL[.1,0.,0.2]*jpsi_backgroundFD,jpsi_backgroundDSD)");
   ws->factory("PROD::jpsi_backgroundlifetimeLpre(jpsi_backgroundlifetimeLpre_punzi|JpsictErr, pdf_ctauerrModelBG)");
 
   RooFormulaVar jpsi_fBkgDSD("jpsi_fBkgDSD","1-@0-@1",RooArgList(*ws->var("jpsi_fBkgSSDR"),*ws->var("jpsi_fBkgSSDL")));
