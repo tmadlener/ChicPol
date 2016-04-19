@@ -645,7 +645,7 @@ void bkgHistos_chi(const std::string infilename, int rapBin, int ptBin, bool fol
     // define tha mass to be used here. all Other properties are anyhow taken from the particle pointer which is already set to the correct particle
     double usedChicMass = 0;
     if (useRefittedChic) {
-      usedChicMass = usedChicMass;
+      usedChicMass = particle->M(); // use mass of refittec chic (which is stored in particle)
     } else {
       usedChicMass = mQ;
     }
@@ -1071,7 +1071,7 @@ void bkgHistos_chi(const std::string infilename, int rapBin, int ptBin, bool fol
     // define tha mass to be used here. all Other properties are anyhow taken from the particle pointer which is already set to the correct particle
     double usedChicMass = 0;
     if (useRefittedChic) {
-      usedChicMass = usedChicMass;
+      usedChicMass = particle->M(); // use mass of refittec chic (which is stored in particle)
     } else {
       usedChicMass = mQ;
     }
@@ -1658,7 +1658,7 @@ void bkgHistos_chi(const std::string infilename, int rapBin, int ptBin, bool fol
       // define tha mass to be used here. all Other properties are anyhow taken from the particle pointer which is already set to the correct particle
       double usedChicMass = 0;
       if (useRefittedChic) {
-        usedChicMass = usedChicMass;
+        usedChicMass = particle->M(); // use mass of refittec chic (which is stored in particle)
       } else {
         usedChicMass = mQ;
       }
