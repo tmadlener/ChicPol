@@ -1,4 +1,4 @@
-CXX=$(shell root-config --cxx --cflags)
+CXX=$(shell root-config --cxx --cflags) -Wall
 LIBS=$(shell root-config --libs)
 INCS=-I../interface
 
@@ -55,7 +55,7 @@ runDefineRegionsAndFractions: runDefineRegionsAndFractions.cc
 PlotMassRapPtBG: PlotMassRapPtBG.cc
 	$(CXX) $^ $(INCS) -o $@ $(LIBS) -lFoam -lMinuit -lRooFit -lRooFitCore
 
-runMC: runMC.cc runMC_globalVars.h
+runMC: runMC.cc runMC_helperStructs.h
 	$(CXX) $^ $(INCS) -o $@ $(LIBS)
 
 clean:
