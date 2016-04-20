@@ -266,7 +266,11 @@ double EvaluateRhoFactor( double& costh, double& phi, int nEff, TFile* fInRhoFac
     return eff;
   }
 
-
+  // tmadlener: this function can drop through here (control reaches end of non-void function)
+  // returning a ludicrous value here such that it will be noticed, will still being able to suppress the warning
+  std::cerr << "ERROR in EvaluateRhoFactor at " << __FILE__ << ":" << __LINE__
+            << ": dropped through all if-clauses returning -999" << std::endl;
+  return -999.;
 }
 
 
@@ -298,7 +302,7 @@ double EvaluateAmap( double& costh_Amap, double& phi_Amap, int nAmap, TFile* fIn
   bool LucaRho=false;
 
   if(nAmap==12109 || nAmap==22109 || nAmap==32109 || nAmap==13109 || nAmap==23109 || nAmap==33109) MassEffRho=true;
-  if(nAmap>=31110 && nAmap<=31130  ||  nAmap>=32110 && nAmap<=32130  ||  nAmap>=33110 && nAmap<=33130) LucaRho=true;
+  if((nAmap>=31110 && nAmap<=31130)  ||  (nAmap>=32110 && nAmap<=32130)  ||  (nAmap>=33110 && nAmap<=33130)) LucaRho=true;
 
   if(nAmap>10000&&!MassEffRho&&!LucaRho){
     char EffType[200];
@@ -366,11 +370,12 @@ double EvaluateAmap( double& costh_Amap, double& phi_Amap, int nAmap, TFile* fIn
     return eff;
   }
 
-
+  // tmadlener: this function can drop through here (control reaches end of non-void function)
+  // returning a ludicrous value here such that it will be noticed, will still being able to suppress the warning
+  std::cerr << "ERROR in EvaluateAmap at " << __FILE__ << ":" << __LINE__
+            << ": dropped through all if-clauses returning -999" << std::endl;
+  return -999.;
 }
-
-
-
 
 
 double DiLeptonEfficiency( double& costh, double& phi, int nEff, TFile* fInDileptonEff, bool MCeff) {
@@ -394,7 +399,11 @@ double DiLeptonEfficiency( double& costh, double& phi, int nEff, TFile* fInDilep
     return eff;
   }
 
-
+  // tmadlener: this function can drop through here (control reaches end of non-void function)
+  // returning a ludicrous value here such that it will be noticed, will still being able to suppress the warning
+  std::cerr << "ERROR in DiLeptonEfficiency at " << __FILE__ << ":" << __LINE__
+            << ": dropped through all if-clauses returning -999" << std::endl;
+  return -999.;
 }
 
 double singleLeptonEfficiency( double& pT, double& eta, int nEff, TFile* fInEff, TH2D* hEvalEff,bool MCeff, TEfficiency* TEff) {
@@ -638,7 +647,11 @@ double singleLeptonEfficiency( double& pT, double& eta, int nEff, TFile* fInEff,
 
   if(nEff==6) return eff;
 
-
+  // tmadlener: this function can drop through here (control reaches end of non-void function)
+  // returning a ludicrous value here such that it will be noticed, will still being able to suppress the warning
+  std::cerr << "ERROR in singleLeptonEfficiency at " << __FILE__ << ":" << __LINE__
+            << ": dropped through all if-clauses returning -999" << std::endl;
+  return -999.;
 }
 
 
@@ -687,5 +700,9 @@ double DenominatorAmapEfficiency( double& pT, double& eta, int nDenominatorAmap,
 
   if(nDenominatorAmap==1) return 1;
 
-
+  // tmadlener: this function can drop through here (control reaches end of non-void function)
+  // returning a ludicrous value here such that it will be noticed, will still being able to suppress the warning
+  std::cerr << "ERROR in DenominatorAmapEfficiency at " << __FILE__ << ":" << __LINE__
+            << ": dropped through all if-clauses returning -999" << std::endl;
+  return -999.;
 }
