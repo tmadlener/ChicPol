@@ -271,7 +271,7 @@ void bkgHistos(const std::string infilename, int rapBin, int ptBin, int nState, 
   double fBkgRSB = fBkgRSB_ws->getVal();
   double fNPRSB = 1. - fPRSB - fBkgRSB;
   std::cout << "-------------------------------------------------------------\n"
-            << "fit parameters for signal contamination: \n" 
+            << "fit parameters for signal contamination: \n"
             << "LSB: fP = " << fPLSB << ", fBkg = " << fBkgLSB << ", fNP = " << fNPLSB << "\n"
             << "RSB: fP = " << fPRSB << ", fBkg = " << fBkgRSB << ", fNP = " << fNPRSB << "\n"
             << "fP/fNP = " << fPLSB/fNPLSB << " (LSB) = " << fPRSB/fNPRSB << " (RSB) \n"
@@ -367,7 +367,7 @@ void bkgHistos(const std::string infilename, int rapBin, int ptBin, int nState, 
   double ctauCut = nSigma*l_pdecay;
 
   if(ctauScen==3){
-    ctauCut = 0.1 ; // mm 
+    ctauCut = 0.1 ; // mm
   }
 
   cout << "ctauCut: " << ctauCut << endl;
@@ -430,7 +430,7 @@ void bkgHistos(const std::string infilename, int rapBin, int ptBin, int nState, 
 
   std::cout << "-------------------------------------------------------------\n" <<
     nSigma << " sigma used for ctau cut" << "\n" <<
-    "pseudo proper decay length: " << l_pdecay << "\n" << 
+    "pseudo proper decay length: " << l_pdecay << "\n" <<
     "ctau cut at " << ctauCut << "\n" <<
     "fraction of prompt events within ctau cut: " << fPinP << " \n" <<
     "fraction of non prompt events within ctau cut: " << fNPinP << " \n" <<
@@ -569,8 +569,8 @@ void bkgHistos(const std::string infilename, int rapBin, int ptBin, int nState, 
         double fracGauss2_ = ((RooRealVar*)args->find("fracGauss2"))->getVal();
         ws->var("fracGauss2")->setVal(fracGauss2_);
 
-        fracP1 = fPrompt_; 
-        fracBkg = fBkg_; 
+        fracP1 = fPrompt_;
+        fracBkg = fBkg_;
         fracNP1 =  1.-fracP1-fracBkg;
 
         // histogram method
@@ -1733,7 +1733,7 @@ vector<double> calculateInteSB(RooWorkspace *ws, RooDataSet *dataJpsictErr, doub
   RooDataSet *genDataBGRSB = BGpdfRSB->generate(*Jpsict,ProtoData(*dataJpsictErr));
   RooDataSet *genDataLSB   = LSBpdf  ->generate(*Jpsict,ProtoData(*dataJpsictErr));
   RooDataSet *genDataRSB   = RSBpdf  ->generate(*Jpsict,ProtoData(*dataJpsictErr));
-	
+
   TH2F* histBGLSB2D = (TH2F*)genDataBGLSB->createHistogram("histBGLSB2D",*Jpsict,Binning(fineBins),
                                                            YVar(*JpsictErr,Binning(fineBins/10)));
   TH1F* histBGLSB   = (TH1F*)histBGLSB2D->ProjectionX();
@@ -1802,12 +1802,12 @@ TH3D *subtract3D(TH3D* hist1, TH3D* hist2){
         if (c1 > 0) {
           double c2 = hist2->GetBinContent(j,k,l);
           double c3 = c1 - 1.*c2;
-          double e1 = hist1->GetBinError(j,k,l);  
-          double e2 = hist2->GetBinError(j,k,l);  
-          double e3 = TMath::Sqrt(e1*e1 + e2*e2); 
-          if(c3 < 0){                             
-            c3 = 0;                             
-            e3 = 0;                             
+          double e1 = hist1->GetBinError(j,k,l);
+          double e2 = hist2->GetBinError(j,k,l);
+          double e3 = TMath::Sqrt(e1*e1 + e2*e2);
+          if(c3 < 0){
+            c3 = 0;
+            e3 = 0;
           }
           hist1->SetBinContent(j,k,l,c3);
           hist1->SetBinError(j,k,l,e3);
@@ -1834,7 +1834,7 @@ TH2D *subtract2D(TH2D* hist1, TH2D* hist2){
         double c3 = c1 - 1.*c2;
         double e1 = hist1->GetBinError(j,k);
         double e2 = hist2->GetBinError(j,k);
-        double e3 = TMath::Sqrt(e1*e1 + e2*e2); 
+        double e3 = TMath::Sqrt(e1*e1 + e2*e2);
         if(c3 < 0){
           c3 = 0;
           e3 = 0;
@@ -1919,7 +1919,7 @@ double calcuFracL(RooWorkspace *ws, double mean, double sigma){
   double sbLowMass =  mean-sigma*onia::nSigBkgLow;
   JpsiMass.setRange("SR",sigMinMass,sigMaxMass);
   JpsiMass.setRange("LSB",JpsiMass.getMin(), sbLowMass);
-  JpsiMass.setRange("RSB",sbHighMass, JpsiMass.getMax()); 
+  JpsiMass.setRange("RSB",sbHighMass, JpsiMass.getMax());
 
   RooAddPdf *bkgMassShape = (RooAddPdf*)ws->pdf("bkgMassShape");
 
@@ -1965,4 +1965,3 @@ double calcuFracL(RooWorkspace *ws, double mean, double sigma){
 
   return fracLCentral;
 }
-
