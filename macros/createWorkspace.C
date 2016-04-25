@@ -7,6 +7,10 @@
 #include "TRandom3.h"
 
 using namespace RooFit;
+using namespace std;
+
+// forward declaration: COULDDO: move to own header
+void conditionalImport(RooWorkspace* ws, const std::string& varname, const double varval);
 
 void createWorkspace(const std::string &infilename, int nState, bool correctCtau, bool drawRapPt2D, bool useRefittedChic = true){
   gROOT->SetStyle("Plain");
@@ -268,9 +272,7 @@ void createWorkspace(const std::string &infilename, int nState, bool correctCtau
   // Define workspace and import datasets
 
   ////Get datasets binned in pT an y
-
   for(int iRap = 0; iRap <= onia::kNbRapForPTBins; iRap++){
-
     double yMin = 0;
     double yMax = 0;
     if(iRap==0){
@@ -282,8 +284,6 @@ void createWorkspace(const std::string &infilename, int nState, bool correctCtau
     }
 
     for(int iPT = 0; iPT <= onia::kNbPTBins[iRap]; iPT++){
-      //for(int iPT = 0; iPT <= 0; iPT++)
-
       double ptMin = 0;
       double ptMax = 0;
       if(iPT==0){
@@ -294,9 +294,7 @@ void createWorkspace(const std::string &infilename, int nState, bool correctCtau
         ptMax = onia::pTRange[iRap][iPT];
       }
 
-      // output file name and workspace
-      std::stringstream outfilename;
-      outfilename << "tmpFiles/backupWorkSpace/ws_createWorkspace_Chi_rap" << iRap << "_pt" << iPT << ".root";
+      // output workspace
       RooWorkspace* ws = new RooWorkspace(workspacename.c_str());
 
       // define pt and y cuts on dataset
@@ -326,30 +324,23 @@ void createWorkspace(const std::string &infilename, int nState, bool correctCtau
 
       cout << "numEvents = " << binData->sumEntries() << endl;
 
-      double chicMeanPt = binData->mean(*chicPt);
-      RooRealVar var_chicMeanPt("var_chicMeanPt","var_chicMeanPt",chicMeanPt); if(!ws->var("var_chicMeanPt")) ws->import(var_chicMeanPt); else ws->var("var_chicMeanPt")->setVal(chicMeanPt);
-      cout << "chicMeanPt = " << chicMeanPt << endl;
-
-      double jpsiMeanPt = binData->mean(*JpsiPt);
-      RooRealVar var_jpsiMeanPt("var_jpsiMeanPt","var_jpsiMeanPt",jpsiMeanPt); if(!ws->var("var_jpsiMeanPt")) ws->import(var_jpsiMeanPt); else ws->var("var_jpsiMeanPt")->setVal(jpsiMeanPt);
-      cout << "jpsiMeanPt = " << jpsiMeanPt << endl;
+      conditionalImport(ws, "var_chicMeanPt", binData->mean(*chicPt));
+      conditionalImport(ws, "var_jpsiMeanPt", binData->mean(*JpsiPt));
 
       std::stringstream cutStringPosRapChic;
       cutStringPosRapChic << "chicRap > 0";
       RooDataSet* binDataPosRapChic = (RooDataSet*)binData->reduce(cutStringPosRapChic.str().c_str());
-      double chicMeanAbsRap = binDataPosRapChic->mean(*chicRap);
-      cout << "chicMeanAbsRap = " << chicMeanAbsRap << endl;
-      RooRealVar var_chicMeanAbsRap("var_chicMeanAbsRap","var_chicMeanAbsRap",chicMeanAbsRap); if(!ws->var("var_chicMeanAbsRap")) ws->import(var_chicMeanAbsRap); else ws->var("var_chicMeanAbsRap")->setVal(chicMeanAbsRap);
+      conditionalImport(ws, "var_chicMeanAbsRap", binDataPosRapChic->mean(*chicRap));
 
       std::stringstream cutStringPosRapJpsi;
       cutStringPosRapJpsi << "JpsiRap > 0";
       RooDataSet* binDataPosRapJpsi = (RooDataSet*)binData->reduce(cutStringPosRapJpsi.str().c_str());
-      double jpsiMeanAbsRap = binDataPosRapJpsi->mean(*JpsiRap);
-      cout << "jpsiMeanAbsRap = " << jpsiMeanAbsRap << endl;
-      RooRealVar var_jpsiMeanAbsRap("var_jpsiMeanAbsRap","var_jpsiMeanAbsRap",jpsiMeanAbsRap); if(!ws->var("var_jpsiMeanAbsRap")) ws->import(var_jpsiMeanAbsRap); else ws->var("var_jpsiMeanAbsRap")->setVal(jpsiMeanAbsRap);
+      conditionalImport(ws, "var_jpsiMeanAbsRap", binDataPosRapJpsi->mean(*JpsiRap));
 
       // Import variables to workspace
       ws->import(*binData);
+      std::stringstream outfilename;
+      outfilename << "tmpFiles/backupWorkSpace/ws_createWorkspace_Chi_rap" << iRap << "_pt" << iPT << ".root";
       ws->writeToFile(outfilename.str().c_str());
     }//iPT
   }//iRap
@@ -470,4 +461,167 @@ void createWorkspace(const std::string &infilename, int nState, bool correctCtau
   }
 
   f->Close();
+}
+
+/** MC closure version of create workspace (at least for dev to have a more clean dev environment). */
+void createWorkspace_MC(const std::string& infilename, int nState, bool correctCtau, bool drawRapPt2D, bool useRefittedChic = true)
+{
+  gROOT->SetStyle("Plain");
+  gStyle->SetTitleBorderSize(0);
+
+  delete gRandom;
+  gRandom = new TRandom3(23101987);
+
+  // Set some strings
+  const std::string workspacename = "ws_masslifetime";
+  const std:: string treename = "selectedData";
+
+  // Get the tree from the data file
+  TFile *f = TFile::Open(infilename.c_str());
+  TTree *tree = (TTree*)f->Get(treename.c_str());
+
+  // for the moment set only those that are needed
+  TLorentzVector* jpsi = new TLorentzVector;
+  tree->SetBranchAddress("jpsi",&jpsi);
+  double lifetime = 0;
+  tree->SetBranchAddress("Jpsict",&lifetime);
+  double lifetimeErr = 0;
+  tree->SetBranchAddress("JpsictErr",&lifetimeErr);
+
+  std::string lifetimeTitle = "l^{#psi} [mm]";
+  if (correctCtau) lifetimeTitle = "l^{#chi} [mm]";
+
+  // define variables necessary for J/Psi(Psi(2S)) mass,lifetime fit
+  RooRealVar* JpsiMass = new RooRealVar("JpsiMass", "M^{#psi} [GeV]", onia::massMin, onia::massMax);
+  RooRealVar* JpsiPt = new RooRealVar("JpsiPt", "p^{#psi}_{T} [GeV]", 0. ,1000.);
+  RooRealVar* JpsiRap = new RooRealVar("JpsiRap", "y^{#psi}", -2., 2.);
+  RooRealVar* Jpsict = new RooRealVar("Jpsict", lifetimeTitle.c_str(), onia::ctVarMin, onia::ctVarMax);
+  RooRealVar* JpsictErr = new RooRealVar("JpsictErr", Form("Error on %s",lifetimeTitle.c_str()), 0.0001, 1.);
+
+  // Set bins
+  JpsiMass->setBins(10000,"cache");
+  JpsiPt->setBins(100);
+  JpsiRap->setBins(10000,"cache");
+  Jpsict->setBins(10000,"cache");
+  JpsictErr->setBins(10000,"cache");
+
+  // The list of data variables
+  RooArgList dataVars(*JpsiMass, *JpsiPt, *JpsiRap, *Jpsict, *JpsictErr);
+  // construct dataset to contain events
+  RooDataSet* fullData = new RooDataSet("fullData","The Full Data From the Input ROOT Trees",dataVars);
+
+  int entries = tree->GetEntries();
+  cout << "entries " << entries << endl;
+
+  int numEntriesTotal=0;
+  int numEntriesInAnalysis=0;
+  int numEntriesNotInAnalysis=0;
+
+
+  // loop through events in tree and save them to dataset
+  for (int ientries = 0; ientries < entries; ++ientries) {
+    numEntriesTotal++;
+    if (ientries%10000==0) std::cout << "event " << ientries << " of " << entries <<  std::endl;
+    tree->GetEntry(ientries);
+
+    double M_jpsi = jpsi->M();
+    double pt_jpsi = jpsi->Pt();
+    double y_jpsi = jpsi->Rapidity();
+
+    // std::cout << "M_jpsi " << M_jpsi << " -> [" << JpsiMass->getMin() << ", " << JpsiMass->getMax() << "]\n"
+    //           << "pt_jpsi " << pt_jpsi << " -> [" << JpsiPt->getMin() << ", " << JpsiPt->getMax() << "]\n"
+    //           << "y_jpsi " << y_jpsi << " -> [" << JpsiRap->getMin() << ", " << JpsiRap->getMax() << "]\n"
+    //           << "lifetime " << lifetime << " -> [" << Jpsict->getMin() << ", " << Jpsict->getMax() << "]\n"
+    //           << "lifetimeErr " << lifetimeErr << " -> [" << JpsictErr->getMin() << ", " << JpsictErr->getMax() << "]\n";
+
+    if (M_jpsi > JpsiMass->getMin() && M_jpsi < JpsiMass->getMax() &&
+        pt_jpsi > JpsiPt->getMin() && pt_jpsi < JpsiPt->getMax() &&
+        y_jpsi > JpsiRap->getMin() && y_jpsi < JpsiRap->getMax() &&
+        lifetime > Jpsict->getMin() && lifetime < Jpsict->getMax() &&
+        lifetimeErr > JpsictErr->getMin() && lifetimeErr < JpsictErr->getMax()
+        ) {
+      JpsiMass->setVal(M_jpsi);
+      JpsiPt->setVal(pt_jpsi);
+      JpsiRap->setVal(y_jpsi);
+      Jpsict->setVal(lifetime);
+      JpsictErr->setVal(lifetimeErr);
+
+      fullData->add(dataVars);
+      numEntriesInAnalysis++;
+    } else {
+      // std::cout << "MISSED" << std::endl;
+      numEntriesNotInAnalysis++;
+    }
+  }
+
+  cout << "entries entering all bins " << fullData->sumEntries() << endl;
+  cout << "numEntriesTotal " << numEntriesTotal << endl;
+  cout << "numEntriesInAnalysis " << numEntriesInAnalysis << endl;
+  cout << "numEntriesNotInAnalysis " << numEntriesNotInAnalysis << endl;
+
+  //------------------------------------------------------------------------------------------------------------------
+  // Define workspace and import datasets
+  ////Get datasets binned in pT an y
+  for (int iRap = 0; iRap <= onia::kNbRapForPTBins; iRap++) {
+    double yMin = onia::rapForPTRange[0];
+    double yMax = onia::rapForPTRange[onia::kNbRapForPTBins];
+    if (iRap > 0) {
+      yMin = onia::rapForPTRange[iRap-1];
+      yMax = onia::rapForPTRange[iRap];
+    }
+
+    for (int iPT = 0; iPT <= onia::kNbPTBins[iRap]; iPT++) {
+      double ptMin = onia::pTRange[iRap][0];
+      double ptMax = onia::pTRange[iRap][onia::kNbPTBins[0]];
+      if (iPT > 0) {
+        ptMin = onia::pTRange[iRap][iPT-1];
+        ptMax = onia::pTRange[iRap][iPT];
+      }
+
+      // output file name and workspace
+      std::stringstream outfilename;
+      outfilename << "tmpFiles/backupWorkSpace/ws_createWorkspace_Chi_rap" << iRap << "_pt" << iPT << ".root";
+      RooWorkspace* ws = new RooWorkspace(workspacename.c_str());
+
+      // define pt an dy cuts on dataset;
+      std::stringstream cutString;
+      cutString << "(JpsiPt >= " << ptMin << " && JpsiPt < " << ptMax << ") && "
+                << "(TMath::Abs(JpsiRap) >= " << yMin << " && TMath::Abs(JpsiRap) < " << yMax << ")";
+
+      cout << "cutString: " << cutString.str().c_str() << endl;
+
+      // get the dataset for the fit
+      RooDataSet* binData = (RooDataSet*)fullData->reduce(cutString.str().c_str());
+      std::stringstream name;
+      name << "jpsi_data_rap" << iRap << "_pt" << iPT;
+      binData->SetNameTitle(name.str().c_str(), "Data For Fitting");
+
+      cout << "numEvents = " << binData->sumEntries() << endl;
+
+      conditionalImport(ws, "var_jpsiMeanPt", binData->mean(*JpsiPt));
+
+      std::string cutStringPosRapJpsi = "JpsiRap > 0";
+      RooDataSet* binDataPosRapJpsi = (RooDataSet*)binData->reduce(cutStringPosRapJpsi.c_str());
+      conditionalImport(ws, "var_jpsiMeanAbsRap", binDataPosRapJpsi->mean(*JpsiRap));
+
+      // Import variables to workspace
+      ws->import(*binData);
+      ws->writeToFile(outfilename.str().c_str());
+    } // iPT
+  } // iRap
+
+  f->Close();
+
+} // createWorkspace_MC
+
+/** import the variable into the workspace if it is not already there. If it is already in workspace set the passed value. */
+void conditionalImport(RooWorkspace* ws, const std::string& varname, const double varval)
+{
+  if (ws->var(varname.c_str())) {
+    ws->var(varname.c_str())->setVal(varval);
+  } else {
+    RooRealVar tmpvar(varname.c_str(), varname.c_str(), varval);
+    ws->import(tmpvar);
+  }
+  std::cout << varname << " = " << varval << std::endl;
 }

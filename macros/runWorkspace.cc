@@ -20,6 +20,7 @@ int main(int argc, char* argv[]){
   bool correctCtau  = false;
   bool drawRapPt2D  = false;
   bool useRefittedMass = true;
+  bool mcClosure = false;
 
   // Loop over argument list
   for (int i=1; i < argc; i++) {
@@ -28,10 +29,15 @@ int main(int argc, char* argv[]){
     fromSplit("correctCtau", arg, correctCtau);
     fromSplit("drawRapPt2D", arg, drawRapPt2D);
     fromSplit("useRefittedChic", arg, useRefittedMass);
+    fromSplit("mcClosure", arg, mcClosure);
   }
 
   const std::string infilename = "tmpFiles/selEvents_data.root";
-  createWorkspace(infilename, nState, correctCtau, drawRapPt2D, useRefittedMass);
+  if (!mcClosure) {
+    createWorkspace(infilename, nState, correctCtau, drawRapPt2D, useRefittedMass);
+  } else {
+    createWorkspace_MC(infilename, nState, correctCtau, drawRapPt2D, useRefittedMass);
+  }
 
   return 0;
 }
