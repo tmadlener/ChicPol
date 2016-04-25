@@ -902,7 +902,7 @@ void polFit(int n_sampledPoints=1,
         for(int i=1;i<bins;i++){
           if(TMath::Abs(lepN_eta) > etaRange[i-1] && TMath::Abs(lepN_eta) < etaRange[i]) {etaBin=i; break; }
         }
-        double eff_N = evalParametrizedEff(lepP_pT, lepP_eta, func[etaBin]);
+        double eff_N = evalParametrizedEff(lepN_pT, lepN_eta, func[etaBin]);
         for(int i=1;i<bins;i++){
           if(TMath::Abs(lepP_eta) > etaRange[i-1] && TMath::Abs(lepP_eta) < etaRange[i]) {etaBin=i; break; }
         }
