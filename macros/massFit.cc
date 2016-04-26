@@ -67,10 +67,6 @@ void massFit(const std::string &infilename, int rapBin, int ptBin, int nState, b
 
   ws->Print("v");
 
-  cout<<"test1"<<endl;
-  RooRealVar test1("test1","test1",1.);
-  ws->import(test1);
-
   //------------------------------------------------------------------------------------------------------------------
   // do fit
   std::cout << "Fitting" << std::endl;
