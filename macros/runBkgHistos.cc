@@ -7,10 +7,12 @@
 #include <sstream>
 using namespace std;
 
+#include "bkgHistos_helper.h"
 #include "calculatePar.cc"
 #include "calcPol.C"
 #include "bkgHistos.C"
 #include "bkgHistos_chi.C"
+#include "bkgHistos_MCclosure.C"
 
 #include "clarg_parsing.h"
 //========================================================
@@ -41,6 +43,7 @@ int main(int argc, char* argv[]){
     subtractNP = false;
   std::string polDataPath;
   bool useRefittedChic = true;
+  bool mcClosure = false;
 
   // Loop over argument list
   for (int i=1; i < argc; i++) {
@@ -64,6 +67,7 @@ int main(int argc, char* argv[]){
     fromSplit("polDataPath", arg, polDataPath);
     fromSplit("subtractNP", arg, subtractNP);
     fromSplit("useRefittedChic", arg, useRefittedChic);
+    fromSplit("mcClosure", arg, mcClosure);
   }
 
   std::cout << "-----------------------\n"
@@ -75,7 +79,7 @@ int main(int argc, char* argv[]){
   for(int iRap = rapMin; iRap <= rapMax; iRap++){
     for(int iPT = ptMin; iPT <= ptMax; iPT++){
 
-      if (nState == 4 || nState == 5) {
+      if (!mcClosure && (nState == 4 || nState == 5)) {
         std::stringstream temp;
         temp << "tmpFiles/fit_Psi" << nState-3 << "S_rap" << iRap << "_pt" << iPT << ".root";
         std::string infilename = temp.str().c_str();
@@ -83,12 +87,18 @@ int main(int argc, char* argv[]){
         bkgHistos(infilename.c_str(), iRap, iPT, nState, folding, MC, doCtauUncer, PolLSB, PolRSB, PolNP,
                   ctauScen, FracLSB, forceBinning, normApproach, scaleFracBg, polDataPath.c_str());
       }
-      else if (nState == 6) {
+      else if (!mcClosure && nState == 6) {
         std::stringstream temp;
         temp << "tmpFiles/backupWorkSpace/ws_DefineRegionsAndFractions_Chi_rap" << iRap << "_pt" << iPT << ".root";
         std::string infilename = temp.str().c_str();
 
         bkgHistos_chi(infilename.c_str(), iRap, iPT, folding, MC, PolLSB, PolRSB, PolNP, FracLSB, normApproach, subtractNP, useRefittedChic);
+      }
+
+      if (mcClosure) {
+        std::stringstream infilename;
+        infilename << "tmpFiles/backupWorkSpace/ws_MassFit_Jpsi_rap" << iRap << "_pt" << iPT << ".root";
+        bkgHistos_MCclosure(infilename.str().c_str(), iRap, iPT, nState, folding);
       }
     }
   }
