@@ -9,7 +9,7 @@
 using namespace RooFit;
 using namespace std;
 
-int order(int n);
+// int order(int n);
 int findEvenNum(double number);
 vector<double> calculateInte(RooWorkspace *ws, RooDataSet *dataJpsictErr, double ctCutMin, double ctCutMax);
 vector<double> calculateInteSB(RooWorkspace *ws, RooDataSet *dataJpsictErr, double ctCutMin, double ctCutMax);
@@ -1889,26 +1889,6 @@ TH2D* ReSetBin(TH2D* hist, int nBinX, int nBinY, const std::stringstream& name, 
   }//binX
 
   return hist;
-}
-
-
-//=================================================
-int order(int n){
-  int total=1;
-  for(int i=0;i<n;i++)
-    total=total*2;
-  return total;
-}
-
-int findEvenNum(double number){
-  int thisNum=0;
-  for(int n=0;n<100;n++){
-    if(number >= order(n) && number <= order(n+1)){
-      thisNum=order(n+1);
-      break;
-    }
-  }
-  return thisNum;
 }
 
 double calcuFracL(RooWorkspace *ws, double mean, double sigma){
