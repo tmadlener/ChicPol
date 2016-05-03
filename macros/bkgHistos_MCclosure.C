@@ -40,8 +40,15 @@ void storeFactor(TFile* file, const std::string& name, const std::string& title,
 
 std::vector<std::vector<double> > calcCosThetaPhiValues(const TLorentzVector& lepP, const TLorentzVector& lepN, bool folding);
 
+double calcMeanPtRap(TH1D* pT_L, TH1D* pT_R, TH1D* pT_PSR, double fracLSB, double fBGsig);
+
+void fillCosThPhiHistos(TH2D** promptH, TH2D** nonPromptH, const std::vector<std::vector<double> >& values);
+
 void bkgHistos_MCclosure(const std::string& infilename, int rapBin, int ptBin, int nState, bool folding)
 {
+  // NOTE: expanding the acceptance 15 times (as compared to data) for keeping all MC events
+  const double nSigMassMC = onia::nSigMass * 15; // keep this here at the moment to not let it be global!
+
   const std::string datafilename = "tmpFiles/selEvents_data.root";
 
   // input
@@ -135,7 +142,7 @@ void bkgHistos_MCclosure(const std::string& infilename, int rapBin, int ptBin, i
   intree->SetBranchAddress("Jpsict", &jpsict);
 
   // ================================================================================
-  // HERE SOME WILD COPY AND PASTING IS HAPPENING AT THE MOMENT. HOPEFULLY THER WILL BE TIME FOR CLEANUP
+  // HERE SOME WILD COPY AND PASTING IS HAPPENING AT THE MOMENT. HOPEFULLY THERE WILL BE TIME FOR CLEANUP
   // SOURCES ARE: bkgHistos.C and bkgHistos_leptonBased.C
   // AT THE MOMENT A LOT OF INTERMEDIATE STEPS ARE SKIPPED!!!
   // ================================================================================
@@ -217,8 +224,11 @@ void bkgHistos_MCclosure(const std::string& infilename, int rapBin, int ptBin, i
         partAbsRap >= onia::rapForPTRange[rapBin-1] && partAbsRap < onia::rapForPTRange[rapBin]) {
       nAll++;
 
-      if (TMath::Abs(jpsi->M() - CBmass_p0) < onia::nSigMass * rapSigma(p0, p1, p2, jpsi->Rapidity())) {
+      if (TMath::Abs(jpsi->M() - CBmass_p0) < nSigMassMC * rapSigma(p0, p1, p2, jpsi->Rapidity())) {
         nSR++;
+
+        // calculate these values here, they are needed in any case afterwards
+        const std::vector<std::vector<double> > cosThPhiValues = calcCosThetaPhiValues(*lepP, *lepN, folding);
 
         if (partMass > jpsiMassSigMin && partMass < jpsiMassSigMax) { // signal region (mass)
           // store TLorentzVectors of the two muons in the given pT and rap cell
@@ -226,37 +236,18 @@ void bkgHistos_MCclosure(const std::string& infilename, int rapBin, int ptBin, i
           pT_PSR->Fill(partPt);
           rap_PSR->Fill(partAbsRap);
           hSR_pTrapMass->Fill(partPt, partAbsRap, gRandom->Uniform(jpsiMassSigMin, jpsiMassSigMax));
+          fillCosThPhiHistos(hSR_cosThetaPhi, hNPBG_cosThetaPhi, cosThPhiValues);
+        } else if (partMass <= jpsiMassSigMin) { // LSB
+          pT_L->Fill(partPt);
+          rap_L->Fill(partAbsRap);
+          hBG_pTrapMass_L->Fill(partPt, partAbsRap, funcBGJpsi->GetRandom(jpsiMassSigMin, jpsiMassSigMax));
+          fillCosThPhiHistos(hBG_cosThetaPhiL, hBGinNP_cosThetaPhiL, cosThPhiValues);
+        } else if (partMass >= jpsiMassSigMax) { // RSB
+          pT_R->Fill(partPt);
+          rap_R->Fill(partAbsRap);
+          hBG_pTrapMass_R->Fill(partPt, partAbsRap, funcBGJpsi->GetRandom(jpsiMassSigMin, jpsiMassSigMax));
+          fillCosThPhiHistos(hBG_cosThetaPhiR, hBGinNP_cosThetaPhiR, cosThPhiValues);
         }
-
-        // ------------------------------ mass histograms for background model ------------------------------
-        // for MC: fill mass histograms with random mass from signal region
-        // fill rapidity and pT histograms with all events
-        // NOTE: if(MC) is not needed in this case!
-        pT_L->Fill(partPt);
-        pT_R->Fill(partPt);
-        rap_L->Fill(partAbsRap);
-        rap_R->Fill(partAbsRap);
-
-        if (iEntry % 3 == 0) {
-          hBG_pTrapMass_L->Fill(partPt, partAbsRap, gRandom->Uniform(jpsiMassSigMin, jpsiMassSigMax));
-        } else if (iEntry % 5 == 0) {
-          hBG_pTrapMass_R->Fill(partPt, partAbsRap, gRandom->Uniform(jpsiMassSigMin, jpsiMassSigMax));
-        }
-
-        std::vector<std::vector<double> > cosThPhiValues = calcCosThetaPhiValues(*lepP, *lepN, folding);
-
-        for (int iFrame = 0; iFrame < onia::kNbFrames; ++iFrame) {
-          // filling histograms (if (MC) is again not needed)
-          hNPBG_cosThetaPhi[iFrame]->Fill(cosThPhiValues[iFrame][0], thisPhi[iFrame]);
-          hSR_cosThetaPhi[iFrame]->Fill(cosThPhiValues[iFrame][0], thisPhi[iFrame]);
-          if (iEntry % 3 == 0) {
-            hBG_cosThetaPhiL[iFrame]->Fill(cosThPhiValues[iFrame][0], thisPhi[iFrame]);
-            hBGinNP_cosThetaPhiL[iFrame]->Fill(cosThPhiValues[iFrame][0], thisPhi[iFrame]);
-          } else if (iEntry % 5 == 0) {
-            hBG_cosThetaPhiR[iFrame]->Fill(cosThPhiValues[iFrame][0], thisPhi[iFrame]);
-            hBGinNP_cosThetaPhiR[iFrame]->Fill(cosThPhiValues[iFrame][0], thisPhi[iFrame]);
-          }
-        } // end loop over frames
       } // acceptance (rap depending mass region)
     } // pT and rap binning
   } // end loop over entries in input
@@ -384,22 +375,17 @@ void bkgHistos_MCclosure(const std::string& infilename, int rapBin, int ptBin, i
 
     if (partPt >= onia::pTRange[rapBin][ptBin-1] && partPt < onia::pTRange[rapBin][ptBin] &&
         partAbsRap >= onia::rapForPTRange[rapBin-1] && partAbsRap < onia::rapForPTRange[rapBin] &&
-        TMath::Abs(jpsi->M() - CBmass_p0) < onia::nSigMass * rapSigma(p0, p1, p2, jpsi->Rapidity()) ) {
+        TMath::Abs(jpsi->M() - CBmass_p0) < nSigMassMC * rapSigma(p0, p1, p2, jpsi->Rapidity()) ) {
 
-      std::vector<std::vector<double> > cosThPhiValues = calcCosThetaPhiValues(*lepP, *lepN, folding);
+      const std::vector<std::vector<double> > cosThPhiValues = calcCosThetaPhiValues(*lepP, *lepN, folding);
 
-      for (int iFrame = 0; iFrame < onia::kNbFrames; ++iFrame) {
-        // filling histograms (if (MC) is again not needed)
-        hNPBG_cosThetaPhi[iFrame]->Fill(cosThPhiValues[iFrame][0], thisPhi[iFrame]);
-        hSR_cosThetaPhi[iFrame]->Fill(cosThPhiValues[iFrame][0], thisPhi[iFrame]);
-        if (iEntry % 3 == 0) {
-          hBG_cosThetaPhiL[iFrame]->Fill(cosThPhiValues[iFrame][0], thisPhi[iFrame]);
-          hBGinNP_cosThetaPhiL[iFrame]->Fill(cosThPhiValues[iFrame][0], thisPhi[iFrame]);
-        } else if (iEntry % 5 == 0) {
-          hBG_cosThetaPhiR[iFrame]->Fill(cosThPhiValues[iFrame][0], thisPhi[iFrame]);
-          hBGinNP_cosThetaPhiR[iFrame]->Fill(cosThPhiValues[iFrame][0], thisPhi[iFrame]);
-        }
-      } // end loop over frames
+      if (partMass > jpsiMassSigMin && partMass < jpsiMassSigMax) {
+        fillCosThPhiHistos(hSR_cosThetaPhi, hNPBG_cosThetaPhi, cosThPhiValues);
+      } else if (partMass <= jpsiMassSigMin) {
+        fillCosThPhiHistos(hBG_cosThetaPhiL, hBGinNP_cosThetaPhiL, cosThPhiValues);
+      } else if (partMass >= jpsiMassSigMax) {
+        fillCosThPhiHistos(hBG_cosThetaPhiR, hBGinNP_cosThetaPhiR, cosThPhiValues);
+      }
     }
   } // end loop entries
 
@@ -428,7 +414,13 @@ void bkgHistos_MCclosure(const std::string& infilename, int rapBin, int ptBin, i
   output->cd(); // redundant!
   hBG_pTrapMass->Write();
 
-  // TODO NEXT: pT and y and cosThPhi histos
+  // mean pT and rap histos
+  double fBGsig = 0.001; // following bkgHistos.C:480
+  double meanPT = calcMeanPtRap(pT_L, pT_R, pT_PSR, fracLSB, fBGsig);
+  storeFactor(output, "mean_pT", ";;mean p_{T}", meanPT, 0.);
+
+  double meanRap = calcMeanPtRap(rap_L, rap_R, rap_PSR, fracLSB, fBGsig);
+  storeFactor(output, "mean_y", ";;mean |y|", meanRap, 0.);
 
   // outtree->Write();
   output->Write();
@@ -508,4 +500,38 @@ std::vector<std::vector<double> > calcCosThetaPhiValues(const TLorentzVector& le
   }
 
   return returnVals;
+}
+
+/** scale the passed histogram to the Integral of itself.
+ * Mainly for less typing effort.
+ */
+inline void selfScale(TH1D* h, double f = 1.0)
+{
+  h->Scale(f / (1. * h->Integral()));
+}
+
+/** calculate the mean pT or rap that should be stored.
+ * NOTE: modifies the passed histograms (scaling and adding them together)
+ * TODO: check if this actually does what is expected. The code in bkgHistos.C and bkgHistos_leptonBased.C is
+ * somewhat conflicting
+ */
+double calcMeanPtRap(TH1D* h_L, TH1D* h_R, TH1D* h_PSR, double fracLSB, double fBGsig)
+{
+  selfScale(h_L, fracLSB);
+  selfScale(h_R, 1. - fracLSB);
+  h_L->Add(h_R);
+  selfScale(h_L, fBGsig);
+  // tmadlener: why no "normalization" of h_PSR?
+  h_PSR->Add(h_L, -1.);
+
+  return h_PSR->GetMean();
+}
+
+/** fill the costheta phi histograms.*/
+void fillCosThPhiHistos(TH2D** promptH, TH2D** nonPromptH, const std::vector<std::vector<double> >& values)
+{
+  for (int iFrame = 0; iFrame < onia::kNbFrames; ++iFrame) {
+    promptH[iFrame]->Fill(values[iFrame][0], values[iFrame][1]);
+    nonPromptH[iFrame]->Fill(values[iFrame][0], values[iFrame][1]);
+  }
 }
