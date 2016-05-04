@@ -5,7 +5,7 @@ INCS=-I../interface
 %.o : %.cc
 	$(CXX) -c $<
 
-all: runData runChiData runWorkspace runMassFit runLifetimeFit runPlotMassLifetime runBkgHistos PlotFitPar PlotCosThetaPhiBG PlotCosThetaPhiDistribution runChiMassLifetimeFit runDefineRegionsAndFractions runPlotDataDistributions runPlotJpsiMassLifetime PlotJpsiFitPar PlotMassRapPtBG runMC
+all: runData runChiData runWorkspace runMassFit runLifetimeFit runPlotMassLifetime runBkgHistos PlotFitPar PlotCosThetaPhiBG PlotCosThetaPhiDistribution runChiMassLifetimeFit runDefineRegionsAndFractions runPlotDataDistributions runPlotJpsiMassLifetime PlotJpsiFitPar PlotMassRapPtBG runMC runBkgHistos_new
 
 PlotJpsiFitPar: PlotJpsiFitPar.cc
 	$(CXX) $^ $(INCS) -o $@ $(LIBS) -lFoam -lMinuit -lRooFit -lRooFitCore
@@ -58,5 +58,8 @@ PlotMassRapPtBG: PlotMassRapPtBG.cc
 runMC: runMC.cc runMC_helperStructs.h
 	$(CXX) $^ $(INCS) -o $@ $(LIBS)
 
+runBkgHistos_new: runBkgHistos_new.cc BkgHistoProducerFactory.h BkgHistoProducer.h BkgHistoProducer_helper.h bkgHistos_helper.h
+	$(CXX) $^ $(INCS) -o $@ $(LIBS) -lRooFit -lRooFitCore
+
 clean:
-	rm runData runChiData runWorkspace runMassFit runLifetimeFit runPlotMassLifetime runBkgHistos PlotFitPar PlotCosThetaPhiBG PlotCosThetaPhiDistribution runChiMassLifetimeFit runDefineRegionsAndFractions runPlotDataDistributions runPlotJpsiMassLifetime PlotJpsiFitPar PlotMassRapPtBG runMC
+	rm runData runChiData runWorkspace runMassFit runLifetimeFit runPlotMassLifetime runBkgHistos PlotFitPar PlotCosThetaPhiBG PlotCosThetaPhiDistribution runChiMassLifetimeFit runDefineRegionsAndFractions runPlotDataDistributions runPlotJpsiMassLifetime PlotJpsiFitPar PlotMassRapPtBG runMC runBkgHistos_new
