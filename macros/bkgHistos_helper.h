@@ -36,7 +36,7 @@ void createHists(std::vector<TH2D*> hists, const std::string& nameBase, /*const 
                  const char* labels[], const std::string& suffix, const int nBinsX, const int nBinsY,
                  const double xMin, const double xMax, const double yMin, const double yMax)
 {
-  std::cout << "CREATE HISTS: " << nameBase << ", " << suffix << std::endl; // dev / testing
+  std::cout << "### CREATE HISTS: " << nameBase << ", " << suffix << std::endl; // dev / testing
 
   for (size_t iH = 0; iH < hists.size(); ++iH) {
     std::stringstream name;
@@ -50,5 +50,36 @@ void createHists(std::vector<TH2D*> hists, const std::string& nameBase, /*const 
     hists[iH]->Sumw2();
   }
 }
+
+/**
+ * Get the value from the RooRealVar stored in the workspace by name.
+ * small helper function for less typing effort. COULDDO: safety measures.
+ */
+inline double getVarVal(RooWorkspace* ws, const std::string& name)
+{
+  // for development:
+  std::cout << "### getVarVal, " << name << ": " << static_cast<RooRealVar*>(ws->var(name.c_str())) << std::endl;
+
+  return static_cast<RooRealVar*>(ws->var(name.c_str()))->getVal();
+}
+
+/**
+ * Get the pdf stored in the workspace by name
+ * small helper function for less typing effort. COULDDO: safety measures.
+ */
+inline RooAbsPdf* getPdf(RooWorkspace* ws, const std::string& name)
+{
+  // for develpment:
+  std::cout << "### getPdf, " << name << ": " << static_cast<RooAbsPdf*>(ws->pdf(name.c_str())) << std::endl;
+
+  return static_cast<RooAbsPdf*>(ws->pdf(name.c_str()));
+}
+
+/** calculate the rapidity dependent mass sigma: \f$\sigma_{m}(|y|) = p_{0} + p_{1} * |y| + p_{2} *|y|^2\f$ */
+inline double rapSigma(double p0, double p1, double p2, double rap)
+{
+  return p0 + p1 * TMath::Abs(rap) + p2 * TMath::Power(TMath::Abs(rap),2);
+}
+
 
 #endif

@@ -1,10 +1,17 @@
 #ifndef BKGHISTOPRODUCER_HELPER_H__
 #define BKGHISTOPRODUCER_HELPER_H__
 
+#include "bkgHistos_helper.h"
+
 #include "rootIncludes.inc"
 
 #include <vector>
 #include <iostream> // this can probably removed after develpment
+#include <string>
+#include <map> // unordered_map, if c++11 is supported
+#include <sstream>
+#include <stdexcept> // remove after development/debugging
+
 
 /** struct containing the variables that are stored in the data root file. */
 struct BkgHistoRootVars {
@@ -21,6 +28,10 @@ struct BkgHistoRootVars {
   double mQ; /**< mQ variable. */
 };
 
+/**
+ * struct containing all the TH2Ds for the different cosTheta Phi histograms. Holds intermediate histos as well
+ * as output histograms.
+ */
 struct BkgHistoCosThetaHists {
   /** constructor. Creates the necessary number of histos (one for each frame) and initializes them to nullptr.*/
   BkgHistoCosThetaHists(const int nHists);
@@ -43,22 +54,108 @@ struct BkgHistoCosThetaHists {
   std::vector<TH2D*> hSR; /**< signal region (?). */
 };
 
+/** struct containing all TH1Ds necessary to store either the pT or the rapidity data.  */
+struct BkgHisto1DHists {
+  /** constructor. Initializes everything to nullptrs. Leaves h_NP and h_PSR empty vectors. */
+  BkgHisto1DHists();
+  /** destructor. Deletes all present histograms. TODO: FIX! */
+  ~BkgHisto1DHists();
+  /** Creates all histograms with nBins and the passed min and max values.
+   * Taking a prefix that is used for storing in root files and also the number of needed NP and PSR1 histograms.
+   */
+  void createHists(const std::string& prefix, const size_t nHists,
+                   const int nBins, const double min, const double max);
+  /** store the histograms to the files. the histograms not in vectors will be stored to each file. The histograms
+   * in vectors will be stored to only one file (index).
+   * NOTE: no check is done whether the vectors actually have the same size!
+   */
+  void storeToFiles(const std::vector<TFile*>& files);
+
+  TH1D* h_L; /**< LSB histogram. */
+  TH1D* h_R; /**< RSB histogram. */
+  TH1D* h_highct_L; /**< LSB histogram for highct. */
+  TH1D* h_highct_R; /**< RSB histogram for highct. */
+  std::vector<TH1D*> h_NP; /**< non-prompt histograms. */
+  std::vector<TH1D*> h_PSR; /**< prompt signal regions histograms. */
+};
+
+/** struct containing all TH3Ds for intermediate and final storage. */
+struct BkgHistoPtRapMassHists {
+  /** constructor. Initializes everything to nullptrs. */
+  BkgHistoPtRapMassHists();
+  /** destructor. Deletes all pointers. TODO: FIX! */
+  ~BkgHistoPtRapMassHists();
+
+  TH3D* hBG_L; /**< LSB background */
+  TH3D* hBG_R; /**< RSB background. */
+  TH3D* h_highct_L; /**< LSB background highct.*/
+  TH3D* h_highct_R; /**< RSB background highct.*/
+  TH3D* hNP; /**< NP histo. */
+  TH3D* hSR; /**< SR histo. */
+};
+
+/**
+ * flexible class to hold different named fitvariables with easy retrieval and set functions.
+ * NOTE: makes use of a map internally, so consider storing variables that are needed frequently in a local
+ * variable.
+ * TODO: upgrade to unordered_map with c++11
+ */
+class BkgHistoFitVarsStore {
+public:
+  /**
+   * retrieve a value form the RooWorkspace and store it under the same name or another (if passed).
+   * NOTE: if a value already exists with the name it is replaced (silently).
+   */
+  void setFromWS(RooWorkspace* ws, const std::string& wsName, const std::string& name = "");
+
+  /**
+   * store a value under the given name.
+   * NOTE: if a value already exists with the name it is replaced (silently).
+   */
+  void set(const std::string& name, const double value) { m_store[name] = value; }
+
+  /**
+   * get the value to the appropriate name.
+   * NOTE: made somewhat save by using at(). Throws an exception if no entry with that name exists.
+   * TODO: remove try-catch block after development!
+   */
+  double operator[](const std::string& name) const {
+    try {
+      return m_store.at(name);
+    } catch(std::out_of_range& ex) {
+      std::cerr << ex.what() << ", no variable " << name << " stored!" << std::endl;
+      throw; // rethrow as this is an error that cannot be handled in the calling function
+    }
+  };
+
+  /** dumpt the whole store onto a stream (for debugging purposes). */
+  friend std::ostream& operator<<(std::ostream&, const BkgHistoFitVarsStore&);
+
+private:
+  typedef std::map<std::string, double> MapT; /**< private typedef for the internally used map. */
+  MapT m_store; /**< actual storing entity. */
+};
+
 // ================================================================================
-//                               IMPLEMENTATION
+//                 IMPLEMENTATION BKG HISTO ROOTVARS
 // ================================================================================
 BkgHistoRootVars::~BkgHistoRootVars()
 {
-  std::cout << "DESTRUCTOR OF BkgHistoRootVars" << std::endl;
+  std::cout << "---------- DESTRUCTOR OF BkgHistoRootVars" << std::endl;
   delete lepP;
   delete lepN;
   delete jpsi;
   delete chic;
   delete chic_rf;
+  std::cout << "********** DESTRUCTOR OF BkgHistoRootVars" << std::endl;
 }
 
+// ================================================================================
+//              IMPLEMENTATION BKG HISTO COSTHETA PHI HISTS
+// ================================================================================
 BkgHistoCosThetaHists::BkgHistoCosThetaHists(const int nHists)
 {
-  std::cout << "CONSTRUCTOR OF BkgHistoCosThetaHists" << std::endl;
+  std::cout << "---------- CONSTRUCTOR OF BkgHistoCosThetaHists" << std::endl;
   // TODO: replace NULL with nullptr after migragtion to c++11
   for (int iH = 0; iH < nHists; ++iH) {
     hBG_L.push_back(NULL);
@@ -74,11 +171,12 @@ BkgHistoCosThetaHists::BkgHistoCosThetaHists(const int nHists)
     hSR_R.push_back(NULL);
     hSR.push_back(NULL);
   }
+  std::cout << "********** CONSTRUCTOR OF BkgHistoCosThetaHists" << std::endl;
 }
 
 BkgHistoCosThetaHists::~BkgHistoCosThetaHists()
 {
-  std::cout << "DESTRUCTOR OF BkgHistoCosThetaHists" << std::endl;
+  std::cout << "---------- DESTRUCTOR OF BkgHistoCosThetaHists" << std::endl;
   for (size_t iH = 0; iH < hBG_L.size(); ++iH) { // every vector should contain the same number of TH2Ds
     delete hBG_L[iH];
     delete hBG_R[iH];
@@ -93,11 +191,12 @@ BkgHistoCosThetaHists::~BkgHistoCosThetaHists()
     delete hSR_R[iH];
     delete hSR[iH];
   }
+  std::cout << "********** DESTRUCTOR OF BkgHistoCosThetaHists" << std::endl;
 }
 
 void BkgHistoCosThetaHists::storeToFile(TFile* file)
 {
-  std::cout << "STORE TO FILE OF BkgHistoCosThetaHists" << std::endl;
+  std::cout << "---------- STORE TO FILE OF BkgHistoCosThetaHists" << std::endl;
   file->cd();
   for (size_t iH = 0; iH < hBG_L.size(); ++iH) { // every vector should contain the same number of TH2Ds
     if (hBG_L[iH]) hBG_L[iH]->Write();
@@ -113,6 +212,137 @@ void BkgHistoCosThetaHists::storeToFile(TFile* file)
     if (hSR_R[iH]) hSR_R[iH]->Write();
     if (hSR[iH]) hSR[iH]->Write();
   }
+  std::cout << "********** STORE TO FILE OF BkgHistoCosThetaHists" << std::endl;
+}
+
+// ================================================================================
+//                    IMPLEMENTATION BKG HISTO 1D HISTS
+// ================================================================================
+BkgHisto1DHists::BkgHisto1DHists()
+{
+  std::cout <<"---------- CONSTRUCTOR OF BkgHisto1DHists" << std::endl;
+  // TODO: replace NULL with nullptr with c++11 availability
+  h_L = NULL;
+  h_R = NULL;
+  h_highct_L = NULL;
+  h_highct_R = NULL;
+
+  std::cout <<"********** CONSTRUCTOR OF BkgHisto1DHists" << std::endl;
+}
+
+BkgHisto1DHists::~BkgHisto1DHists()
+{
+  std::cout <<"---------- DESTRUCTOR OF BkgHisto1DHists" << std::endl;
+
+  // TODO: currently get a seg fault here. This is caused by the call to TFile::Close() prior to this
+  // destructor, which apparently means for ROOT to delete TH1D that are "attatched" to the TFile
+  // The question remains, why this works for TH2Ds (e.g.)?
+  // delete h_L;
+  // delete h_R;
+  // delete h_highct_L;
+  // delete h_highct_R;
+  // for (size_t i = 0; i < h_NP.size(); ++i) delete h_NP[i];
+  // for (size_t i = 0; i < h_PSR.size(); ++i) delete h_PSR[i];
+
+  std::cout <<"********** DESTRUCTOR OF BkgHisto1DHists" << std::endl;
+}
+
+void BkgHisto1DHists::createHists(const std::string& prefix, const size_t nHists,
+                                  const int nBins, const double min, const double max)
+{
+  std::cout <<"---------- CREATE HISTS OF BkgHisto1DHists" << std::endl;
+
+  std::string temp = prefix + "LSB";
+  h_L = new TH1D(temp.c_str(), temp.c_str(), nBins, min, max);
+  temp = prefix + "RSB";
+  h_R = new TH1D(temp.c_str(), temp.c_str(), nBins, min, max);
+  temp = prefix + "_highct_LSB";
+  h_highct_L = new TH1D(temp.c_str(), temp.c_str(), nBins, min, max);
+  temp = prefix + "_highct_RSB";
+  h_highct_R = new TH1D(temp.c_str(), temp.c_str(), nBins, min, max);
+
+  for (size_t i = 0; i < nHists; ++i) {
+    temp = prefix + "NP";
+    h_NP.push_back(new TH1D(temp.c_str(), temp.c_str(), nBins, min, max));
+    temp = prefix + "PSR";
+    h_PSR.push_back(new TH1D(temp.c_str(), temp.c_str(), nBins, min, max));
+  }
+
+  std::cout <<"********** CREATE HISTS OF BkgHisto1DHists" << std::endl;
+}
+
+void BkgHisto1DHists::storeToFiles(const std::vector<TFile*>& files)
+{
+  std::cout << "---------- STORE TO FILES OF BkgHisto1DHists" << std::endl;
+
+  for (size_t iFile = 0; iFile < files.size(); ++iFile) {
+    TFile* file = files[iFile];
+
+    file->cd();
+    h_L->Write();
+    h_R->Write();
+    h_highct_L->Write();
+    h_highct_R->Write();
+    h_NP[iFile]->Write();
+    h_PSR[iFile]->Write();
+  }
+
+  std::cout << "********** STORE TO FILES OF BkgHisto1DHists" << std::endl;
+}
+
+// ================================================================================
+//               IMPLEMENTATION BKG HISTO PT RAP MASS HISTS
+// ================================================================================
+BkgHistoPtRapMassHists::BkgHistoPtRapMassHists()
+{
+  std::cout << "---------- CONSTRUCTOR OF BkgHistoPtRapMassHists" << std::endl;
+  // TODO: replace NULL w/ nullptr for c++11
+  hBG_L = NULL;
+  hBG_R = NULL;
+  h_highct_L = NULL;
+  h_highct_R = NULL;
+  hNP = NULL;
+  hSR = NULL;
+
+  std::cout << "********** CONSTRUCTOR OF BkgHistoPtRapMassHists" << std::endl;
+}
+
+BkgHistoPtRapMassHists::~BkgHistoPtRapMassHists()
+{
+  std::cout << "---------- DESTRUCTOR OF BkgHistoPtRapMassHists" << std::endl;
+  // TODO: currently get a seg fault here. This is caused by the call to TFile::Close() prior to this
+  // destructor, which apparently means for ROOT to delete TH3D that are "attatched" to the TFile
+  // The question remains, why this works for TH2Ds (e.g.)?
+  // delete hBG_L;
+  // delete hBG_R;
+  // delete h_highct_L;
+  // delete h_highct_R;
+  // delete hNP;
+  // delete hSR;
+
+  std::cout << "********** DESTRUCTOR OF BkgHistoPtRapMassHists" << std::endl;
+}
+
+// ================================================================================
+//                IMPLEMENTATION OF BKG HISTO FIT VARS STORE
+// ================================================================================
+void BkgHistoFitVarsStore::setFromWS(RooWorkspace* ws, const std::string& wsName, const std::string& name)
+{
+  std::string storeName = name.empty() ? wsName : name; // determine name to be used for storage
+  m_store[storeName] = getVarVal(ws, wsName);
+}
+
+std::ostream& operator<<(std::ostream& os, const BkgHistoFitVarsStore& store)
+{
+  // os << "content of BkgHistoFitVarsStore:" << std::endl;
+  // typedef for easier exchange of internal map
+  typedef BkgHistoFitVarsStore::MapT::const_iterator mapIt;
+
+  for (mapIt it = store.m_store.begin(); it != store.m_store.end(); ++it) {
+    os << it->first << " = " << it->second << ", ";
+  }
+
+  return os;
 }
 
 #endif
