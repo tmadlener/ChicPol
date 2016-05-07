@@ -112,28 +112,26 @@ public:
    * store a value under the given name.
    * NOTE: if a value already exists with the name it is replaced (silently).
    */
-  void set(const std::string& name, const double value) { m_store[name] = value; }
+  void set(const std::string& name, const double value);
 
   /**
    * get the value to the appropriate name.
    * NOTE: made somewhat save by using at(). Throws an exception if no entry with that name exists.
    * TODO: remove try-catch block after development!
    */
-  double operator[](const std::string& name) const {
-    try {
-      return m_store.at(name);
-    } catch(std::out_of_range& ex) {
-      std::cerr << ex.what() << ", no variable " << name << " stored!" << std::endl;
-      throw; // rethrow as this is an error that cannot be handled in the calling function
-    }
-  };
+  double operator[](const std::string& name) const;
 
-  /** dumpt the whole store onto a stream (for debugging purposes). */
+  /** dump the whole store onto a stream (for debugging purposes). */
   friend std::ostream& operator<<(std::ostream&, const BkgHistoFitVarsStore&);
+
+  /** debugging. Print how many times each variable has been retrieved from the store. */
+  const std::string printUsages() const;
 
 private:
   typedef std::map<std::string, double> MapT; /**< private typedef for the internally used map. */
   MapT m_store; /**< actual storing entity. */
+  /** development entity for counting the times of usage for each variable. */
+  mutable std::map<std::string, size_t> m_counter;
 };
 
 // ================================================================================
@@ -326,11 +324,30 @@ BkgHistoPtRapMassHists::~BkgHistoPtRapMassHists()
 // ================================================================================
 //                IMPLEMENTATION OF BKG HISTO FIT VARS STORE
 // ================================================================================
-void BkgHistoFitVarsStore::setFromWS(RooWorkspace* ws, const std::string& wsName, const std::string& name)
+inline void BkgHistoFitVarsStore::setFromWS(RooWorkspace* ws, const std::string& wsName, const std::string& name)
 {
   std::string storeName = name.empty() ? wsName : name; // determine name to be used for storage
-  m_store[storeName] = getVarVal(ws, wsName);
+  set(storeName, getVarVal(ws, wsName));
 }
+
+inline void BkgHistoFitVarsStore::set(const std::string& name, const double value)
+{
+   m_store[name] = value;
+   m_counter[name] = 0; // reset the counter
+}
+
+inline double BkgHistoFitVarsStore::operator[](const std::string& name) const
+{
+  // TODO: remove try-catch block after dev.
+  try {
+    // don't care if the variable exists or gets created here! If its not present all fails in the next line anyway
+    m_counter[name]++;
+    return m_store.at(name);
+  } catch(std::out_of_range& ex) {
+    std::cerr << ex.what() << ", no variable " << name << " stored!" << std::endl;
+    throw; // rethrow as this is an error that cannot be handled in the calling function
+  }
+};
 
 std::ostream& operator<<(std::ostream& os, const BkgHistoFitVarsStore& store)
 {
@@ -343,6 +360,19 @@ std::ostream& operator<<(std::ostream& os, const BkgHistoFitVarsStore& store)
   }
 
   return os;
+}
+
+const std::string BkgHistoFitVarsStore::printUsages() const
+{
+  typedef std::map<std::string, size_t>::const_iterator mapIt;
+  std::stringstream output;
+  output << "usage counter: ";
+
+  for (mapIt it = m_counter.begin(); it != m_counter.end(); ++it) {
+    output << it->first << ": " << it->second << ", ";
+  }
+
+  return output.str();
 }
 
 #endif
