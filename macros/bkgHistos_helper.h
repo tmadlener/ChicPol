@@ -64,6 +64,18 @@ inline double getVarVal(RooWorkspace* ws, const std::string& name)
 }
 
 /**
+ * Get the error from the RooRealVar stored in the workspace by name.
+ * small helper function for less typing effort. COULDDO: safety measures.
+ */
+inline double getVarError(RooWorkspace* ws, const std::string& name)
+{
+  // for development:
+  std::cout << "### getVarError, " << name << ": " << static_cast<RooRealVar*>(ws->var(name.c_str())) << std::endl;
+
+  return static_cast<RooRealVar*>(ws->var(name.c_str()))->getError();
+}
+
+/**
  * Get the pdf stored in the workspace by name
  * small helper function for less typing effort. COULDDO: safety measures.
  */

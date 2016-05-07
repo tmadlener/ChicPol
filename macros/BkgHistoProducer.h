@@ -18,7 +18,8 @@
 class IBkgHistoProducer {
 public:
   /** initialize everything that is necessary. Call for every pt and rapidity bin separately.*/
-  virtual void initialize(const std::string& infileName, const int rapBin, const int ptBin, bool MC) = 0;
+  virtual void initialize(const std::string& infileName, const int rapBin, const int ptBin, bool MC,
+                          const int FracLSB) = 0;
   /** do the actual work and fill the histograms. Call for every pt and rapidity bin separately.*/
   virtual void fillHistos() = 0;
   /** store the appropriate histograms to the output files. Call for every pt and rapidity bin separately. */
@@ -81,7 +82,8 @@ public:
    * initialize the fit file and setup all variables needed internally for the given State. Call for every
    * pt and rapidity bin separately.
    */
-  virtual void initialize(const std::string& infileName, const int rapBin, const int ptBin, bool MC) /*override*/;
+  virtual void initialize(const std::string& infileName, const int rapBin, const int ptBin, bool MC,
+                          const int FracLSB) /*override*/;
   /** fill all needed histograms and write them to file. Call for every pt and rapitdity bin separately. */
   virtual void fillHistos() /*override*/;
   /** store all the filled histograms, and combine them together to have the correct output histograms. */
@@ -101,7 +103,9 @@ private:
   BkgHisto1DHists m_ptHists; /**< the pT TH1D histogram container. */
   BkgHisto1DHists m_rapHists; /**< the rap TH1D histogram container. */
   std::vector<BkgHistoPtRapMassHists> m_ptRapMass; /**< vector for the pTRapMass histos. */
-  BkgHistoFitVarsStore m_fitVars; /**< storage for the different double values, like the fit variables. */
+  NamedVarStore<double> m_fitVars; /**< storage for the different double values, like the fit variables. */
+  /** storage for the different distributions from which random numbers are drawn. */
+  NamedVarStore<TF1*> m_randomDists;
 
   /** Initialization that is common to every state, like setup of the workspace, etc... */
   void initCommon(const std::string& infilename);
@@ -140,7 +144,10 @@ private:
    * Initialize the Fit Variables store by retrieving all necessary values from the RooWorkspace or setting them
    * to the appropriate values for MC closure. Also defines som other variables that would else be "global";
    */
-  void setupFitVariables(const int rapBin, const int ptBin, bool MC);
+  void setupFitVariables(const int rapBin, const int ptBin, bool MC, const int FracLSB);
+
+  /** Setup the TF1s that are needed for filling the mass histograms */
+  void setupRandomDists();
 
   typedef typename std::vector<TFile*>::iterator TFileIt; /**< private typedef for easier looping over files. */
   typedef typename std::vector<TTree*>::iterator TTreeIt; /**< private typedef for easier looping over TTrees. */
@@ -262,11 +269,84 @@ void BkgHistoProducer<State>::setupCosThPhiHists(const int nBCT, const int nBP)
 // ================================================================================
 // this definetely needs spezialization
 template<>
-void BkgHistoProducer<Chic>::setupFitVariables(const int rapBin, const int ptBin, bool MC)
+void BkgHistoProducer<Chic>::setupFitVariables(const int rapBin, const int ptBin, bool MC, const int FracLSB)
 {
   // NOTE: This is not yet done and no MC closure initialization is done at the moment. This is just a mere
   // "translation" from 'bkgHistos_leptonBased.C'. There is probably some unecessary storage done here
   // TODO: implement MC closure
+  // TODO: find a way to implement this more readable. At the moment this is just a very long list of variables
+
+  m_fitVars.setFromWS(m_ws, "var_fLSBChic1", "fracLSB1");
+  m_fitVars.setFromWS(m_ws, "var_fLSBChic2", "fracLSB2");
+  m_fitVars.setFromWS(m_ws, "var_fLSBpsi", "fracLSBpsi");
+  if (FracLSB >= 0) { // NOTE: no sanity check for FracLSB > 100 !
+    m_fitVars.set("fracLSB1", (double)FracLSB / 100.);
+    m_fitVars.set("fracLSB2", (double)FracLSB / 100.);
+    m_fitVars.set("fracLSBpsi", (double)FracLSB / 100.);
+  }
+
+  m_fitVars.setFromWS(m_ws, "var_fracBackgroundInPRSR1", "fBGsig1"); // comb. background in PRSR1
+  m_fitVars.setFromWS(m_ws, "var_fracBackgroundInPRSR2", "fBGsig2"); // comb. background in PRSR2
+  m_fitVars.setFromWS(m_ws, "var_fracBackgroundInNPSR1", "fBGinNP1"); // comb. background in NPSR1
+  m_fitVars.setFromWS(m_ws, "var_fracBackgroundInNPSR2", "fBGinNP2"); // comb. background in NPSR2
+  m_fitVars.setFromWS(m_ws, "var_fracNPChic1InPRSR1", "fNPB1"); // non prompt background in PRSR1
+  m_fitVars.setFromWS(m_ws, "var_fracNPChic2InPRSR2", "fNPB2"); // non prompt background in PRSR2
+  m_fitVars.set("fTBsig1", m_fitVars["fBGsig1"]); // total background fraction
+  m_fitVars.set("fTBsig2", m_fitVars["fBGsig2"]); // total background fraction
+  m_fitVars.set("fP1", 1. - m_fitVars["fBGsig1"] - m_fitVars["fNPB1"]);
+  m_fitVars.set("fP2", 1. - m_fitVars["fBGsig2"] - m_fitVars["fNPB2"]);
+
+  m_fitVars.setFromWS(m_ws, "var_fracPRChic1InPRLSB", "fSRinPLSB"); // prompt chic1 contamination in LSB
+  m_fitVars.setFromWS(m_ws, "var_fracPRChic2InPRRSB", "fSRinPRSB"); // prompt chic2 contamination in RSB
+  m_fitVars.setFromWS(m_ws, "var_nBackground", "nBkg"); // total number of background events
+  m_fitVars.setFromWS(m_ws, "var_nChic", "nChic"); // total number of chic events
+  m_fitVars.setFromWS(m_ws, "var_nChic1", "nChic1"); // total number of chic1 events
+  m_fitVars.setFromWS(m_ws, "var_nChic2", "nChic2"); // total number of chic2 events
+  m_fitVars.setFromWS(m_ws, "var_nPRChic1InPRSR1","nPRChic1InPRSR1"); // number of chic1 events in PRSR1
+  m_fitVars.setFromWS(m_ws, "var_nPRChic2InPRSR2","nPRChic2InPRSR2"); // number of chic2 events in PRSR2
+
+  m_fitVars.setFromWS(m_ws, "var_fTotInSR1", "fTotInSR1"); // fraction of total events in SR1
+  m_fitVars.setFromWS(m_ws, "var_fracBackgroundInSR1", "fBGinSR1"); // background fraction in SR1
+  m_fitVars.set("nSR1", (m_fitVars["nBkg"] + m_fitVars["nChic"]) * m_fitVars["fTotInSR1"]); // total number of events in SR1
+
+  m_fitVars.setFromWS(m_ws, "var_fTotInSR2", "fTotInSR2"); // fraction of total events in SR2
+  m_fitVars.setFromWS(m_ws, "var_fracBackgroundInSR2", "fBGinSR2"); // background fraction in SR2
+  m_fitVars.set("nSR2", (m_fitVars["nBkg"] + m_fitVars["nChic"]) * m_fitVars["fTotInSR2"]); // total number of events in SR2
+
+  m_fitVars.setFromWS(m_ws, "var_fPRSR1InSR1", "fPRSR1InSR1"); // fraction of PRSR1 in SR1
+  m_fitVars.set("nPRSR1", m_fitVars["nSR1"] * m_fitVars["fPRSR1InSR1"]); // total number of events in PRSR1
+  m_fitVars.setFromWS(m_ws, "var_fNPSR1InSR1", "fNPSR1InPRSR1"); // fraction of PRSR1 in SR1
+  m_fitVars.set("nNPSR1", m_fitVars["nSR1"] * m_fitVars["fNPSR1InPRSR1"]); // total number of events in NPSR1
+  m_fitVars.setFromWS(m_ws, "var_fracNPChic1InPRSR1", "fNPChic1InPRSR1"); // non prompt chic1 fraction in PRSR1
+  m_fitVars.setFromWS(m_ws, "var_fracPRChic1InNPSR1", "fNPChic1InPRSR1"); // prompt chic1 fraction in NPSR1
+  m_fitVars.setFromWS(m_ws, "var_fracNPChic1InNPSR1", "fNPChic1InNPSR1"); // non prompt chic1 fraction in NPSR1
+
+  m_fitVars.setFromWS(m_ws, "var_fPRSR2InSR2", "fPRSR2InSR2"); // fraction of PRSR2 in SR2
+  m_fitVars.set("nPRSR2", m_fitVars["nSR2"] * m_fitVars["fPRSR2InSR2"]); // total number of events in PRSR2
+  m_fitVars.setFromWS(m_ws, "var_fNPSR2InSR2", "fNPSR2InPRSR2"); // fraction of PRSR2 in SR2
+  m_fitVars.set("nNPSR2", m_fitVars["nSR2"] * m_fitVars["fNPSR2InPRSR2"]); // total number of events in NPSR2
+  m_fitVars.setFromWS(m_ws, "var_fracNPChic2InPRSR2", "fNPChic2InPRSR2"); // non prompt chic2 fraction in PRSR2
+  m_fitVars.setFromWS(m_ws, "var_fracPRChic2InNPSR2", "fNPChic2InPRSR2"); // prompt chic2 fraction in NPSR2
+  m_fitVars.setFromWS(m_ws, "var_fracNPChic2InNPSR2", "fNPChic2InNPSR2"); // non prompt chic2 fraction in NPSR2
+
+  // no differentiation between mumu+gamma and Jpsi+gamma events as mass distribution has no influence
+  // fraction of combinatorial mumu+gamma events to total background
+  m_fitVars.setFromWS(m_ws, "var_fractionCombBGofTotalBackground", "fComBgToTotBg");
+  // fraction of combinatorial Jpsi + gamma events to total background
+  m_fitVars.setFromWS(m_ws, "var_fractionJpsiBGofTotalBackground", "fJpsiBgToTotBg");
+
+  // errors on fractions
+  m_fitVars.set("fBGerr1", getVarError(m_ws, "var_fracBackgroundInPRSR1"));
+  m_fitVars.set("fBGerr2", getVarError(m_ws, "var_fracBackgroundInPRSR2"));
+  m_fitVars.set("fNPerr1", getVarError(m_ws, "var_fracBackgroundInNPSR1"));
+  m_fitVars.set("fNPerr2", getVarError(m_ws, "var_fracBackgroundInNPSR2"));
+  m_fitVars.set("fBGinNPerr1", getVarError(m_ws, "var_fracNPChic1InPRSR1"));
+  m_fitVars.set("fBGinNPerr2", getVarError(m_ws, "var_fracNPChic1InPRSR2"));
+  m_fitVars.set("fTBGerr1", m_fitVars["fBGerr1"]);
+  m_fitVars.set("fTBGerr2", m_fitVars["fBGerr2"]);
+  m_fitVars.set("fPerr1", TMath::Sqrt(TMath::Power(m_fitVars["fNPerr1"], 2) + TMath::Power(m_fitVars["fBGerr1"], 2)));
+  m_fitVars.set("fPerr2", TMath::Sqrt(TMath::Power(m_fitVars["fNPerr2"], 2) + TMath::Power(m_fitVars["fBGerr2"], 2)));
+
   // TODO: chic kinematic dependent pt/rap min/max values
   m_fitVars.set("jpsiMassMin", onia::massMin);
   m_fitVars.set("jpsiMassMax", onia::massMax);
@@ -290,7 +370,7 @@ void BkgHistoProducer<Chic>::setupFitVariables(const int rapBin, const int ptBin
 
 // all other states (i.e. not chic) currently handled by the same function
 template<StateT State>
-void BkgHistoProducer<State>::setupFitVariables(const int rapBin, const int ptBin, bool MC)
+void BkgHistoProducer<State>::setupFitVariables(const int rapBin, const int ptBin, bool MC, const int FracLSB)
 {
   // NOTE: this contains only the variables for MC closure at the moment. (I.e. only the ones from the massfit
   // are present). The variables should also be present for data! Only others will not be here!
@@ -315,11 +395,28 @@ void BkgHistoProducer<State>::setupFitVariables(const int rapBin, const int ptBi
   m_fitVars.set("minRap", onia::rapForPTRange[rapBin-1]);
   m_fitVars.set("maxRap", onia::rapForPTRange[rapBin]);
 }
+
+// ================================================================================
+//                               SETUP RANDOM DISTS
+// ================================================================================
+template<>
+void BkgHistoProducer<Chic>::setupRandomDists()
+{
+  // TODO
+}
+
+template<StateT State>
+void BkgHistoProducer<State>::setupRandomDists()
+{
+  // TODO
+}
+
 // ================================================================================
 //                               INITIALIZE SPEZIALIZATION
 // ================================================================================
 template<>
-void BkgHistoProducer<Jpsi>::initialize(const std::string& infileName, const int rapBin, const int ptBin, bool MC)
+void BkgHistoProducer<Jpsi>::initialize(const std::string& infileName, const int rapBin, const int ptBin, bool MC,
+                                        const int FracLSB)
 {
   std::cout << "---------- INITIALIZE FOR JPSI" << std::endl;
 
@@ -329,8 +426,10 @@ void BkgHistoProducer<Jpsi>::initialize(const std::string& infileName, const int
   addOutputFile(outfilename.str());
 
   // get the fit variables
-  setupFitVariables(rapBin, ptBin, MC);
+  setupFitVariables(rapBin, ptBin, MC, FracLSB);
   std::cout << "m_fitVars after setup: " << m_fitVars << std::endl;
+
+  setupRandomDists();
 
   setupCosThPhiHists(onia::kNbBinsCosT, onia::kNbBinsPhiPol);
   m_ptHists.createHists("pT", 1, 100, m_fitVars["minPt"], m_fitVars["maxPt"]);
@@ -342,7 +441,8 @@ void BkgHistoProducer<Jpsi>::initialize(const std::string& infileName, const int
 }
 
 template<>
-void BkgHistoProducer<Psi2S>::initialize(const std::string& infileName, const int rapBin, const int ptBin, bool MC)
+void BkgHistoProducer<Psi2S>::initialize(const std::string& infileName, const int rapBin, const int ptBin, bool MC,
+                                         const int FracLSB)
 {
   std::cout << "---------- INITIALIZE FOR PSI2S" << std::endl;
 
@@ -353,9 +453,11 @@ void BkgHistoProducer<Psi2S>::initialize(const std::string& infileName, const in
   addOutputFile(outfilename.str());
 
   // get the fit variables
-  setupFitVariables(rapBin, ptBin, MC);
+  setupFitVariables(rapBin, ptBin, MC, FracLSB);
   std::cout << "m_fitVars after setup: " << m_fitVars << std::endl;
 
+  setupRandomDists();
+  
   setupCosThPhiHists(onia::kNbBinsCosT, onia::kNbBinsPhiPol);
   m_ptHists.createHists("pT", 1, 100, onia::pTRange[rapBin][ptBin-1], onia::pTRange[rapBin][ptBin]);
   m_rapHists.createHists("rap", 1, 100, onia::rapForPTRange[rapBin-1], onia::rapForPTRange[rapBin]);
@@ -366,7 +468,8 @@ void BkgHistoProducer<Psi2S>::initialize(const std::string& infileName, const in
 }
 
 template<>
-void BkgHistoProducer<Chic>::initialize(const std::string& infileName, const int rapBin, const int ptBin, bool MC)
+void BkgHistoProducer<Chic>::initialize(const std::string& infileName, const int rapBin, const int ptBin, bool MC,
+                                        const int FracLSB)
 {
   std::cout << "---------- INITIALIZE FOR CHIC" << std::endl;
 
@@ -384,9 +487,11 @@ void BkgHistoProducer<Chic>::initialize(const std::string& infileName, const int
   addOutputFile(chic2file.str());
 
   // get the fit variables
-  setupFitVariables(rapBin, ptBin, MC);
+  setupFitVariables(rapBin, ptBin, MC, FracLSB);
   std::cout << "m_fitVars after setup: " << m_fitVars << std::endl;
 
+  setupRandomDists();
+  
   setupCosThPhiHists(onia::kNbBinsCosT, onia::kNbBinsPhiPol);
   m_ptHists.createHists("pT", 2, 100, onia::pTRange[rapBin][ptBin-1], onia::pTRange[rapBin][ptBin]);
   m_rapHists.createHists("rap", 2, 100, onia::rapForPTRange[rapBin-1], onia::rapForPTRange[rapBin]);
@@ -399,7 +504,7 @@ void BkgHistoProducer<Chic>::initialize(const std::string& infileName, const int
 
 // This case should never happen, since it should get caught at the factory creating this object already.
 template<StateT State>
-void BkgHistoProducer<State>::initialize(const std::string&, const int, const int, bool)
+void BkgHistoProducer<State>::initialize(const std::string&, const int, const int, bool, const int)
 {
   std::cerr << "Calling BkgHistoProducer::initialize() with StateT (" << State << ")" << " which is not defined." << std::endl;
   return;
@@ -455,6 +560,8 @@ void BkgHistoProducer<State>::storeHistos()
   // temporary saving for testing!!!
   m_ptHists.storeToFiles(m_outFiles);
   m_rapHists.storeToFiles(m_outFiles);
+
+  std::cout << m_fitVars.printUsages() << std::endl;
 
   return;
 }
