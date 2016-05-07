@@ -95,12 +95,13 @@ struct BkgHistoPtRapMassHists {
 };
 
 /**
- * flexible class to hold different named fitvariables with easy retrieval and set functions.
+ * flexible class to hold differently named variables of the same type  with easy retrieval and set functions.
  * NOTE: makes use of a map internally, so consider storing variables that are needed frequently in a local
  * variable.
  * TODO: upgrade to unordered_map with c++11
  */
-class BkgHistoFitVarsStore {
+template<typename T>
+class NamedVarStore {
 public:
   /**
    * retrieve a value form the RooWorkspace and store it under the same name or another (if passed).
@@ -112,23 +113,24 @@ public:
    * store a value under the given name.
    * NOTE: if a value already exists with the name it is replaced (silently).
    */
-  void set(const std::string& name, const double value);
+  void set(const std::string& name, const T value);
 
   /**
    * get the value to the appropriate name.
    * NOTE: made somewhat save by using at(). Throws an exception if no entry with that name exists.
    * TODO: remove try-catch block after development!
    */
-  double operator[](const std::string& name) const;
+  T operator[](const std::string& name) const;
 
   /** dump the whole store onto a stream (for debugging purposes). */
-  friend std::ostream& operator<<(std::ostream&, const BkgHistoFitVarsStore&);
+  template <typename U>
+  friend std::ostream& operator<<(std::ostream&, const NamedVarStore<U>&);
 
   /** debugging. Print how many times each variable has been retrieved from the store. */
   const std::string printUsages() const;
 
 private:
-  typedef std::map<std::string, double> MapT; /**< private typedef for the internally used map. */
+  typedef typename std::map<std::string, T> MapT; /**< private typedef for the internally used map. */
   MapT m_store; /**< actual storing entity. */
   /** development entity for counting the times of usage for each variable. */
   mutable std::map<std::string, size_t> m_counter;
@@ -324,19 +326,29 @@ BkgHistoPtRapMassHists::~BkgHistoPtRapMassHists()
 // ================================================================================
 //                IMPLEMENTATION OF BKG HISTO FIT VARS STORE
 // ================================================================================
-inline void BkgHistoFitVarsStore::setFromWS(RooWorkspace* ws, const std::string& wsName, const std::string& name)
+template<>
+inline void NamedVarStore<double>::setFromWS(RooWorkspace* ws, const std::string& wsName, const std::string& name)
 {
   std::string storeName = name.empty() ? wsName : name; // determine name to be used for storage
   set(storeName, getVarVal(ws, wsName));
 }
 
-inline void BkgHistoFitVarsStore::set(const std::string& name, const double value)
+template<typename T>
+inline void NamedVarStore<T>::setFromWS(RooWorkspace*, const std::string&, const std::string&)
+{
+  // NOP
+  std::cerr << "NamedVarStore<T> only defined vor T = double" << std::endl;
+}
+
+template<typename T>
+inline void NamedVarStore<T>::set(const std::string& name, const T value)
 {
    m_store[name] = value;
    m_counter[name] = 0; // reset the counter
 }
 
-inline double BkgHistoFitVarsStore::operator[](const std::string& name) const
+template<typename T>
+inline T NamedVarStore<T>::operator[](const std::string& name) const
 {
   // TODO: remove try-catch block after dev.
   try {
@@ -349,11 +361,12 @@ inline double BkgHistoFitVarsStore::operator[](const std::string& name) const
   }
 };
 
-std::ostream& operator<<(std::ostream& os, const BkgHistoFitVarsStore& store)
+template<typename T>
+std::ostream& operator<<(std::ostream& os, const NamedVarStore<T>& store)
 {
   // os << "content of BkgHistoFitVarsStore:" << std::endl;
   // typedef for easier exchange of internal map
-  typedef BkgHistoFitVarsStore::MapT::const_iterator mapIt;
+  typedef typename NamedVarStore<T>::MapT::const_iterator mapIt;
 
   for (mapIt it = store.m_store.begin(); it != store.m_store.end(); ++it) {
     os << it->first << " = " << it->second << ", ";
@@ -362,7 +375,8 @@ std::ostream& operator<<(std::ostream& os, const BkgHistoFitVarsStore& store)
   return os;
 }
 
-const std::string BkgHistoFitVarsStore::printUsages() const
+template<typename T>
+const std::string NamedVarStore<T>::printUsages() const
 {
   typedef std::map<std::string, size_t>::const_iterator mapIt;
   std::stringstream output;
