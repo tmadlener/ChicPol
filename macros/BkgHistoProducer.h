@@ -13,15 +13,17 @@
 #include <string>
 #include <iostream>
 #include <vector>
+#include <cmath>
 
 /** Interface class for the templatized version of the actual class, to have a common interface. */
 class IBkgHistoProducer {
 public:
   /** initialize everything that is necessary. Call for every pt and rapidity bin separately.*/
   virtual void initialize(const std::string& infileName, const int rapBin, const int ptBin, bool MC,
-                          const int FracLSB) = 0;
+                          const int FracLSB, bool useRefittedChic) = 0;
   /** do the actual work and fill the histograms. Call for every pt and rapidity bin separately.*/
-  virtual void fillHistos() = 0;
+  virtual void fillHistos(const int rapBin, const int ptBin, bool useRefittedChic, bool MC, bool PolLSB,
+                          bool PolRSB, bool PolNP) = 0;
   /** store the appropriate histograms to the output files. Call for every pt and rapidity bin separately. */
   virtual void storeHistos() = 0;
   virtual ~IBkgHistoProducer() = 0; /**< destructor. */
@@ -83,9 +85,10 @@ public:
    * pt and rapidity bin separately.
    */
   virtual void initialize(const std::string& infileName, const int rapBin, const int ptBin, bool MC,
-                          const int FracLSB) /*override*/;
+                          const int FracLSB, bool useRefittedChic) /*override*/;
   /** fill all needed histograms and write them to file. Call for every pt and rapitdity bin separately. */
-  virtual void fillHistos() /*override*/;
+  virtual void fillHistos(const int rapBin, const int ptBin, bool useRefittedChic, bool MC, bool PolLSB,
+                          bool PolRSB, bool PolNP) /*override*/;
   /** store all the filled histograms, and combine them together to have the correct output histograms. */
   virtual void storeHistos() /*override*/;
   /** Destructor, do all the state independent clean-up work that is needed. */
@@ -97,6 +100,7 @@ private:
   TFile* m_fitFile; /**< pointer to the root file containing the fit data. */
   RooWorkspace* m_ws; /**< RooWorkspace containing the fit results. */
   BkgHistoRootVars m_inputVars; /**< input root variables container. */
+  TLorentzVector* m_particle; /**< 4 momentum of the particle that is actually used in chic case. */
   std::vector<TFile*> m_outFiles; /**< vector containing the rootfiles created by this class. */
   std::vector<TTree*> m_outTrees; /**< vector containing the TTrees that are stored in the output files */
   std::vector<BkgHistoCosThetaHists> m_cosThetaPhi; /**< vector containing the TH2D histo container. */
@@ -152,6 +156,21 @@ private:
   /** Store all values (+errors) in TH1Ds that are needed in the polFit framework (?). */
   void store1DFactors(bool MC);
 
+  /** Determine the pT and rapidity borders in dimuon kinematics in case of chi kinematics. */
+  void findRapPtBordersDiMuonKin(const int rapBin, const int ptBin);
+
+  /**
+   * Fill the TH1D histograms. Chic case.
+   * NOTE: The bools RSB, LSB, NP and MC have to be mutually exclusive if one of them is set! (They are queried
+   * in a chain of if-else clauses in this order).
+   */
+  void fill1DHists(bool RSB, bool LSB, bool NP, bool MC, const double pt, const double y, const double mass,
+                   const double ct, const BkgHistoRange& lsbMRange, const BkgHistoRange& rsbMRange,
+                   const BkgHistoRange& sr1MRange, const BkgHistoRange& sr2MRange,
+                   const BkgHistoRange& prRange, const BkgHistoRange& npRange);
+
+  // TODO: define a fill1DHists for the Jpsi case with less args!!!
+
   typedef typename std::vector<TFile*>::iterator TFileIt; /**< private typedef for easier looping over files. */
   typedef typename std::vector<TTree*>::iterator TTreeIt; /**< private typedef for easier looping over TTrees. */
 };
@@ -160,7 +179,7 @@ private:
 //                               IMPLEMENTATION
 // ================================================================================
 template<StateT State>
-BkgHistoProducer<State>::BkgHistoProducer()
+BkgHistoProducer<State>::BkgHistoProducer() : m_particle(NULL)
 {
   std::cout << "---------- CONSTRUCTOR, STATE == " << State << std::endl;
 
@@ -202,6 +221,8 @@ BkgHistoProducer<State>::~BkgHistoProducer()
       delete m_outFiles[iFile];
     }
   }
+
+  // delete m_particle; // DO NOT DO THIS! The ressource this pointer is pointing too is freed elsewhere!
 
   std::cout << "********** DESTRUCTOR, STATE == " << State << std::endl;
 }
@@ -294,8 +315,8 @@ void BkgHistoProducer<Chic>::setupFitVariables(const int rapBin, const int ptBin
   m_fitVars.setFromWS(m_ws, "var_fracBackgroundInNPSR2", "fBGinNP2"); // comb. background in NPSR2
   m_fitVars.setFromWS(m_ws, "var_fracNPChic1InPRSR1", "fNPB1"); // non prompt background in PRSR1
   m_fitVars.setFromWS(m_ws, "var_fracNPChic2InPRSR2", "fNPB2"); // non prompt background in PRSR2
-  m_fitVars.set("fTBsig1", m_fitVars["fBGsig1"]); // total background fraction
-  m_fitVars.set("fTBsig2", m_fitVars["fBGsig2"]); // total background fraction
+  m_fitVars.set("fTBGsig1", m_fitVars["fBGsig1"]); // total background fraction
+  m_fitVars.set("fTBGsig2", m_fitVars["fBGsig2"]); // total background fraction
   m_fitVars.set("fP1", 1. - m_fitVars["fBGsig1"] - m_fitVars["fNPB1"]);
   m_fitVars.set("fP2", 1. - m_fitVars["fBGsig2"] - m_fitVars["fNPB2"]);
 
@@ -317,6 +338,14 @@ void BkgHistoProducer<Chic>::setupFitVariables(const int rapBin, const int ptBin
   m_fitVars.set("fPerr1", TMath::Sqrt(TMath::Power(m_fitVars["fNPerr1"], 2) + TMath::Power(m_fitVars["fBGerr1"], 2)));
   m_fitVars.set("fPerr2", TMath::Sqrt(TMath::Power(m_fitVars["fNPerr2"], 2) + TMath::Power(m_fitVars["fBGerr2"], 2)));
 
+  std::cout << "-------------------------------------------------------------\n"
+            << "fraction of left sideband: " << m_fitVars["fracLSBpsi"] << " (Jpsi), " << m_fitVars["fracLSB1"]
+            << " (chic1), " << m_fitVars["fracLSB2"] << " (chic2)\n" << "combinatorial background fraction: "
+            << m_fitVars["fBGsig1"] << " (chic1), " << m_fitVars["fBGsig2"] << " (chic2)\n"
+            << "nonprompt background fraction: " << m_fitVars["fNPB1"] << " (chic1), " << m_fitVars["fNPB2"]
+            << " (chic2)\n" << "total background fraction: " << m_fitVars["fTBGsig1"] << " (chic1), "
+            << m_fitVars["fTBGsig2"] << " (chic2)" << std::endl;
+
   // TODO: chic kinematic dependent pt/rap min/max values
   m_fitVars.set("jpsiMassMin", onia::massMin);
   m_fitVars.set("jpsiMassMax", onia::massMax);
@@ -329,13 +358,42 @@ void BkgHistoProducer<Chic>::setupFitVariables(const int rapBin, const int ptBin
   m_fitVars.setFromWS(m_ws, "CBmass_p0_jpsi", "CBmass_p0");
   m_fitVars.set("jpsiMassBkgMaxL", m_fitVars["CBmass_p0"] - onia::nSigBkgLow * m_fitVars["jpsiMassSigma"]);
   m_fitVars.set("jpsiMassSigMin", m_fitVars["CBmass_p0"] - onia::nSigMass * m_fitVars["jpsiMassSigma"]);
-  m_fitVars.set("jpsiMassSigMax", m_fitVars["CBmass_p0"] - onia::nSigMass * m_fitVars["jpsiMassSigma"]);
-  m_fitVars.set("jpsiMassBkgMinR", m_fitVars["CBmass_p0"] - onia::nSigBkgHigh * m_fitVars["jpsiMassSigma"]);
+  m_fitVars.set("jpsiMassSigMax", m_fitVars["CBmass_p0"] + onia::nSigMass * m_fitVars["jpsiMassSigma"]);
+  m_fitVars.set("jpsiMassBkgMinR", m_fitVars["CBmass_p0"] + onia::nSigBkgHigh * m_fitVars["jpsiMassSigma"]);
+
+  std::cout << "-------------------------------------------------------------\n"
+            << "signal region Jpsi: mass window " << m_fitVars["jpsiMassSigMin"] << " < M "
+            << m_fitVars["jpsiMassSigMax"] << " GeV" << std::endl;
+
 
   m_fitVars.set("minPt", onia::pTRange[rapBin][ptBin-1]);
   m_fitVars.set("maxPt", onia::pTRange[rapBin][ptBin]);
   m_fitVars.set("minRap", onia::rapForPTRange[rapBin-1]);
   m_fitVars.set("maxRap", onia::rapForPTRange[rapBin]);
+
+  m_fitVars.set("massMinL", onia::massChiSBMin);
+  m_fitVars.set("massMaxR", onia::massChiSBMax);
+  m_fitVars.setFromWS(m_ws, "var_lsbMaxMass", "massMaxL");
+  m_fitVars.setFromWS(m_ws, "var_rsbMinMass", "massMinR");
+  m_fitVars.setFromWS(m_ws, "var_sig1MinMass", "massMinSR1");
+  m_fitVars.setFromWS(m_ws, "var_sig2MinMass", "massMinSR2");
+  m_fitVars.setFromWS(m_ws, "var_sig1MaxMass", "massMaxSR1");
+  m_fitVars.setFromWS(m_ws, "var_sig2MaxMass", "massMaxSR2");
+  m_fitVars.setFromWS(m_ws, "var_PRMin", "PRmin");
+  m_fitVars.setFromWS(m_ws, "var_PRMax", "PRmax");
+  m_fitVars.setFromWS(m_ws, "var_NPMin", "NPmin");
+  m_fitVars.setFromWS(m_ws, "var_NPMax", "NPmax");
+
+  std::cout << "-------------------------------------------------------------\n" <<
+    "left  sideband: mass window " << m_fitVars["massMinL"]  << " < M < " << m_fitVars["massMaxL"]  << " GeV\n" <<
+    "right sideband: mass window " << m_fitVars["massMinR"]  << " < M < " << m_fitVars["massMaxR"]  << " GeV\n" <<
+    "signal region chic1: mass window " << m_fitVars["massMinSR1"]  << " < M < " << m_fitVars["massMaxSR1"]   << " GeV\n" <<
+    "signal region chic2: mass window " << m_fitVars["massMinSR2"]  << " < M < " << m_fitVars["massMaxSR2"]   << " GeV\n" <<
+    "prompt region: " << m_fitVars["PRmin"] << " < ctau < " << m_fitVars["PRmax"] << "\n"
+    "nonprompt region: " << m_fitVars["NPmin"] << " < ctau < " << m_fitVars["NPmax"] << "\n"
+    "-------------------------------------------------------------\n" << std::endl;
+
+
 }
 
 // all other states (i.e. not chic) currently handled by the same function
@@ -433,7 +491,7 @@ void BkgHistoProducer<Chic>::store1DFactors(bool MC)
     storeFactor(m_outFiles[i], "nonprompt_background_fraction", ";;fraction of non prompt BG in PRSR" + cr[i],
                 m_fitVars["fNPB" + cr[i]], m_fitVars["fNPerr" + cr[i]]); // non prompt background fraction
     storeFactor(m_outFiles[i], "background_fraction", ";;fraction of total BG in PRSR" + cr[i],
-                m_fitVars["fTBsig" + cr[i]], m_fitVars["fTBGerr" + cr[i]]); // total background fraction
+                m_fitVars["fTBGsig" + cr[i]], m_fitVars["fTBGerr" + cr[i]]); // total background fraction
     storeFactor(m_outFiles[i], "prompt_fraction", ";;fraction of prompt events in PRSR" + cr[i] + " (1-fNP-fBkg)",
                 m_fitVars["fP" + cr[i]], m_fitVars["fPerr" + cr[i]]); // prompt fraction
     storeFactor(m_outFiles[i], "fraction_LSB", ";;f_{LSB}", m_fitVars["fracLSB" + cr[i]], 0); // no error here
@@ -476,12 +534,65 @@ void BkgHistoProducer<State>::store1DFactors(bool MC)
   // TODO
 }
 
+template<>
+void BkgHistoProducer<Chic>::findRapPtBordersDiMuonKin(const int rapBin, const int ptBin)
+{
+  // set these values eplicitly (although they should in principle also be in the fitVars store)
+  double minPt = onia::pTRange[rapBin][ptBin-1];
+  double maxPt = onia::pTRange[rapBin][ptBin];
+  double minRap = onia::rapForPTRange[rapBin-1];
+  double maxRap = onia::rapForPTRange[rapBin];
+
+  // retrieve some variables from store to avoid lookups in the loop body
+  double p0 = m_fitVars["p0"];
+  double p1 = m_fitVars["p1"];
+  double p2 = m_fitVars["p2"];
+  double CBmass_p0 = m_fitVars["CBmass_p0"];
+
+  TH1D h_pt("", "", 1000, 0, 100);
+  TH1D h_y("", "", 240, 0, 2.4);
+
+  int nEntries = m_inTree->GetEntries();
+  for (int i = 0; i < nEntries; ++i) {
+    long iEntry = m_inTree->LoadTree(i);
+    if (i % 100000 == 0) { std:: cout << "entry " << i << " out of " << nEntries << std::endl; }
+
+    m_inTree->GetEntry(iEntry);
+    double pt = m_particle->Pt();
+    double absY = TMath::Abs(m_particle->Rapidity());
+    if (pt >= minPt && pt < maxPt && absY >= minRap && absY < maxRap && // NOTE: assumption standard def of min/max
+        TMath::Abs(m_inputVars.jpsi->M() - CBmass_p0) < onia::nSigMass * rapSigma(p0, p1, p2, absY)) {
+
+      h_pt.Fill(m_inputVars.jpsi->Pt());
+      h_y.Fill(TMath::Abs(m_inputVars.jpsi->Rapidity()));
+    }
+  }
+
+  double pt1 = h_pt.GetBinLowEdge(h_pt.FindFirstBinAbove());
+  minPt = std::floor(pt1 * 2) / 2;
+  double pt2 = h_pt.GetBinLowEdge(h_pt.FindLastBinAbove() + 1);
+  maxPt = std::ceil(pt2 * 2) / 2;
+  double y1 = h_y.GetBinLowEdge(h_y.FindFirstBinAbove());
+  minRap = std::floor(y1 * 10) / 10;
+  double y2 = h_y.GetBinLowEdge(h_y.FindLastBinAbove() + 1);
+  maxRap = std::ceil(y2 * 10) / 10;
+  if(maxRap < onia::rapForPTRange[rapBin]) maxRap = onia::rapForPTRange[rapBin];
+
+  std::cout << "first bins = " << pt1 << ", " << y1 << "; last bins = " << pt2 << ", " << y2 << std::endl;
+
+  m_fitVars.set("minPt", minPt); m_fitVars.set("maxPt", maxPt);
+  m_fitVars.set("minRap", minRap); m_fitVars.set("maxRap", maxRap);
+}
+
+template<StateT State>
+void BkgHistoProducer<State>::findRapPtBordersDiMuonKin(const int, const int) { /* No-OP */ }
+
 // ================================================================================
 //                         INITIALIZE SPEZIALIZATION
 // ================================================================================
 template<>
 void BkgHistoProducer<Jpsi>::initialize(const std::string& infileName, const int rapBin, const int ptBin, bool MC,
-                                        const int FracLSB)
+                                        const int FracLSB, bool)
 {
   std::cout << "---------- INITIALIZE FOR JPSI" << std::endl;
 
@@ -509,7 +620,7 @@ void BkgHistoProducer<Jpsi>::initialize(const std::string& infileName, const int
 
 template<>
 void BkgHistoProducer<Psi2S>::initialize(const std::string& infileName, const int rapBin, const int ptBin, bool MC,
-                                         const int FracLSB)
+                                         const int FracLSB, bool)
 {
   std::cout << "---------- INITIALIZE FOR PSI2S" << std::endl;
 
@@ -538,7 +649,7 @@ void BkgHistoProducer<Psi2S>::initialize(const std::string& infileName, const in
 
 template<>
 void BkgHistoProducer<Chic>::initialize(const std::string& infileName, const int rapBin, const int ptBin, bool MC,
-                                        const int FracLSB)
+                                        const int FracLSB, bool useRefittedChic)
 {
   std::cout << "---------- INITIALIZE FOR CHIC" << std::endl;
 
@@ -547,6 +658,20 @@ void BkgHistoProducer<Chic>::initialize(const std::string& infileName, const int
   m_inTree->SetBranchAddress("chic", &m_inputVars.chic);
   m_inTree->SetBranchAddress("chic_rf", &m_inputVars.chic_rf);
   m_inTree->SetBranchAddress("mQ", &m_inputVars.mQ);
+
+  if (onia::KinParticleChi) {
+    if (useRefittedChic) {
+      m_inTree->SetBranchAddress("chic_rf", &m_particle);
+      m_inputVars.chic_rf = m_particle;
+    } else {
+      m_inTree->SetBranchAddress("chic", &m_particle);
+      m_inputVars.chic = m_particle;
+    }
+  } else {
+    m_inTree->SetBranchAddress("jpsi", &m_particle);
+    m_inputVars.jpsi = m_particle;
+    std::cout << "Jpsi kinematics used!" << std::endl;
+  }
 
   // create the outpu files
   std::stringstream chic1file, chic2file;
@@ -564,6 +689,14 @@ void BkgHistoProducer<Chic>::initialize(const std::string& infileName, const int
   setupRandomDists(rapBin, ptBin);
   std::cout << m_randDists << std::endl;
 
+  if (onia::KinParticleChi) {
+    findRapPtBordersDiMuonKin(rapBin, ptBin);
+  }
+
+  std::cout << "--------------------------------------------\n"
+            << "pT binning of jpsi: " << m_fitVars["minPt"] << " - " << m_fitVars["maxPt"] << "\n"
+            << "rapidity binning of jpsi: " << m_fitVars["minRap"] << " - " << m_fitVars["maxRap"] << std::endl;
+
   setupCosThPhiHists(onia::kNbBinsCosT, onia::kNbBinsPhiPol);
   m_ptHists.createHists("pT", 2, 100, onia::pTRange[rapBin][ptBin-1], onia::pTRange[rapBin][ptBin]);
   m_rapHists.createHists("rap", 2, 100, onia::rapForPTRange[rapBin-1], onia::rapForPTRange[rapBin]);
@@ -576,17 +709,127 @@ void BkgHistoProducer<Chic>::initialize(const std::string& infileName, const int
 
 // This case should never happen, since it should get caught at the factory creating this object already.
 template<StateT State>
-void BkgHistoProducer<State>::initialize(const std::string&, const int, const int, bool, const int)
+void BkgHistoProducer<State>::initialize(const std::string&, const int, const int, bool, const int, bool)
 {
   std::cerr << "Calling BkgHistoProducer::initialize() with StateT (" << State << ")" << " which is not defined." << std::endl;
   return;
 }
 
 // ================================================================================
+//                          FILL 1D HISTS
+// ================================================================================
+template<>
+void BkgHistoProducer<Chic>::fill1DHists(bool RSB, bool LSB, bool NP, bool MC, const double pt, const double absY,
+                                         const double mass, const double ct,
+                                         const BkgHistoRange& lsbMRange, const BkgHistoRange& rsbMRange,
+                                         const BkgHistoRange& sr1MRange, const BkgHistoRange& sr2MRange,
+                                         const BkgHistoRange& prRange, const BkgHistoRange& npRange)
+{
+  // signal histos and outTree Filling
+  if (LSB) { // left sideband
+    if (lsbMRange.accept(mass) && prRange.accept(ct)) {
+      for (size_t i = 0; i < m_outFiles.size(); ++i) {
+        m_outTrees[i]->Fill();
+        m_ptHists.h_PSR[i]->Fill(pt);
+        m_rapHists.h_PSR[i]->Fill(absY);
+      }
+    }
+  } else if (RSB) { // right sideband
+    if (rsbMRange.accept(mass) && prRange.accept(ct)) {
+      for (size_t i = 0; i < m_outFiles.size(); ++i) {
+        m_outTrees[i]->Fill();
+        m_ptHists.h_PSR[i]->Fill(pt);
+        m_rapHists.h_PSR[i]->Fill(absY);
+      }
+    }
+  } else if (NP) { // non prompt data
+    if (sr1MRange.accept(mass) && npRange.accept(ct)) {
+      m_outTrees[0]->Fill();
+      m_ptHists.h_PSR[0]->Fill(pt);
+      m_rapHists.h_PSR[0]->Fill(absY);
+    } else if (sr2MRange.accept(mass) && npRange.accept(ct)) {
+      m_outTrees[1]->Fill();
+      m_ptHists.h_PSR[1]->Fill(pt);
+      m_rapHists.h_PSR[1]->Fill(absY);
+    }
+  } else if (MC) { // only prompt data in MC
+    if (sr1MRange.accept(mass)) {
+      m_outTrees[0]->Fill();
+      m_ptHists.h_PSR[0]->Fill(pt);
+      m_rapHists.h_PSR[0]->Fill(absY);
+    } else if (sr2MRange.accept(mass)) {
+      m_outTrees[1]->Fill();
+      m_ptHists.h_PSR[1]->Fill(pt);
+      m_rapHists.h_PSR[1]->Fill(absY);
+    }
+  } else { // prompt data in signal region
+    if (sr1MRange.accept(mass) && prRange.accept(ct)) {
+      m_outTrees[0]->Fill();
+      m_ptHists.h_PSR[0]->Fill(pt);
+      m_rapHists.h_PSR[0]->Fill(absY);
+    } else if (sr2MRange.accept(mass) && prRange.accept(ct)) {
+      m_outTrees[1]->Fill();
+      m_ptHists.h_PSR[1]->Fill(pt);
+      m_rapHists.h_PSR[1]->Fill(absY);
+    }
+  }
+
+  // rest of the pT and rap histograms
+  if (MC) { // fill rap and pT hists with all events
+    m_ptHists.h_L->Fill(pt);
+    m_ptHists.h_R->Fill(pt);
+    m_ptHists.h_highct_L->Fill(pt);
+    m_ptHists.h_highct_R->Fill(pt);
+    m_rapHists.h_L->Fill(absY);
+    m_rapHists.h_R->Fill(absY);
+    m_rapHists.h_highct_L->Fill(absY);
+    m_rapHists.h_highct_R->Fill(absY);
+    if (sr1MRange.accept(mass)) {
+      m_ptHists.h_NP[0]->Fill(pt);
+      m_rapHists.h_NP[0]->Fill(absY);
+    } else if (sr2MRange.accept(mass)) {
+      m_ptHists.h_NP[1]->Fill(pt);
+      m_rapHists.h_NP[1]->Fill(absY);
+    }
+  } else { // for data fill the histograms accordingly
+    if (lsbMRange.accept(mass) && prRange.accept(ct)) {
+      m_ptHists.h_L->Fill(pt);
+      m_rapHists.h_L->Fill(absY);
+    } else if (lsbMRange.accept(mass) && npRange.accept(ct)) {
+      m_ptHists.h_highct_L->Fill(pt);
+      m_rapHists.h_highct_L->Fill(absY);
+    } else if (sr1MRange.accept(mass) && npRange.accept(ct)) {
+      m_ptHists.h_NP[0]->Fill(pt);
+      m_ptHists.h_NP[0]->Fill(absY);
+    } else if (sr2MRange.accept(mass) && npRange.accept(ct)) {
+      m_ptHists.h_NP[1]->Fill(pt);
+      m_ptHists.h_NP[1]->Fill(absY);
+    } else if (rsbMRange.accept(mass) && prRange.accept(ct)) {
+      m_ptHists.h_R->Fill(pt);
+      m_rapHists.h_R->Fill(absY);
+    } else if (rsbMRange.accept(mass) && npRange.accept(ct)) {
+      m_ptHists.h_highct_R->Fill(pt);
+      m_rapHists.h_highct_R->Fill(absY);
+    } else {
+      std::cerr << "I DON'T KNOW HOW I CAME HERE" << std::endl; // this should not happen
+    }
+  }
+}
+
+// this is a no-op for Jpsis (where the same function with another signature has to be defined)
+template<StateT State>
+void BkgHistoProducer<State>::fill1DHists(bool, bool, bool, bool, const double, const double, const double,
+                                          const double, const BkgHistoRange&, const BkgHistoRange&,
+                                          const BkgHistoRange&, const BkgHistoRange&, const BkgHistoRange&,
+                                          const BkgHistoRange&)
+{ /* No-OP */}
+
+// ================================================================================
 //                               FILLHISTOS SPEZIALIZATION
 // ================================================================================
 template<>
-void BkgHistoProducer<Jpsi>::fillHistos()
+void BkgHistoProducer<Jpsi>::fillHistos(const int rapBin, const int ptBin, bool useRefittedChic, bool MC,
+                                        bool PolLSB, bool PolRSB, bool PolNP)
 {
   std::cout << "---------- FILLHISTOS FOR JPSI" << std::endl;
   // TODO
@@ -594,7 +837,8 @@ void BkgHistoProducer<Jpsi>::fillHistos()
 }
 
 template<>
-void BkgHistoProducer<Psi2S>::fillHistos()
+void BkgHistoProducer<Psi2S>::fillHistos(const int rapBin, const int ptBin, bool useRefittedChic, bool MC,
+                                         bool PolLSB, bool PolRSB, bool PolNP)
 {
   std::cout << "---------- FILLHISTOS FOR PSI2S" << std::endl;
   // TODO
@@ -602,16 +846,58 @@ void BkgHistoProducer<Psi2S>::fillHistos()
 }
 
 template<>
-void BkgHistoProducer<Chic>::fillHistos()
+void BkgHistoProducer<Chic>::fillHistos(const int rapBin, const int ptBin, bool useRefittedChic, bool MC,
+                                        bool PolLSB, bool PolRSB, bool PolNP)
 {
   std::cout << "---------- FILLHISTOS FOR CHIC" << std::endl;
-  // TODO
+
+  const int nEntries = m_inTree->GetEntries();
+  unsigned int nAll = 0;
+  unsigned int nSR = 0;
+
+  // cache some fit variables to avoid lookups in the loop body
+  double p0 = m_fitVars["p0"], p1 = m_fitVars["p1"], p2 = m_fitVars["p2"];
+  double CBmass_p0 = m_fitVars["CBmass_p0"];
+  double nSigMass = MC ? onia::nSigMass : onia::nSigMass * 15; // accept everything in MC-closure
+  const BkgHistoRange prRange(m_fitVars["PRmin"], m_fitVars["PRmax"]);
+  const BkgHistoRange npRange(m_fitVars["NPmin"], m_fitVars["NPmax"]);
+  const BkgHistoRange lsbRange(m_fitVars["massMinL"], m_fitVars["massMaxL"]);
+  const BkgHistoRange rsbRange(m_fitVars["massMinR"], m_fitVars["massMaxR"]);
+  const BkgHistoRange sr1Range(m_fitVars["massMinSR1"], m_fitVars["massMaxSR1"]);
+  const BkgHistoRange sr2Range(m_fitVars["massMinSR2"], m_fitVars["massMaxSR2"]);
+
+  for (int i = 0; i < nEntries; ++i) {
+    long iEntry = m_inTree->LoadTree(i);
+    m_inTree->GetEntry(iEntry);
+    if (i % 100000 == 0) { std::cout << "entry " << i << " out of " << nEntries << std::endl; }
+
+    double usedChicMass = useRefittedChic ? m_particle->M() : m_inputVars.mQ;
+    double pt = m_particle->Pt();
+    double absY = TMath::Abs(m_particle->Rapidity());
+
+    if (pt >= onia::pTRange[rapBin][ptBin-1] && pt < onia::pTRange[rapBin][ptBin] &&
+        absY >= onia::rapForPTRange[rapBin-1] && absY < onia::rapForPTRange[rapBin]) {
+      nAll++;
+
+      if (TMath::Abs(m_inputVars.jpsi->M() - CBmass_p0) < nSigMass * rapSigma(p0, p1, p2, absY)) {
+        nSR++;
+
+        fill1DHists(PolRSB, PolLSB, PolNP, MC, pt, absY, usedChicMass, m_inputVars.jpsict,
+                    lsbRange, rsbRange, sr1Range, sr2Range, prRange, npRange);
+      }
+
+    }
+
+
+  }
+
+
   std::cout << "********** FILLHISTOS FOR CHIC" << std::endl;
 }
 
 // This case should never happen, since it should get caught at the factory creating this object already.
 template<StateT State>
-void BkgHistoProducer<State>::fillHistos()
+void BkgHistoProducer<State>::fillHistos(const int, const int, bool, bool, bool, bool, bool)
 {
   std::cerr << "Calling BkgHistoProducer::fillHistos() with StateT (" << State << ")" << " which is not defined." << std::endl;
   return;

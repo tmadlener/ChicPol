@@ -17,6 +17,10 @@ int main(int argc, char* argv[])
   int ptMax = -1;
   int FracLSB = -1;
   bool MC = false;
+  bool refittedChic = true;
+  bool PolLSB = false;
+  bool PolRSB = false;
+  bool PolNP = false;
 
   for (int iArg = 0; iArg < argc; ++iArg) {
     const std::string arg = std::string(argv[iArg]);
@@ -27,6 +31,10 @@ int main(int argc, char* argv[])
     fromSplit("ptMax", arg, ptMax);
     fromSplit("FracLSB", arg, FracLSB);
     fromSplit("mcClosure", arg, MC);
+    fromSplit("useRefittedChic", arg, refittedChic);
+    fromSplit("PolLSB", arg, PolLSB);
+    fromSplit("PolRSB", arg, PolRSB);
+    fromSplit("PolNP", arg, PolNP);
   }
 
   BkgHistoProducerFactory factory;
@@ -46,8 +54,8 @@ int main(int argc, char* argv[])
     for (int iPt = ptMin; iPt <= ptMax; ++iPt) {
       std::stringstream infilename;
       infilename << infileBase << "_rap" << iRap << "_pt" << iPt << ".root";
-      bkgHistoProducer->initialize(infilename.str(), iRap, iPt, MC, FracLSB);
-      bkgHistoProducer->fillHistos();
+      bkgHistoProducer->initialize(infilename.str(), iRap, iPt, MC, FracLSB, refittedChic);
+      bkgHistoProducer->fillHistos(iRap, iPt, refittedChic, MC, PolLSB, PolRSB, PolNP);
       bkgHistoProducer->storeHistos();
     }
   }

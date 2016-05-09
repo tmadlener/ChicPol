@@ -136,6 +136,17 @@ private:
   mutable std::map<std::string, size_t> m_counter;
 };
 
+/** helper struct to represent simple (double valued) ranges. */
+class BkgHistoRange {
+public:
+  BkgHistoRange(const double low, const double high) : m_low(low), m_high(high) {;} /**< ctor. */
+  /** val is in range? */
+  bool accept(const double val) const { return (val > m_low && val < m_high); }
+private:
+  double m_low; /**< lower bound of range. */
+  double m_high; /**< upper bound of range. */
+};
+
 // ================================================================================
 //                 IMPLEMENTATION BKG HISTO ROOTVARS
 // ================================================================================
