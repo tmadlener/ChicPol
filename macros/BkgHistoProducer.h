@@ -105,7 +105,7 @@ private:
   std::vector<BkgHistoPtRapMassHists> m_ptRapMass; /**< vector for the pTRapMass histos. */
   NamedVarStore<double> m_fitVars; /**< storage for the different double values, like the fit variables. */
   /** storage for the different distributions from which random numbers are drawn. */
-  NamedVarStore<TF1*> m_randomDists;
+  NamedVarStore<TF1*> m_randDists;
 
   /** Initialization that is common to every state, like setup of the workspace, etc... */
   void initCommon(const std::string& infilename);
@@ -147,7 +147,10 @@ private:
   void setupFitVariables(const int rapBin, const int ptBin, bool MC, const int FracLSB);
 
   /** Setup the TF1s that are needed for filling the mass histograms */
-  void setupRandomDists();
+  void setupRandomDists(const int rapBin, const int ptBin);
+
+  /** Store all values (+errors) in TH1Ds that are needed in the polFit framework (?). */
+  void store1DFactors(bool MC);
 
   typedef typename std::vector<TFile*>::iterator TFileIt; /**< private typedef for easier looping over files. */
   typedef typename std::vector<TTree*>::iterator TTreeIt; /**< private typedef for easier looping over TTrees. */
@@ -298,39 +301,6 @@ void BkgHistoProducer<Chic>::setupFitVariables(const int rapBin, const int ptBin
 
   m_fitVars.setFromWS(m_ws, "var_fracPRChic1InPRLSB", "fSRinPLSB"); // prompt chic1 contamination in LSB
   m_fitVars.setFromWS(m_ws, "var_fracPRChic2InPRRSB", "fSRinPRSB"); // prompt chic2 contamination in RSB
-  m_fitVars.setFromWS(m_ws, "var_nBackground", "nBkg"); // total number of background events
-  m_fitVars.setFromWS(m_ws, "var_nChic", "nChic"); // total number of chic events
-  m_fitVars.setFromWS(m_ws, "var_nChic1", "nChic1"); // total number of chic1 events
-  m_fitVars.setFromWS(m_ws, "var_nChic2", "nChic2"); // total number of chic2 events
-  m_fitVars.setFromWS(m_ws, "var_nPRChic1InPRSR1","nPRChic1InPRSR1"); // number of chic1 events in PRSR1
-  m_fitVars.setFromWS(m_ws, "var_nPRChic2InPRSR2","nPRChic2InPRSR2"); // number of chic2 events in PRSR2
-
-  m_fitVars.setFromWS(m_ws, "var_fTotInSR1", "fTotInSR1"); // fraction of total events in SR1
-  m_fitVars.setFromWS(m_ws, "var_fracBackgroundInSR1", "fBGinSR1"); // background fraction in SR1
-  m_fitVars.set("nSR1", (m_fitVars["nBkg"] + m_fitVars["nChic"]) * m_fitVars["fTotInSR1"]); // total number of events in SR1
-
-  m_fitVars.setFromWS(m_ws, "var_fTotInSR2", "fTotInSR2"); // fraction of total events in SR2
-  m_fitVars.setFromWS(m_ws, "var_fracBackgroundInSR2", "fBGinSR2"); // background fraction in SR2
-  m_fitVars.set("nSR2", (m_fitVars["nBkg"] + m_fitVars["nChic"]) * m_fitVars["fTotInSR2"]); // total number of events in SR2
-
-  m_fitVars.setFromWS(m_ws, "var_fPRSR1InSR1", "fPRSR1InSR1"); // fraction of PRSR1 in SR1
-  m_fitVars.set("nPRSR1", m_fitVars["nSR1"] * m_fitVars["fPRSR1InSR1"]); // total number of events in PRSR1
-  m_fitVars.setFromWS(m_ws, "var_fNPSR1InSR1", "fNPSR1InPRSR1"); // fraction of PRSR1 in SR1
-  m_fitVars.set("nNPSR1", m_fitVars["nSR1"] * m_fitVars["fNPSR1InPRSR1"]); // total number of events in NPSR1
-  m_fitVars.setFromWS(m_ws, "var_fracNPChic1InPRSR1", "fNPChic1InPRSR1"); // non prompt chic1 fraction in PRSR1
-  m_fitVars.setFromWS(m_ws, "var_fracPRChic1InNPSR1", "fNPChic1InPRSR1"); // prompt chic1 fraction in NPSR1
-  m_fitVars.setFromWS(m_ws, "var_fracNPChic1InNPSR1", "fNPChic1InNPSR1"); // non prompt chic1 fraction in NPSR1
-
-  m_fitVars.setFromWS(m_ws, "var_fPRSR2InSR2", "fPRSR2InSR2"); // fraction of PRSR2 in SR2
-  m_fitVars.set("nPRSR2", m_fitVars["nSR2"] * m_fitVars["fPRSR2InSR2"]); // total number of events in PRSR2
-  m_fitVars.setFromWS(m_ws, "var_fNPSR2InSR2", "fNPSR2InPRSR2"); // fraction of PRSR2 in SR2
-  m_fitVars.set("nNPSR2", m_fitVars["nSR2"] * m_fitVars["fNPSR2InPRSR2"]); // total number of events in NPSR2
-  m_fitVars.setFromWS(m_ws, "var_fracNPChic2InPRSR2", "fNPChic2InPRSR2"); // non prompt chic2 fraction in PRSR2
-  m_fitVars.setFromWS(m_ws, "var_fracPRChic2InNPSR2", "fNPChic2InPRSR2"); // prompt chic2 fraction in NPSR2
-  m_fitVars.setFromWS(m_ws, "var_fracNPChic2InNPSR2", "fNPChic2InNPSR2"); // non prompt chic2 fraction in NPSR2
-
-  // no differentiation between mumu+gamma and Jpsi+gamma events as mass distribution has no influence
-  // fraction of combinatorial mumu+gamma events to total background
   m_fitVars.setFromWS(m_ws, "var_fractionCombBGofTotalBackground", "fComBgToTotBg");
   // fraction of combinatorial Jpsi + gamma events to total background
   m_fitVars.setFromWS(m_ws, "var_fractionJpsiBGofTotalBackground", "fJpsiBgToTotBg");
@@ -400,19 +370,114 @@ void BkgHistoProducer<State>::setupFitVariables(const int rapBin, const int ptBi
 //                               SETUP RANDOM DISTS
 // ================================================================================
 template<>
-void BkgHistoProducer<Chic>::setupRandomDists()
+void BkgHistoProducer<Chic>::setupRandomDists(const int rapBin, const int ptBin)
 {
-  // TODO
+  // variables
+  RooRealVar* m = m_ws->var("chicMass");
+  RooRealVar* mjpsi = m_ws->var("JpsiMass");
+  RooRealVar *poly1 = m_ws->var("BK_p1");
+  RooRealVar *poly2 = m_ws->var("BK_p2");
+  RooRealVar *CBmass1 = m_ws->var("CBmass1");
+  RooRealVar *CBmass2 = m_ws->var("CBmass2");
+  RooRealVar *CBsigma1 = m_ws->var("CBsigma1");
+  RooRealVar *CBsigma2 = m_ws->var("CBsigma2");
+  RooRealVar *CBalpha1 = m_ws->var("CBalpha1");
+  RooRealVar *CBalpha2 = m_ws->var("CBalpha2");
+  RooRealVar *CBn1 = m_ws->var("CBn");
+  RooRealVar *CBn2 = m_ws->var("CBn2");
+  RooRealVar *lambdaJpsi = m_ws->var("bkgLambda_jpsi");
+  RooRealVar *CBmassJpsi = m_ws->var("CBmass_jpsi");
+  RooRealVar *CBalphaJpsi = m_ws->var("CBalpha_jpsi");
+  RooRealVar *CBsigmaJpsi = m_ws->var("CBsigma_jpsi");
+  RooRealVar *CBnJpsi = m_ws->var("CBn_jpsi");
+
+  // pdf
+  RooAbsPdf *bkgMass = getPdf(m_ws, "M_background");
+  RooAbsPdf *signalMass1 = getPdf(m_ws, "M_chic1");
+  RooAbsPdf *signalMass2 = getPdf(m_ws, "M_chic2");
+  RooAbsPdf *bkgMassJpsi = getPdf(m_ws, "bkgMassShape_jpsi");
+  RooAbsPdf *sigMassJpsi = getPdf(m_ws, "sigMassShape_jpsi");
+
+  // load snapshot with all results
+  std::stringstream masssnapshotname;
+  masssnapshotname << "m_snapshot_rap" << rapBin << "_pt" << ptBin;
+  m_ws->loadSnapshot(masssnapshotname.str().c_str());
+
+  // function to draw random mass values
+  m_randDists.set("funcBG", (TF1*)bkgMass->asTF(*m, RooArgList(*poly1, *poly2, *m)));
+  m_randDists.set("funcSig1", (TF1*)signalMass1->asTF(*m, RooArgList(*CBmass1, *CBsigma1, *CBalpha1, *CBn1, *m)));
+  m_randDists.set("funcSig2", (TF1*)signalMass2->asTF(*m, RooArgList(*CBmass2, *CBsigma2, *CBalpha2, *CBn2, *m)));
+  m_randDists.set("fincBGJpsi", (TF1*)bkgMassJpsi->asTF(*mjpsi, RooArgList(*lambdaJpsi), *mjpsi));
+  m_randDists.set("funcSigJpsi", (TF1*)sigMassJpsi->asTF(*mjpsi, RooArgList(*CBmassJpsi, *CBsigmaJpsi, *CBalphaJpsi, *CBnJpsi), *mjpsi));
 }
 
 template<StateT State>
-void BkgHistoProducer<State>::setupRandomDists()
+void BkgHistoProducer<State>::setupRandomDists(const int rapBin, const int ptBin)
 {
   // TODO
 }
 
 // ================================================================================
-//                               INITIALIZE SPEZIALIZATION
+//                              STORE 1D FACTORS
+// ================================================================================
+template<>
+void BkgHistoProducer<Chic>::store1DFactors(bool MC)
+{
+  std::cout << "---------- IN BkgHistoProducer<Chic>::store1DFactors()" << std::endl;
+
+  // for looping over chic1 and chic2 (less duplicate code). Replace with std::array once available
+  const std::string cr[] = {"1", "2"};
+  for (size_t i = 0; i < m_outFiles.size(); ++i) {
+    storeFactor(m_outFiles[i], "comb_background_fraction", ";;fraction of comb. BG in PRSR" + cr[i],
+                m_fitVars["fBGsig" + cr[i]], m_fitVars["fBGerr" + cr[i]]); // combinatorial background fraction
+    storeFactor(m_outFiles[i], "nonprompt_background_fraction", ";;fraction of non prompt BG in PRSR" + cr[i],
+                m_fitVars["fNPB" + cr[i]], m_fitVars["fNPerr" + cr[i]]); // non prompt background fraction
+    storeFactor(m_outFiles[i], "background_fraction", ";;fraction of total BG in PRSR" + cr[i],
+                m_fitVars["fTBsig" + cr[i]], m_fitVars["fTBGerr" + cr[i]]); // total background fraction
+    storeFactor(m_outFiles[i], "prompt_fraction", ";;fraction of prompt events in PRSR" + cr[i] + " (1-fNP-fBkg)",
+                m_fitVars["fP" + cr[i]], m_fitVars["fPerr" + cr[i]]); // prompt fraction
+    storeFactor(m_outFiles[i], "fraction_LSB", ";;f_{LSB}", m_fitVars["fracLSB" + cr[i]], 0); // no error here
+    if (!MC) {
+      // get some variables from the workspace
+      // non prompt chic1 fraction in NPSR1
+      double fNPChicInNPSR = getVarVal(m_ws, "var_fracNPChic"+cr[i]+"InNPSR"+cr[i]);
+       // prompt chic1 fraction in NPSR1
+      double fPRChicInNPSR = getVarVal(m_ws, "var_fracPRChic"+cr[i]+"InNPSR"+cr[i]);
+      double nTot = getVarVal(m_ws, "var_nBackground") + getVarVal(m_ws, "var_nChic"); // total event number
+      double nSR = nTot * getVarVal(m_ws, "var_fTotInSR" + cr[i]); // total events in signal region
+      double nNPSR = nSR * getVarVal(m_ws, "var_fNPSR" + cr[i] + "InSR" + cr[i]); // total number of events in NPSR
+      double nPRSR = nSR * getVarVal(m_ws, "var_fPRSR" + cr[i] + "InSR" + cr[i]); // total number of events in PRSR
+      double fBGinSR = getVarVal(m_ws, "var_fracBackgroundInSR" + cr[i]); // background fraction in SR
+      // non prompt chicX fraction in PRSR1
+      double fNPChicInPRSR = getVarVal(m_ws, "var_fracNPChic"+cr[i]+"InPRSR"+cr[i]);
+      // number of prompt chicX events in PRSR1
+      double nPRChicInPRSR = getVarVal(m_ws, "var_nPRChic"+cr[i]+"InPRSR"+cr[i]);
+
+      store3Factors(m_outFiles[i], "events_SR", ";;chic" + cr[i]+ " events in SR" + cr[i],
+                    nPRChicInPRSR + fPRChicInNPSR * nNPSR,
+                    fNPChicInPRSR * nPRSR + fNPChicInNPSR * nNPSR,
+                    fBGinSR * nSR); // events in signal region
+
+      store3Factors(m_outFiles[i], "events_promptSR", ";;chic" + cr[i] + " events in PRSR" + cr[i],
+                    nPRChicInPRSR, fNPChicInPRSR * nPRSR, m_fitVars["fBGsig" + cr[i]] * nPRSR);
+
+      store3Factors(m_outFiles[i], "events_nonpromptSR", ";;chic" + cr[i] + " events in NPSR" + cr[i],
+                    fPRChicInNPSR * nNPSR, fNPChicInNPSR * nNPSR, fBGinSR * nNPSR);
+
+    }
+  }
+
+  std::cout << "********** IN BkgHistoProducer<Chic>::store1DFactors()" << std::endl;
+}
+
+template<StateT State>
+void BkgHistoProducer<State>::store1DFactors(bool MC)
+{
+  // TODO
+}
+
+// ================================================================================
+//                         INITIALIZE SPEZIALIZATION
 // ================================================================================
 template<>
 void BkgHistoProducer<Jpsi>::initialize(const std::string& infileName, const int rapBin, const int ptBin, bool MC,
@@ -429,7 +494,9 @@ void BkgHistoProducer<Jpsi>::initialize(const std::string& infileName, const int
   setupFitVariables(rapBin, ptBin, MC, FracLSB);
   std::cout << "m_fitVars after setup: " << m_fitVars << std::endl;
 
-  setupRandomDists();
+  store1DFactors(MC);
+
+  setupRandomDists(rapBin, ptBin);
 
   setupCosThPhiHists(onia::kNbBinsCosT, onia::kNbBinsPhiPol);
   m_ptHists.createHists("pT", 1, 100, m_fitVars["minPt"], m_fitVars["maxPt"]);
@@ -456,8 +523,10 @@ void BkgHistoProducer<Psi2S>::initialize(const std::string& infileName, const in
   setupFitVariables(rapBin, ptBin, MC, FracLSB);
   std::cout << "m_fitVars after setup: " << m_fitVars << std::endl;
 
-  setupRandomDists();
-  
+  store1DFactors(MC);
+
+  setupRandomDists(rapBin, ptBin);
+
   setupCosThPhiHists(onia::kNbBinsCosT, onia::kNbBinsPhiPol);
   m_ptHists.createHists("pT", 1, 100, onia::pTRange[rapBin][ptBin-1], onia::pTRange[rapBin][ptBin]);
   m_rapHists.createHists("rap", 1, 100, onia::rapForPTRange[rapBin-1], onia::rapForPTRange[rapBin]);
@@ -490,8 +559,11 @@ void BkgHistoProducer<Chic>::initialize(const std::string& infileName, const int
   setupFitVariables(rapBin, ptBin, MC, FracLSB);
   std::cout << "m_fitVars after setup: " << m_fitVars << std::endl;
 
-  setupRandomDists();
-  
+  store1DFactors(MC);
+
+  setupRandomDists(rapBin, ptBin);
+  std::cout << m_randDists << std::endl;
+
   setupCosThPhiHists(onia::kNbBinsCosT, onia::kNbBinsPhiPol);
   m_ptHists.createHists("pT", 2, 100, onia::pTRange[rapBin][ptBin-1], onia::pTRange[rapBin][ptBin]);
   m_rapHists.createHists("rap", 2, 100, onia::rapForPTRange[rapBin-1], onia::rapForPTRange[rapBin]);
@@ -552,7 +624,6 @@ template<StateT State>
 void BkgHistoProducer<State>::storeHistos()
 {
   std::cerr << "BkgHistoProducer::storeHistos() not yet implemented for State (" << State << ")" << std::endl;
-
   // temporary output for testing!!!
   for (size_t iF = 0; iF < m_outFiles.size(); ++iF) {
     m_cosThetaPhi[iF].storeToFile(m_outFiles[iF]);

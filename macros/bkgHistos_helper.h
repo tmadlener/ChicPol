@@ -93,5 +93,32 @@ inline double rapSigma(double p0, double p1, double p2, double rap)
   return p0 + p1 * TMath::Abs(rap) + p2 * TMath::Power(TMath::Abs(rap),2);
 }
 
+/** create and store a TH1D in the rootfile pointed to by file */
+void storeFactor(TFile* file, const std::string& name, const std::string& title, const double val, const double valErr)
+{
+  file->cd();
+  TH1D* h = new TH1D(name.c_str(), title.c_str(), 1, 0., 1.);
+  h->SetBinContent(1, val);
+  h->SetBinError(1, valErr);
+  h->Write();
+  delete h;
+}
+
+/**
+ * create and store a TH1D with 3 bins and store the three passed values in the bins and the histo in the passed
+ * TFile.
+ * COULDDO: generalize this to N factors
+ */
+void store3Factors(TFile* file, const std::string& name, const std::string& title,
+                   const double d1, const double d2, const double d3)
+{
+  file->cd();
+  TH1D* h = new TH1D(name.c_str(), title.c_str(), 3, 0, 3.);
+  h->SetBinContent(1, d1);
+  h->SetBinContent(2, d2);
+  h->SetBinContent(3, d3);
+  h->Write();
+  delete h;
+}
 
 #endif

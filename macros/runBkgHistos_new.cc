@@ -15,6 +15,8 @@ int main(int argc, char* argv[])
   int rapMax = -1;
   int ptMin = -1;
   int ptMax = -1;
+  int FracLSB = -1;
+  bool MC = false;
 
   for (int iArg = 0; iArg < argc; ++iArg) {
     const std::string arg = std::string(argv[iArg]);
@@ -23,6 +25,8 @@ int main(int argc, char* argv[])
     fromSplit("rapMax", arg, rapMax);
     fromSplit("ptMin", arg, ptMin);
     fromSplit("ptMax", arg, ptMax);
+    fromSplit("FracLSB", arg, FracLSB);
+    fromSplit("mcClosure", arg, MC);
   }
 
   BkgHistoProducerFactory factory;
@@ -35,15 +39,14 @@ int main(int argc, char* argv[])
   if (nState == 4 || nState == 5) {
     infileBase += "MassFit_Jpsi";
   } else if (nState == 6) {
-    // infileBase += "DefineRegionsAndFractions_Chi"; // for after dev
-    infileBase += "MassFit_Jpsi"; // for development
+    infileBase += "DefineRegionsAndFractions_Chi";
   }
 
   for (int iRap = rapMin; iRap <= rapMax; ++iRap) {
     for (int iPt = ptMin; iPt <= ptMax; ++iPt) {
       std::stringstream infilename;
       infilename << infileBase << "_rap" << iRap << "_pt" << iPt << ".root";
-      bkgHistoProducer->initialize(infilename.str(), iRap, iPt);
+      bkgHistoProducer->initialize(infilename.str(), iRap, iPt, MC, FracLSB);
       bkgHistoProducer->fillHistos();
       bkgHistoProducer->storeHistos();
     }
