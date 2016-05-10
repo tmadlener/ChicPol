@@ -23,7 +23,7 @@ public:
                           const int FracLSB, bool useRefittedChic) = 0;
   /** do the actual work and fill the histograms. Call for every pt and rapidity bin separately.*/
   virtual void fillHistos(const int rapBin, const int ptBin, bool useRefittedChic, bool MC, bool PolLSB,
-                          bool PolRSB, bool PolNP) = 0;
+                          bool PolRSB, bool PolNP, bool folding) = 0;
   /** store the appropriate histograms to the output files. Call for every pt and rapidity bin separately. */
   virtual void storeHistos() = 0;
   virtual ~IBkgHistoProducer() = 0; /**< destructor. */
@@ -88,7 +88,7 @@ public:
                           const int FracLSB, bool useRefittedChic) /*override*/;
   /** fill all needed histograms and write them to file. Call for every pt and rapitdity bin separately. */
   virtual void fillHistos(const int rapBin, const int ptBin, bool useRefittedChic, bool MC, bool PolLSB,
-                          bool PolRSB, bool PolNP) /*override*/;
+                          bool PolRSB, bool PolNP, bool folding) /*override*/;
   /** store all the filled histograms, and combine them together to have the correct output histograms. */
   virtual void storeHistos() /*override*/;
   /** Destructor, do all the state independent clean-up work that is needed. */
@@ -165,11 +165,19 @@ private:
    * in a chain of if-else clauses in this order).
    */
   void fill1DHists(bool RSB, bool LSB, bool NP, bool MC, const double pt, const double y, const double mass,
-                   const double ct, const BkgHistoRange& lsbMRange, const BkgHistoRange& rsbMRange,
-                   const BkgHistoRange& sr1MRange, const BkgHistoRange& sr2MRange,
-                   const BkgHistoRange& prRange, const BkgHistoRange& npRange);
+                   const BkgHistoRangeReport& eventRegion);
 
-  // TODO: define a fill1DHists for the Jpsi case with less args!!!
+  /**
+   * Fill the PtRapMass TH3Ds.
+   * NOTE: mass can probably be dropped! (All the needed information is already in the eventRegion)
+   */
+  void fill3DHists(bool RSB, bool LSB, bool NP, bool MC, const double pt, const double absY, const double mass,
+                   const BkgHistoRangeReport& eventRegion);
+
+  /**
+   * Fill the cosThetaPhi histograms.
+   */
+  void fill2DHists(const std::vector<std::vector<double> >& cosThPVals, const BkgHistoRangeReport& eventRegion);
 
   typedef typename std::vector<TFile*>::iterator TFileIt; /**< private typedef for easier looping over files. */
   typedef typename std::vector<TTree*>::iterator TTreeIt; /**< private typedef for easier looping over TTrees. */
@@ -465,7 +473,7 @@ void BkgHistoProducer<Chic>::setupRandomDists(const int rapBin, const int ptBin)
   m_randDists.set("funcBG", (TF1*)bkgMass->asTF(*m, RooArgList(*poly1, *poly2, *m)));
   m_randDists.set("funcSig1", (TF1*)signalMass1->asTF(*m, RooArgList(*CBmass1, *CBsigma1, *CBalpha1, *CBn1, *m)));
   m_randDists.set("funcSig2", (TF1*)signalMass2->asTF(*m, RooArgList(*CBmass2, *CBsigma2, *CBalpha2, *CBn2, *m)));
-  m_randDists.set("fincBGJpsi", (TF1*)bkgMassJpsi->asTF(*mjpsi, RooArgList(*lambdaJpsi), *mjpsi));
+  m_randDists.set("funcBGJpsi", (TF1*)bkgMassJpsi->asTF(*mjpsi, RooArgList(*lambdaJpsi), *mjpsi));
   m_randDists.set("funcSigJpsi", (TF1*)sigMassJpsi->asTF(*mjpsi, RooArgList(*CBmassJpsi, *CBsigmaJpsi, *CBalphaJpsi, *CBnJpsi), *mjpsi));
 }
 
@@ -720,14 +728,11 @@ void BkgHistoProducer<State>::initialize(const std::string&, const int, const in
 // ================================================================================
 template<>
 void BkgHistoProducer<Chic>::fill1DHists(bool RSB, bool LSB, bool NP, bool MC, const double pt, const double absY,
-                                         const double mass, const double ct,
-                                         const BkgHistoRange& lsbMRange, const BkgHistoRange& rsbMRange,
-                                         const BkgHistoRange& sr1MRange, const BkgHistoRange& sr2MRange,
-                                         const BkgHistoRange& prRange, const BkgHistoRange& npRange)
+                                         const double mass, const BkgHistoRangeReport& eventRegion)
 {
   // signal histos and outTree Filling
   if (LSB) { // left sideband
-    if (lsbMRange.accept(mass) && prRange.accept(ct)) {
+    if (eventRegion.isLSB() && eventRegion.isPR()) {
       for (size_t i = 0; i < m_outFiles.size(); ++i) {
         m_outTrees[i]->Fill();
         m_ptHists.h_PSR[i]->Fill(pt);
@@ -735,7 +740,7 @@ void BkgHistoProducer<Chic>::fill1DHists(bool RSB, bool LSB, bool NP, bool MC, c
       }
     }
   } else if (RSB) { // right sideband
-    if (rsbMRange.accept(mass) && prRange.accept(ct)) {
+    if (eventRegion.isRSB() && eventRegion.isPR()) {
       for (size_t i = 0; i < m_outFiles.size(); ++i) {
         m_outTrees[i]->Fill();
         m_ptHists.h_PSR[i]->Fill(pt);
@@ -743,31 +748,31 @@ void BkgHistoProducer<Chic>::fill1DHists(bool RSB, bool LSB, bool NP, bool MC, c
       }
     }
   } else if (NP) { // non prompt data
-    if (sr1MRange.accept(mass) && npRange.accept(ct)) {
+    if (eventRegion.isSR1() && eventRegion.isNP()) {
       m_outTrees[0]->Fill();
       m_ptHists.h_PSR[0]->Fill(pt);
       m_rapHists.h_PSR[0]->Fill(absY);
-    } else if (sr2MRange.accept(mass) && npRange.accept(ct)) {
+    } else if (eventRegion.isSR2() && eventRegion.isNP()) {
       m_outTrees[1]->Fill();
       m_ptHists.h_PSR[1]->Fill(pt);
       m_rapHists.h_PSR[1]->Fill(absY);
     }
   } else if (MC) { // only prompt data in MC
-    if (sr1MRange.accept(mass)) {
+    if (eventRegion.isSR1()) {
       m_outTrees[0]->Fill();
       m_ptHists.h_PSR[0]->Fill(pt);
       m_rapHists.h_PSR[0]->Fill(absY);
-    } else if (sr2MRange.accept(mass)) {
+    } else if (eventRegion.isSR2()) {
       m_outTrees[1]->Fill();
       m_ptHists.h_PSR[1]->Fill(pt);
       m_rapHists.h_PSR[1]->Fill(absY);
     }
   } else { // prompt data in signal region
-    if (sr1MRange.accept(mass) && prRange.accept(ct)) {
+    if (eventRegion.isSR1() && eventRegion.isPR()) {
       m_outTrees[0]->Fill();
       m_ptHists.h_PSR[0]->Fill(pt);
       m_rapHists.h_PSR[0]->Fill(absY);
-    } else if (sr2MRange.accept(mass) && prRange.accept(ct)) {
+    } else if (eventRegion.isSR2() && eventRegion.isPR()) {
       m_outTrees[1]->Fill();
       m_ptHists.h_PSR[1]->Fill(pt);
       m_rapHists.h_PSR[1]->Fill(absY);
@@ -784,52 +789,138 @@ void BkgHistoProducer<Chic>::fill1DHists(bool RSB, bool LSB, bool NP, bool MC, c
     m_rapHists.h_R->Fill(absY);
     m_rapHists.h_highct_L->Fill(absY);
     m_rapHists.h_highct_R->Fill(absY);
-    if (sr1MRange.accept(mass)) {
+    if (eventRegion.isSR1()) {
       m_ptHists.h_NP[0]->Fill(pt);
       m_rapHists.h_NP[0]->Fill(absY);
-    } else if (sr2MRange.accept(mass)) {
+    } else if (eventRegion.isSR2()) {
       m_ptHists.h_NP[1]->Fill(pt);
       m_rapHists.h_NP[1]->Fill(absY);
     }
   } else { // for data fill the histograms accordingly
-    if (lsbMRange.accept(mass) && prRange.accept(ct)) {
+    if (eventRegion.isLSB() && eventRegion.isPR()) {
       m_ptHists.h_L->Fill(pt);
       m_rapHists.h_L->Fill(absY);
-    } else if (lsbMRange.accept(mass) && npRange.accept(ct)) {
+    } else if (eventRegion.isLSB() && eventRegion.isNP()) {
       m_ptHists.h_highct_L->Fill(pt);
       m_rapHists.h_highct_L->Fill(absY);
-    } else if (sr1MRange.accept(mass) && npRange.accept(ct)) {
+    } else if (eventRegion.isSR1() && eventRegion.isNP()) {
       m_ptHists.h_NP[0]->Fill(pt);
       m_ptHists.h_NP[0]->Fill(absY);
-    } else if (sr2MRange.accept(mass) && npRange.accept(ct)) {
+    } else if (eventRegion.isSR2() && eventRegion.isNP()) {
       m_ptHists.h_NP[1]->Fill(pt);
       m_ptHists.h_NP[1]->Fill(absY);
-    } else if (rsbMRange.accept(mass) && prRange.accept(ct)) {
+    } else if (eventRegion.isRSB() && eventRegion.isPR()) {
       m_ptHists.h_R->Fill(pt);
       m_rapHists.h_R->Fill(absY);
-    } else if (rsbMRange.accept(mass) && npRange.accept(ct)) {
+    } else if (eventRegion.isRSB() && eventRegion.isNP()) {
       m_ptHists.h_highct_R->Fill(pt);
       m_rapHists.h_highct_R->Fill(absY);
-    } else {
-      std::cerr << "I DON'T KNOW HOW I CAME HERE" << std::endl; // this should not happen
+    } else { // Since SR and Sideband regions are not handled together it is possible that this is reached!
+      // std::cerr << "Not in any of the regions (Fill1DHists)" << std::endl; // should be caught earlier
     }
   }
 }
 
-// this is a no-op for Jpsis (where the same function with another signature has to be defined)
+// TODO for Jpsis
 template<StateT State>
 void BkgHistoProducer<State>::fill1DHists(bool, bool, bool, bool, const double, const double, const double,
-                                          const double, const BkgHistoRange&, const BkgHistoRange&,
-                                          const BkgHistoRange&, const BkgHistoRange&, const BkgHistoRange&,
-                                          const BkgHistoRange&)
-{ /* No-OP */}
+                                          const BkgHistoRangeReport&)
+{ /* No-OP */ }
+
+// ================================================================================
+//                      FILL 3D HISTS
+// ================================================================================
+template<>
+void BkgHistoProducer<Chic>::fill3DHists(bool RSB, bool LSB, bool NP, bool MC, const double pt, const double absY,
+                                         const double mass, const BkgHistoRangeReport& eventRegion)
+{
+  /*const*/ TF1* funcBGJpsi = m_randDists["funcBGJpsi"]; // avoid too many lookups
+  const double jpsiMassSigMin = m_fitVars["jpsiMassSigMin"];
+  const double jpsiMassSigMax = m_fitVars["jpsiMassSigMax"];
+
+  // TODO: MC
+  if (eventRegion.isLSB() && eventRegion.isPR()) { // prompt left sideband
+    m_ptRapMass[0].hBG_L->Fill(pt, absY, funcBGJpsi->GetRandom(jpsiMassSigMin, jpsiMassSigMax));
+    m_ptRapMass[1].hBG_L->Fill(pt, absY, funcBGJpsi->GetRandom(jpsiMassSigMin, jpsiMassSigMax));
+  } else if (eventRegion.isLSB() && eventRegion.isNP()) { // non prompt LSB
+    m_ptRapMass[0].h_highct_L->Fill(pt, absY, funcBGJpsi->GetRandom(jpsiMassSigMin, jpsiMassSigMax));
+    m_ptRapMass[1].h_highct_L->Fill(pt, absY, funcBGJpsi->GetRandom(jpsiMassSigMin, jpsiMassSigMax));
+  } else if (eventRegion.isSR1() && eventRegion.isPR()) { // prompt SR1
+    m_ptRapMass[0].hSR->Fill(pt, absY, funcBGJpsi->GetRandom(jpsiMassSigMin, jpsiMassSigMax));
+  } else if (eventRegion.isSR1() && eventRegion.isNP()) { // non prompt SR1
+    m_ptRapMass[0].hNP->Fill(pt, absY, funcBGJpsi->GetRandom(jpsiMassSigMin, jpsiMassSigMax));
+  } else if (eventRegion.isSR2() && eventRegion.isPR()) { // prompt SR2
+    m_ptRapMass[1].hSR->Fill(pt, absY, funcBGJpsi->GetRandom(jpsiMassSigMin, jpsiMassSigMax));
+  } else if (eventRegion.isSR2() && eventRegion.isNP()) { // non prompt SR2
+    m_ptRapMass[1].hNP->Fill(pt, absY, funcBGJpsi->GetRandom(jpsiMassSigMin, jpsiMassSigMax));
+  } else if (eventRegion.isRSB() && eventRegion.isPR()) { // prompt right sideband
+    m_ptRapMass[0].hBG_R->Fill(pt, absY, funcBGJpsi->GetRandom(jpsiMassSigMin, jpsiMassSigMax));
+    m_ptRapMass[1].hBG_R->Fill(pt, absY, funcBGJpsi->GetRandom(jpsiMassSigMin, jpsiMassSigMax));
+  } else if (eventRegion.isRSB() && eventRegion.isNP()) { // non prompt RSB
+    m_ptRapMass[0].h_highct_R->Fill(pt, absY, funcBGJpsi->GetRandom(jpsiMassSigMin, jpsiMassSigMax));
+    m_ptRapMass[1].h_highct_R->Fill(pt, absY, funcBGJpsi->GetRandom(jpsiMassSigMin, jpsiMassSigMax));
+  } else {
+    std::cerr << "Not in any of the regions (Fill3DHists)" << std::endl; // should be caught earlier
+  }
+
+
+}
+
+template<StateT State>
+void BkgHistoProducer<State>::fill3DHists(bool RSB, bool LSB, bool NP, bool MC, const double pt,
+                                          const double absY, const double mass,
+                                          const BkgHistoRangeReport& eventRegion)
+{
+  // TODO
+}
+
+// ================================================================================
+//                              FILL 2D HISTS
+// ================================================================================
+template<>
+void BkgHistoProducer<Chic>::fill2DHists(const std::vector<std::vector<double> >& cosThPVals,
+                                         const BkgHistoRangeReport& eventRegion)
+{
+  for (int iFrame = 0; iFrame < onia::kNbFrames; ++iFrame) {
+    if (eventRegion.isLSB() && eventRegion.isPR()) { // prompt left sideband
+      m_cosThetaPhi[0].hBG_L[iFrame]->Fill(cosThPVals[iFrame][0], cosThPVals[iFrame][1]);
+      m_cosThetaPhi[1].hBG_L[iFrame]->Fill(cosThPVals[iFrame][0], cosThPVals[iFrame][1]);
+    } else if (eventRegion.isLSB() && eventRegion.isNP()) { // non prompt left sideband
+      m_cosThetaPhi[0].hBGinNP_L[iFrame]->Fill(cosThPVals[iFrame][0], cosThPVals[iFrame][1]);
+      m_cosThetaPhi[1].hBGinNP_L[iFrame]->Fill(cosThPVals[iFrame][0], cosThPVals[iFrame][1]);
+    } else if (eventRegion.isSR1() && eventRegion.isPR()) { // prompt SR1
+      m_cosThetaPhi[0].hSR[iFrame]->Fill(cosThPVals[iFrame][0], cosThPVals[iFrame][1]);
+    } else if (eventRegion.isSR1() && eventRegion.isNP()) { // non prompt SR1
+      m_cosThetaPhi[0].hNPBG[iFrame]->Fill(cosThPVals[iFrame][0], cosThPVals[iFrame][1]);
+    } else if (eventRegion.isSR2() && eventRegion.isPR()) { // prompt SR2
+      m_cosThetaPhi[1].hSR[iFrame]->Fill(cosThPVals[iFrame][0], cosThPVals[iFrame][1]);
+    } else if (eventRegion.isSR2() && eventRegion.isNP()) { // non prompt SR2
+      m_cosThetaPhi[1].hNPBG[iFrame]->Fill(cosThPVals[iFrame][0], cosThPVals[iFrame][1]);
+    } else if (eventRegion.isRSB() && eventRegion.isPR()) { // prompt RSB
+      m_cosThetaPhi[0].hBG_R[iFrame]->Fill(cosThPVals[iFrame][0], cosThPVals[iFrame][1]);
+      m_cosThetaPhi[1].hBG_R[iFrame]->Fill(cosThPVals[iFrame][0], cosThPVals[iFrame][1]);
+    } else if (eventRegion.isRSB() && eventRegion.isNP()) { // non prompt RSB
+      m_cosThetaPhi[0].hBGinNP_R[iFrame]->Fill(cosThPVals[iFrame][0], cosThPVals[iFrame][1]);
+      m_cosThetaPhi[1].hBGinNP_R[iFrame]->Fill(cosThPVals[iFrame][0], cosThPVals[iFrame][1]);
+    } else {
+      std::cerr << "Not in any region (fill2DHists)" << std::endl;
+    }
+  }
+}
+
+template<StateT State>
+void BkgHistoProducer<State>::fill2DHists(const std::vector<std::vector<double> >& cosThPVals,
+                                          const BkgHistoRangeReport& eventRegion)
+{
+  // TODO
+}
 
 // ================================================================================
 //                               FILLHISTOS SPEZIALIZATION
 // ================================================================================
 template<>
 void BkgHistoProducer<Jpsi>::fillHistos(const int rapBin, const int ptBin, bool useRefittedChic, bool MC,
-                                        bool PolLSB, bool PolRSB, bool PolNP)
+                                        bool PolLSB, bool PolRSB, bool PolNP, bool folding)
 {
   std::cout << "---------- FILLHISTOS FOR JPSI" << std::endl;
   // TODO
@@ -838,7 +929,7 @@ void BkgHistoProducer<Jpsi>::fillHistos(const int rapBin, const int ptBin, bool 
 
 template<>
 void BkgHistoProducer<Psi2S>::fillHistos(const int rapBin, const int ptBin, bool useRefittedChic, bool MC,
-                                         bool PolLSB, bool PolRSB, bool PolNP)
+                                         bool PolLSB, bool PolRSB, bool PolNP, bool folding)
 {
   std::cout << "---------- FILLHISTOS FOR PSI2S" << std::endl;
   // TODO
@@ -847,18 +938,20 @@ void BkgHistoProducer<Psi2S>::fillHistos(const int rapBin, const int ptBin, bool
 
 template<>
 void BkgHistoProducer<Chic>::fillHistos(const int rapBin, const int ptBin, bool useRefittedChic, bool MC,
-                                        bool PolLSB, bool PolRSB, bool PolNP)
+                                        bool PolLSB, bool PolRSB, bool PolNP, bool folding)
 {
   std::cout << "---------- FILLHISTOS FOR CHIC" << std::endl;
+  typedef std::vector<std::vector<double> > cosTPT; // typedef for less typing
 
-  const int nEntries = m_inTree->GetEntries();
+  const int nEntries = m_inTree->GetEntries(); //  100;
   unsigned int nAll = 0;
   unsigned int nSR = 0;
+  unsigned int noValidRegion = 0;
 
   // cache some fit variables to avoid lookups in the loop body
   double p0 = m_fitVars["p0"], p1 = m_fitVars["p1"], p2 = m_fitVars["p2"];
   double CBmass_p0 = m_fitVars["CBmass_p0"];
-  double nSigMass = MC ? onia::nSigMass : onia::nSigMass * 15; // accept everything in MC-closure
+  double nSigMass = MC ? onia::nSigMass * 15 : onia::nSigMass; // accept everything in MC-closure
   const BkgHistoRange prRange(m_fitVars["PRmin"], m_fitVars["PRmax"]);
   const BkgHistoRange npRange(m_fitVars["NPmin"], m_fitVars["NPmax"]);
   const BkgHistoRange lsbRange(m_fitVars["massMinL"], m_fitVars["massMaxL"]);
@@ -879,25 +972,80 @@ void BkgHistoProducer<Chic>::fillHistos(const int rapBin, const int ptBin, bool 
         absY >= onia::rapForPTRange[rapBin-1] && absY < onia::rapForPTRange[rapBin]) {
       nAll++;
 
-      if (TMath::Abs(m_inputVars.jpsi->M() - CBmass_p0) < nSigMass * rapSigma(p0, p1, p2, absY)) {
+      if (TMath::Abs(m_inputVars.jpsi->M() - CBmass_p0) <
+          nSigMass * rapSigma(p0, p1, p2, m_inputVars.jpsi->Eta())) {
         nSR++;
 
-        fill1DHists(PolRSB, PolLSB, PolNP, MC, pt, absY, usedChicMass, m_inputVars.jpsict,
-                    lsbRange, rsbRange, sr1Range, sr2Range, prRange, npRange);
+        // std::cout << "----------------------------------------" << std::endl;
+        // classify the event only once and pass the results down to the filling functions
+        // COULDDO: check already here if the event is in any of the desired regions
+        BkgHistoRangeReport eventReg(sr1Range.accept(usedChicMass), sr2Range.accept(usedChicMass),
+                                     npRange.accept(m_inputVars.jpsict), prRange.accept(m_inputVars.jpsict),
+                                     lsbRange.accept(usedChicMass), rsbRange.accept(usedChicMass));
+        if (!eventReg.isValidChicEvent()) {
+          // std::cerr << "Event is not in any valid range!" << std::endl;
+          noValidRegion++;
+          continue;
+        }
+        // std::cout << "mass: " << usedChicMass << ", ct: " << m_inputVars.jpsict << std::endl;
+        // std::cout << "SR1: " << sr1Range << ", SR2: " << sr2Range << ", LSB: " << lsbRange << ", RSB: "
+        //           << rsbRange << ", PR: " << prRange << ", NP: " << npRange << std::endl;
+
+        fill1DHists(PolRSB, PolLSB, PolNP, MC, pt, absY, usedChicMass, eventReg);
+        fill3DHists(PolRSB, PolLSB, PolNP, MC, pt, absY, usedChicMass, eventReg);
+
+        cosTPT cosThPhiVals = calcCosThetaPhiValues(*m_inputVars.lepP, *m_inputVars.lepN, folding);
+        fill2DHists(cosThPhiVals, eventReg);
+        // std::cout << "----------------------------------------" << std::endl;
       }
-
     }
-
-
   }
+  std::cout << "------------------------------" << std::endl
+            << "nAll = " << nAll << ", nSR = " << nSR << ", noValidRegion = " << noValidRegion << std::endl;
 
+  // rebinning
+  std::pair<int, int> cosThPhiBins = determineBinning(*m_cosThetaPhi[0].hBG_R[2], *m_cosThetaPhi[0].hBG_L[2],
+                                                      *m_cosThetaPhi[0].hNPBG[2], folding);
+
+  std::cout << "final binning for background histogram:" << std::endl
+            << "phi bins: " << cosThPhiBins.first << std::endl
+            << "cosTheta bins: " << cosThPhiBins.second << std::endl
+            << "------------------------------------------------------------" << std::endl;
+
+  // re-run the filling for the cosTheta Phi histograms with the correct binning
+  // COULDO: refactor the whole looping somehow, to remove this code duplicacy!
+  setupCosThPhiHists(cosThPhiBins.second, cosThPhiBins.first); // set them up
+
+  for (int i = 0; i < nEntries; ++i) {
+    long iEntry = m_inTree->LoadTree(i);
+    m_inTree->GetEntry(iEntry);
+    if (i % 100000 == 0) { std::cout << "entry " << i << " out of " << nEntries << std::endl; }
+
+    double usedChicMass = useRefittedChic ? m_particle->M() : m_inputVars.mQ;
+    double pt = m_particle->Pt();
+    double absY = TMath::Abs(m_particle->Rapidity());
+
+    if (pt >= onia::pTRange[rapBin][ptBin-1] && pt < onia::pTRange[rapBin][ptBin] &&
+        absY >= onia::rapForPTRange[rapBin-1] && absY < onia::rapForPTRange[rapBin] &&
+        TMath::Abs(m_inputVars.jpsi->M() - CBmass_p0) < nSigMass * rapSigma(p0,p1,p2,m_inputVars.jpsi->Eta())) {
+
+      BkgHistoRangeReport eventReg(sr1Range.accept(usedChicMass), sr2Range.accept(usedChicMass),
+                                   npRange.accept(m_inputVars.jpsict), prRange.accept(m_inputVars.jpsict),
+                                   lsbRange.accept(usedChicMass), rsbRange.accept(usedChicMass));
+
+      if (eventReg.isValidChicEvent()) {
+        cosTPT cosThPhiVals = calcCosThetaPhiValues(*m_inputVars.lepP, *m_inputVars.lepN, folding);
+        fill2DHists(cosThPhiVals, eventReg);
+      }
+    }
+  }
 
   std::cout << "********** FILLHISTOS FOR CHIC" << std::endl;
 }
 
 // This case should never happen, since it should get caught at the factory creating this object already.
 template<StateT State>
-void BkgHistoProducer<State>::fillHistos(const int, const int, bool, bool, bool, bool, bool)
+void BkgHistoProducer<State>::fillHistos(const int, const int, bool, bool, bool, bool, bool, bool)
 {
   std::cerr << "Calling BkgHistoProducer::fillHistos() with StateT (" << State << ")" << " which is not defined." << std::endl;
   return;
@@ -919,6 +1067,7 @@ void BkgHistoProducer<State>::storeHistos()
   m_rapHists.storeToFiles(m_outFiles);
 
   std::cout << m_fitVars.printUsages() << std::endl;
+  std::cout << m_randDists.printUsages() << std::endl;
 
   return;
 }

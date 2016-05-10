@@ -142,9 +142,43 @@ public:
   BkgHistoRange(const double low, const double high) : m_low(low), m_high(high) {;} /**< ctor. */
   /** val is in range? */
   bool accept(const double val) const { return (val > m_low && val < m_high); }
+  /** ostream operator */
+  friend std::ostream& operator<<(std::ostream& os, const BkgHistoRange& range);
 private:
   double m_low; /**< lower bound of range. */
   double m_high; /**< upper bound of range. */
+};
+
+std::ostream& operator<<(std::ostream& os, const BkgHistoRange& range)
+{
+  os << "[" << range.m_low << "," << range.m_high << "]";
+  return os;
+}
+
+/**
+ * class to store the results of the different range checkes of an event. Can be queried to get in which
+ * region a given event is.
+ */
+class BkgHistoRangeReport {
+public:
+  /** ctor for chic case. */
+  BkgHistoRangeReport(bool SR1, bool SR2, bool NP, bool PR, bool LSB, bool RSB) :
+    m_NP(NP), m_PR(PR), m_LSB(LSB), m_RSB(RSB)
+  { m_SRs.push_back(SR1); m_SRs.push_back(SR2); }
+  bool isNP() const { return m_NP; } /**< is in non-prompt region. */
+  bool isPR() const { return m_PR; } /**< is in prompt region. */
+  bool isLSB() const { return m_LSB; } /**< is in LSB. */
+  bool isRSB() const { return m_RSB; } /**< is in RSB. */
+  bool isSR1() const { return m_SRs[0]; } /**< is in SR1. */
+  bool isSR2() const { return m_SRs[1]; } /**< is in SR2. */
+  /** check if the event can be categorized into the predefined regions. */
+  bool isValidChicEvent() const { return ((m_NP || m_PR) && (m_LSB || m_RSB || m_SRs[0] || m_SRs[1])); }
+private:
+  std::vector<bool> m_SRs;
+  bool m_NP;
+  bool m_PR;
+  bool m_LSB;
+  bool m_RSB;
 };
 
 // ================================================================================
@@ -188,20 +222,23 @@ BkgHistoCosThetaHists::BkgHistoCosThetaHists(const int nHists)
 BkgHistoCosThetaHists::~BkgHistoCosThetaHists()
 {
   std::cout << "---------- DESTRUCTOR OF BkgHistoCosThetaHists" << std::endl;
-  for (size_t iH = 0; iH < hBG_L.size(); ++iH) { // every vector should contain the same number of TH2Ds
-    delete hBG_L[iH];
-    delete hBG_R[iH];
-    delete hBG[iH];
-    delete hNPBG[iH];
-    delete hNPS[iH];
-    delete hBGinNP_L[iH];
-    delete hBGinNP_R[iH];
-    delete hBGinNP[iH];
-    delete hTBG[iH];
-    delete hSR_L[iH];
-    delete hSR_R[iH];
-    delete hSR[iH];
-  }
+  // TODO: currently get a seg fault here. This is caused by the call to TFile::Close() prior to this
+  // destructor, which apparently means for ROOT to delete TH2D that are "attatched" to the TFile
+
+  // for (size_t iH = 0; iH < hBG_L.size(); ++iH) { // every vector should contain the same number of TH2Ds
+  //   delete hBG_L[iH];
+  //   delete hBG_R[iH];
+  //   delete hBG[iH];
+  //   delete hNPBG[iH];
+  //   delete hNPS[iH];
+  //   delete hBGinNP_L[iH];
+  //   delete hBGinNP_R[iH];
+  //   delete hBGinNP[iH];
+  //   delete hTBG[iH];
+  //   delete hSR_L[iH];
+  //   delete hSR_R[iH];
+  //   delete hSR[iH];
+  // }
   std::cout << "********** DESTRUCTOR OF BkgHistoCosThetaHists" << std::endl;
 }
 
@@ -247,7 +284,7 @@ BkgHisto1DHists::~BkgHisto1DHists()
 
   // TODO: currently get a seg fault here. This is caused by the call to TFile::Close() prior to this
   // destructor, which apparently means for ROOT to delete TH1D that are "attatched" to the TFile
-  // The question remains, why this works for TH2Ds (e.g.)?
+  // The question remains, why this works for TH2Ds (e.g.)? -> If properly set it doesn't!
   // delete h_L;
   // delete h_R;
   // delete h_highct_L;

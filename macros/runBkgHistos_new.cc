@@ -21,6 +21,7 @@ int main(int argc, char* argv[])
   bool PolLSB = false;
   bool PolRSB = false;
   bool PolNP = false;
+  bool folding = false;
 
   for (int iArg = 0; iArg < argc; ++iArg) {
     const std::string arg = std::string(argv[iArg]);
@@ -35,6 +36,7 @@ int main(int argc, char* argv[])
     fromSplit("PolLSB", arg, PolLSB);
     fromSplit("PolRSB", arg, PolRSB);
     fromSplit("PolNP", arg, PolNP);
+    fromSplit("folding", arg, folding);
   }
 
   BkgHistoProducerFactory factory;
@@ -55,7 +57,7 @@ int main(int argc, char* argv[])
       std::stringstream infilename;
       infilename << infileBase << "_rap" << iRap << "_pt" << iPt << ".root";
       bkgHistoProducer->initialize(infilename.str(), iRap, iPt, MC, FracLSB, refittedChic);
-      bkgHistoProducer->fillHistos(iRap, iPt, refittedChic, MC, PolLSB, PolRSB, PolNP);
+      bkgHistoProducer->fillHistos(iRap, iPt, refittedChic, MC, PolLSB, PolRSB, PolNP, folding);
       bkgHistoProducer->storeHistos();
     }
   }

@@ -3,11 +3,14 @@
 // this header defines some functions which are commonly used throughout the bkgHistos
 
 #include "rootIncludes.inc"
+#include "commonVar.h" // included here because it is needed in calcPol.C but could break things there -> FIXME
+#include "calcPol.C" // for calcPol
 
 #include <climits> // for CHAR_BIT
 #include <string>
 #include <sstream>
 #include <vector>
+#include <algorithm> // for std::min
 
 /** find the power of 2 which is larger then the passed number. */
 int findEvenNum(double number)
@@ -32,7 +35,7 @@ int findEvenNum(double number)
  * TODO: make the const char** a vector of strings
  * NOTE: this relies very much on the right initialization of everything so this is a likely breaking point!
  */
-void createHists(std::vector<TH2D*> hists, const std::string& nameBase, /*const std::string& titleBase*/
+void createHists(std::vector<TH2D*>& hists, const std::string& nameBase, /*const std::string& titleBase*/
                  const char* labels[], const std::string& suffix, const int nBinsX, const int nBinsY,
                  const double xMin, const double xMax, const double yMin, const double yMax)
 {
@@ -119,6 +122,148 @@ void store3Factors(TFile* file, const std::string& name, const std::string& titl
   h->SetBinContent(3, d3);
   h->Write();
   delete h;
+}
+
+/**
+ * calculate the cosTheta and phi values to be stored in the histograms.
+ * Returntype is an onia::kNbFrames x 2 array of doubles, index 0 is CosTh, index 1 is Phi for each frame
+ * COULDDO: define a nice(r) return type for this.
+ */
+std::vector<std::vector<double> > calcCosThetaPhiValues(const TLorentzVector& lepP, const TLorentzVector& lepN, bool folding)
+{
+  // NOTE: This writes to global variables, which are then used below
+  // usage of these variables is restricted to scope of this function in this case
+  // TODO: Refactor / Redesign
+  ////////////////////////
+  calcPol(lepP, lepN);
+  ////////////////////////
+
+  std::vector<std::vector<double> > returnVals;
+  for (int iFrame = 0; iFrame < onia::kNbFrames; ++iFrame) {
+    std::vector<double> frameVals;
+    double phi = thisPhi[iFrame]; // only usage of global vars!
+    double cosTh = thisCosTh[iFrame]; // only usage of global vars!
+
+    if (folding) { // map all values into first (?) octant
+      double phiFolded = phi;
+      double thetaAdjusted = cosTh;
+      if (phi > -90. && phi < 0.) {
+        phiFolded *= -1;
+      } else if (phi > 90. && phi < 180.) {
+        phiFolded = 180. - phi;
+        thetaAdjusted *= -1;
+      } else if (phi > -180. && phi < -90.) {
+        phiFolded = 180. + phi;
+        thetaAdjusted *= -1;
+      }
+      // asign again to values that will be stored
+      phi = phiFolded;
+      cosTh = thetaAdjusted;
+    }
+
+    frameVals.push_back(cosTh);
+    frameVals.push_back(phi);
+
+    returnVals.push_back(frameVals);
+  }
+
+  return returnVals;
+}
+
+/**
+ * Calculate the ratio of filled bins over total bins
+ * hR, hL and hC have to have the samme binning! (at least the same bin numbers).
+ * hC is used to estimate the coverage
+ */
+double calcCoverage(const TH2D& hR, const TH2D& hL, const TH2D& hC)
+{
+  unsigned int totBins = 0;
+  unsigned int filledBins = 0;
+
+  for (int iX = 0; iX < hR.GetNbinsX(); ++iX) {
+    for (int iY = 0; iY < hR.GetNbinsY(); ++iY) {
+      totBins++;
+      if (hC.GetBinContent(iX + 1, iY + 1) > 0) filledBins++;
+    }
+  }
+
+  std::cout << "------------------------------------------------------------" << std::endl
+            << "filled bins: " << filledBins << std::endl
+            << "total bins: " << totBins << std::endl;
+
+  return (double) filledBins / (double) totBins;
+}
+
+/** mainly for less typing! */
+inline bool minBinningReached(const int phi, const int phiMin, const int cosTh, const int cosThMin)
+{
+  return ((phi / 2 < phiMin) && (cosTh /2 < cosThMin));
+}
+
+/**
+ * determine the binning for the cosThPhi histograms.
+ * .first is Phi Binning, .second is CosTheta Binning
+ */
+std::pair<int, int> determineBinning(const TH2D& hR, const TH2D& hL, const TH2D& hC, bool folding)
+{
+  double coverage = 2 * calcCoverage(hR, hL, hC);
+  int nBinsCosth = findEvenNum(16 * 2 / coverage); // find 2^n closest (but above) the passed number
+  if (nBinsCosth > 64) nBinsCosth = 64; // maximum is 64 bins
+  int nBinsPhi = 16;
+
+  std::cout << "------------------------------------------------------------" << std::endl
+            << "Calculating coverage and average number of bin contents" << std::endl
+            << "bin coverage: " << coverage << std::endl
+            << "starting point for binning in phi: " << nBinsPhi << std::endl
+            << "starting point for binning in cosTheta: " << nBinsCosth << std::endl
+            << "------------------------------------------------------------" << std::endl;
+
+  // calculate the integral of the lowstatBG histo (check which of the histos has less events)
+  int IntBG = std::min(hL.Integral(), hR.Integral());
+
+  double Naverage = (double)IntBG/((double)nBinsPhi * nBinsCosth * coverage / 2.);
+  std::cout << "average cell coverage: " << Naverage << std::endl;
+
+  if (Naverage > 10) {
+    std::cout << "Rebinning is not necessary in this case." << "\n"
+              << "Ending binning algorithm." << "\n"
+              << "------------------------------------------------" << std::endl;
+  } else {
+    std::cout << "------------------------------------------------" << "\n"
+              << "old cosTheta binning: " << nBinsCosth << "\n"
+              << "old phi binning: " << nBinsPhi << std::endl;
+
+    nBinsPhi = findEvenNum(nBinsCosth * coverage / 2.);
+
+    std::cout << "closest 2^n number to cosTheta bins: " << nBinsCosth << "\n"
+              << "lowest 2^n number so that phi bins > cosTheta bins * coverage/2: " << nBinsPhi << "\n"
+              << "------------------------------------------------" << std::endl;
+
+    int nBinsPhiMin = folding ? 16 : 8;
+    int nBinsCosthMin = 8;
+
+    int iLoop = 0;
+    while (Naverage <= 10. || !minBinningReached(nBinsPhi, nBinsPhiMin, nBinsCosth, nBinsCosthMin)) {
+      iLoop++;
+      std::cout << "looping for correct binning in background histogram" << std::endl;
+
+      // Change binning of  in phi first, then in costh. Check inbetween and escape loop if necessary
+      if (nBinsPhi / 2 >= nBinsPhiMin) nBinsPhi /= 2; // split only if minimum binning is ensured
+      Naverage = (double)IntBG / ((double) nBinsPhi * nBinsCosth * coverage / 2.);
+      std::cout << "average bin content per cell after " << iLoop << " phi rebinning: " << Naverage << std::endl;
+      if (Naverage > 10) break;
+
+      if (nBinsCosth / 2 >= nBinsCosthMin) nBinsCosth /= 2; // split only if minimum binning is ensured
+      Naverage = (double)IntBG / ((double) nBinsPhi * nBinsCosth * coverage / 2.);
+      std::cout << "avg bin content per cell after " << iLoop << " cosTheta rebinning:" << Naverage << std::endl;
+    }
+
+    std::cout << "average bin content per cell exceeds 10: " << Naverage << "\n"
+              << "phi bins = " << nBinsPhi << ", cosTheta bins = " << nBinsCosth << "\n"
+              << "------------------------------------------------" << std::endl;
+  }
+
+  return std::make_pair(nBinsPhi, nBinsCosth);
 }
 
 #endif
