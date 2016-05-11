@@ -25,7 +25,7 @@ public:
   virtual void fillHistos(const int rapBin, const int ptBin, bool useRefittedChic, bool MC, bool PolLSB,
                           bool PolRSB, bool PolNP, bool folding) = 0;
   /** store the appropriate histograms to the output files. Call for every pt and rapidity bin separately. */
-  virtual void storeHistos() = 0;
+  virtual void storeHistos(bool PolLSB, bool PolRSB, bool PolNP, bool subtractNP) = 0;
   virtual ~IBkgHistoProducer() = 0; /**< destructor. */
 };
 
@@ -90,7 +90,7 @@ public:
   virtual void fillHistos(const int rapBin, const int ptBin, bool useRefittedChic, bool MC, bool PolLSB,
                           bool PolRSB, bool PolNP, bool folding) /*override*/;
   /** store all the filled histograms, and combine them together to have the correct output histograms. */
-  virtual void storeHistos() /*override*/;
+  virtual void storeHistos(bool PolLSB, bool PolRSB, bool PolNP, bool subtractNP) /*override*/;
   /** Destructor, do all the state independent clean-up work that is needed. */
   ~BkgHistoProducer();
 
@@ -178,6 +178,16 @@ private:
    * Fill the cosThetaPhi histograms.
    */
   void fill2DHists(const std::vector<std::vector<double> >& cosThPVals, const BkgHistoRangeReport& eventRegion);
+
+  /** store the pTRapMass Histos. */
+  void store3DHists(bool PolLSB, bool PolRSB, bool PolNP, bool subtractNP);
+
+  /**
+   * store the pT and |y| histograms.
+   * NOTE: actually stores just mean pt and mean |y|.
+   * TODO: Refactor
+   */
+  void store1DHists(bool PolLSB, bool PolRSB, bool PolNP, bool subtractNP);
 
   typedef typename std::vector<TFile*>::iterator TFileIt; /**< private typedef for easier looping over files. */
   typedef typename std::vector<TTree*>::iterator TTreeIt; /**< private typedef for easier looping over TTrees. */
@@ -518,6 +528,7 @@ void BkgHistoProducer<Chic>::store1DFactors(bool MC)
       double fNPChicInPRSR = getVarVal(m_ws, "var_fracNPChic"+cr[i]+"InPRSR"+cr[i]);
       // number of prompt chicX events in PRSR1
       double nPRChicInPRSR = getVarVal(m_ws, "var_nPRChic"+cr[i]+"InPRSR"+cr[i]);
+      double fBGinNP = m_fitVars["fBGinNP" + cr[i]]; // comb. background in NPSR1
 
       store3Factors(m_outFiles[i], "events_SR", ";;chic" + cr[i]+ " events in SR" + cr[i],
                     nPRChicInPRSR + fPRChicInNPSR * nNPSR,
@@ -528,7 +539,7 @@ void BkgHistoProducer<Chic>::store1DFactors(bool MC)
                     nPRChicInPRSR, fNPChicInPRSR * nPRSR, m_fitVars["fBGsig" + cr[i]] * nPRSR);
 
       store3Factors(m_outFiles[i], "events_nonpromptSR", ";;chic" + cr[i] + " events in NPSR" + cr[i],
-                    fPRChicInNPSR * nNPSR, fNPChicInNPSR * nNPSR, fBGinSR * nNPSR);
+                    fPRChicInNPSR * nNPSR, fNPChicInNPSR * nNPSR, fBGinNP * nNPSR);
 
     }
   }
@@ -608,6 +619,7 @@ void BkgHistoProducer<Jpsi>::initialize(const std::string& infileName, const int
   std::stringstream outfilename;
   outfilename << "tmpFiles/data_Psi" << 1 << "S_rap" << rapBin << "_pT" << ptBin << ".root";
   addOutputFile(outfilename.str());
+  storePtRapBorders(rapBin, ptBin);
 
   // get the fit variables
   setupFitVariables(rapBin, ptBin, MC, FracLSB);
@@ -637,6 +649,7 @@ void BkgHistoProducer<Psi2S>::initialize(const std::string& infileName, const in
   std::stringstream outfilename;
   outfilename << "tmpFiles/data_Psi" << 2 << "S_rap" << rapBin << "_pT" << ptBin << ".root";
   addOutputFile(outfilename.str());
+  storePtRapBorders(rapBin, ptBin);
 
   // get the fit variables
   setupFitVariables(rapBin, ptBin, MC, FracLSB);
@@ -687,6 +700,7 @@ void BkgHistoProducer<Chic>::initialize(const std::string& infileName, const int
   chic2file << "tmpFiles/data_chic2_rap" << rapBin << "_pT" << ptBin << ".root";
   addOutputFile(chic1file.str());
   addOutputFile(chic2file.str());
+  storePtRapBorders(rapBin, ptBin);
 
   // get the fit variables
   setupFitVariables(rapBin, ptBin, MC, FracLSB);
@@ -947,6 +961,8 @@ void BkgHistoProducer<Chic>::fillHistos(const int rapBin, const int ptBin, bool 
   unsigned int nAll = 0;
   unsigned int nSR = 0;
   unsigned int noValidRegion = 0;
+  unsigned int inSR1 = 0;
+  unsigned int inSR2 = 0;
 
   // cache some fit variables to avoid lookups in the loop body
   double p0 = m_fitVars["p0"], p1 = m_fitVars["p1"], p2 = m_fitVars["p2"];
@@ -973,7 +989,7 @@ void BkgHistoProducer<Chic>::fillHistos(const int rapBin, const int ptBin, bool 
       nAll++;
 
       if (TMath::Abs(m_inputVars.jpsi->M() - CBmass_p0) <
-          nSigMass * rapSigma(p0, p1, p2, m_inputVars.jpsi->Eta())) {
+          nSigMass * rapSigma(p0, p1, p2, m_inputVars.jpsi->Rapidity())) {
         nSR++;
 
         // std::cout << "----------------------------------------" << std::endl;
@@ -982,17 +998,21 @@ void BkgHistoProducer<Chic>::fillHistos(const int rapBin, const int ptBin, bool 
         BkgHistoRangeReport eventReg(sr1Range.accept(usedChicMass), sr2Range.accept(usedChicMass),
                                      npRange.accept(m_inputVars.jpsict), prRange.accept(m_inputVars.jpsict),
                                      lsbRange.accept(usedChicMass), rsbRange.accept(usedChicMass));
+
         if (!eventReg.isValidChicEvent()) {
           // std::cerr << "Event is not in any valid range!" << std::endl;
           noValidRegion++;
           continue;
         }
+        if (eventReg.isSR1() && eventReg.isPR()) inSR1++;
+        if (eventReg.isSR2() && eventReg.isPR()) inSR2++;
+
         // std::cout << "mass: " << usedChicMass << ", ct: " << m_inputVars.jpsict << std::endl;
         // std::cout << "SR1: " << sr1Range << ", SR2: " << sr2Range << ", LSB: " << lsbRange << ", RSB: "
         //           << rsbRange << ", PR: " << prRange << ", NP: " << npRange << std::endl;
 
         fill1DHists(PolRSB, PolLSB, PolNP, MC, pt, absY, usedChicMass, eventReg);
-        fill3DHists(PolRSB, PolLSB, PolNP, MC, pt, absY, usedChicMass, eventReg);
+        fill3DHists(PolRSB, PolLSB, PolNP, MC, m_inputVars.jpsi->Pt(), absY, usedChicMass, eventReg);
 
         cosTPT cosThPhiVals = calcCosThetaPhiValues(*m_inputVars.lepP, *m_inputVars.lepN, folding);
         fill2DHists(cosThPhiVals, eventReg);
@@ -1001,7 +1021,8 @@ void BkgHistoProducer<Chic>::fillHistos(const int rapBin, const int ptBin, bool 
     }
   }
   std::cout << "------------------------------" << std::endl
-            << "nAll = " << nAll << ", nSR = " << nSR << ", noValidRegion = " << noValidRegion << std::endl;
+            << "nAll = " << nAll << ", nSR = " << nSR << ", noValidRegion = " << noValidRegion << std::endl
+            << "total events in PRSR: " << inSR1 << " chic1, " << inSR2 << " chic2" << std::endl;
 
   // rebinning
   std::pair<int, int> cosThPhiBins = determineBinning(*m_cosThetaPhi[0].hBG_R[2], *m_cosThetaPhi[0].hBG_L[2],
@@ -1014,6 +1035,9 @@ void BkgHistoProducer<Chic>::fillHistos(const int rapBin, const int ptBin, bool 
 
   // re-run the filling for the cosTheta Phi histograms with the correct binning
   // COULDO: refactor the whole looping somehow, to remove this code duplicacy!
+  // COULDO: check if this re-run is necessary, or if the binning is already correct.
+  // COULDO: set the binning to the maximum number of bins and then use TH inbuilt Rebin() method to avoid
+  // a second filling
   setupCosThPhiHists(cosThPhiBins.second, cosThPhiBins.first); // set them up
 
   for (int i = 0; i < nEntries; ++i) {
@@ -1052,10 +1076,165 @@ void BkgHistoProducer<State>::fillHistos(const int, const int, bool, bool, bool,
 }
 
 // ================================================================================
+//                              STORE 3D HISTS
+// ================================================================================
+template<>
+void BkgHistoProducer<Chic>::store3DHists(bool PolLSB, bool PolRSB, bool PolNP, bool subtractNP)
+{
+  std::cout << "---------- IN BkgHistoProducer<Chic>::store3DHists" << std::endl;
+  double fracLSB[] = { m_fitVars["fracLSB1"], m_fitVars["fracLSB2"] }; // std::array when available!
+  double fBGinNP[] = { m_fitVars["fBGinNP1"], m_fitVars["fBGinNP2"] }; // std::array when available!
+  double fNPB[] = { m_fitVars["fNPB1"], m_fitVars["fNPB2"] }; // std::array when available
+  double fBGsig[] = { m_fitVars["fBGsig1"], m_fitVars["fBGsig2"] }; // std::array when available
+
+  const std::string bgName = "background_pTrapMass";
+
+  for (size_t iF = 0; iF < m_outFiles.size(); ++iF) {
+    m_ptRapMass[iF].storeToFile(m_outFiles[iF]); // pt, |y|, M hists (store the starting points)
+
+    TH3D* hBG_pTRapMass_lowct = addScaled(m_ptRapMass[iF].hBG_L, m_ptRapMass[iF].hBG_R, fracLSB[iF],
+                                          "comb_background_pTrapMass", m_outFiles[iF]);
+    TH3D* hBG_pTRapMass_highct = addScaled(m_ptRapMass[iF].h_highct_L, m_ptRapMass[iF].h_highct_R, fracLSB[iF],
+                                           "comb_background_highct_pTrapMass", m_outFiles[iF]);
+    TH3D* hNP_pTRapMass = subtractScaled(m_ptRapMass[iF].hNP, hBG_pTRapMass_highct, fBGinNP[iF],
+                                         "NPS_highct_pTrapMass", m_outFiles[iF]);
+
+    // TODO: there is probably a lot of potential for saving some lines and some instructions with some thinking
+    TH3D* hBG_pTRapMass = new TH3D();
+    if (PolLSB) { // LSB polarization: total background = signal contamination of prompt chic1;
+      m_ptRapMass[iF].hSR->Scale(1. / (1. * m_ptRapMass[0].hSR->Integral()));
+      hBG_pTRapMass = static_cast<TH3D*>(m_ptRapMass[0].hSR->Clone(bgName.c_str()));
+    } else if (PolRSB) { // RSB polarization: total background = signal contamination of prompt chic2
+      m_ptRapMass[iF].hSR->Scale(1. / (1. * m_ptRapMass[1].hSR->Integral()));
+      hBG_pTRapMass = static_cast<TH3D*>(m_ptRapMass[1].hSR->Clone(bgName.c_str()));
+    } else if (PolNP) { // non prompt polarization: total background = high ct background
+      hBG_pTRapMass = static_cast<TH3D*>(hBG_pTRapMass_highct->Clone(bgName.c_str()));
+    } else if (subtractNP) { // add low ct and non prompt background
+      selfScale(hNP_pTRapMass, fNPB[iF]);
+      hBG_pTRapMass = static_cast<TH3D*>(hNP_pTRapMass->Clone(bgName.c_str()));
+      selfScale(hBG_pTRapMass_lowct, fBGsig[iF]);
+      hBG_pTRapMass->Add(hBG_pTRapMass_lowct);
+    } else {
+      std::cout << "total background = combinatorial background" << std::endl;
+      hBG_pTRapMass = static_cast<TH3D*>(hBG_pTRapMass_lowct->Clone(bgName.c_str()));
+    }
+
+    m_outFiles[iF]->cd();
+    hBG_pTRapMass->Write();
+  }
+
+  std::cout << "********** IN BkgHistoProducer<Chic>::store3DHists" << std::endl;
+}
+
+template<StateT State>
+void BkgHistoProducer<State>::store3DHists(bool, bool, bool, bool)
+{
+  // TODO
+}
+
+// ================================================================================
+//                               STORE 1D HISTS
+// ================================================================================
+template<>
+void BkgHistoProducer<Chic>::store1DHists(bool PolLSB, bool PolRSB, bool PolNP, bool subtractNP)
+{
+  // COULDDO: use the values directly
+  const double fSRinPLSB = m_fitVars["fSRinPLSB"];
+  const double fSRinPRSB = m_fitVars["fSRinPRSB"];
+  const double fracLSB[] = { m_fitVars["fracLSB1"], m_fitVars["fracLSB1"] }; // std::array when available
+  const double fBGinNP[] = { m_fitVars["fBGinNP1"], m_fitVars["fBGinNP1"] }; // std::array when available
+  const double fBGsig[] = { m_fitVars["fBGsig1"], m_fitVars["fBGsig2"] };
+  const double fNPB[] = { m_fitVars["fNPB1"], m_fitVars["fNPB1"] };
+
+  // TODO: subtractScaledMean() is a really confusing function that modifies both input hists. -> Refactor!
+
+  double meanPT[] = { -1., -1. }; // std::array when available
+  double meanY[] = { -1., -1. }; // std::array when available
+  if (PolLSB) { // prompt chic1 contamination in LSB for polarization of LSB
+    double tmp = subtractScaledMean(m_ptHists.h_PSR[0], m_ptHists.h_L, fSRinPLSB);
+    meanPT[0] = tmp; meanPT[1] = tmp;
+    tmp = subtractScaledMean(m_rapHists.h_PSR[0], m_rapHists.h_L, fSRinPLSB);
+    meanY[0] = tmp; meanY[1] = tmp;
+  } else if (PolRSB) { // prompt chic2 contamination in RSB for polarization of RSB
+    double tmp = subtractScaledMean(m_ptHists.h_PSR[1], m_ptHists.h_R, fSRinPRSB);
+    meanPT[0] = tmp; meanPT[1] = tmp;
+    tmp = subtractScaledMean(m_rapHists.h_PSR[1], m_ptHists.h_R, fSRinPRSB);
+    meanY[0] = tmp; meanY[1] = tmp;
+  } else {
+    // continuum background using different fLSB for the two signal regions
+    TH1D* pT_L2 = addSideBands(m_ptHists.h_L, m_ptHists.h_R, fracLSB[0], fracLSB[1]);
+    TH1D* rap_L2 = addSideBands(m_rapHists.h_L, m_rapHists.h_R, fracLSB[0], fracLSB[1]);
+    // non prompt continuum background in NPSB
+    TH1D* pT_highct_L2 = addSideBands(m_ptHists.h_highct_L, m_ptHists.h_highct_R, fracLSB[0], fracLSB[1]);
+    TH1D* rap_highct_L2 = addSideBands(m_rapHists.h_highct_L, m_rapHists.h_highct_R, fracLSB[0], fracLSB[1]);
+
+    // non prompt background (NOTE: two statements per line!)
+    selfScale(m_ptHists.h_NP[0]);                       selfScale(m_ptHists.h_NP[1]); // normalize non-prompts
+    selfScale(m_ptHists.h_highct_L, fBGinNP[0]);        selfScale(pT_highct_L2, fBGinNP[1]);
+    m_ptHists.h_NP[0]->Add(m_ptHists.h_highct_L, -1.);  m_ptHists.h_NP[1]->Add(pT_highct_L2, -1.);
+
+    selfScale(m_rapHists.h_NP[0]);                        selfScale(m_rapHists.h_NP[1]); // normalize non-prompts
+    selfScale(m_rapHists.h_highct_L, fBGinNP[0]);         selfScale(rap_highct_L2, fBGinNP[1]);
+    m_rapHists.h_NP[0]->Add(m_rapHists.h_highct_L, -1.);  m_rapHists.h_NP[1]->Add(rap_highct_L2, -1.);
+
+    if (PolNP) {
+      meanPT[0] = m_ptHists.h_NP[0]->GetMean(); meanPT[1] = m_ptHists.h_NP[1]->GetMean();
+      meanY[0] = m_rapHists.h_NP[0]->GetMean(); meanY[1] = m_rapHists.h_NP[1]->GetMean();
+    }
+
+    // pt
+    selfScale(m_ptHists.h_L, fBGsig[0]);    selfScale(pT_L2, fBGsig[1]);
+    if (subtractNP) {
+      selfScale(m_ptHists.h_NP[0], fNPB[0]);    selfScale(m_ptHists.h_NP[1], fNPB[1]);
+      m_ptHists.h_L->Add(m_ptHists.h_NP[0]);   pT_L2->Add(m_ptHists.h_NP[1]);
+    }
+    m_ptHists.h_PSR[0]->Add(m_ptHists.h_L, -1);  m_ptHists.h_PSR[1]->Add(pT_L2, -1);
+    meanPT[0] = m_ptHists.h_PSR[0]->GetMean();   meanPT[1] = m_ptHists.h_PSR[1]->GetMean();
+
+    // rap
+    selfScale(m_rapHists.h_L, fBGsig[0]);    selfScale(rap_L2, fBGsig[1]);
+    if (subtractNP) {
+      selfScale(m_rapHists.h_NP[0], fNPB[0]);    selfScale(m_rapHists.h_NP[1], fNPB[1]);
+      m_rapHists.h_L->Add(m_rapHists.h_NP[0]);   rap_L2->Add(m_rapHists.h_NP[1]);
+    }
+    m_rapHists.h_PSR[0]->Add(m_rapHists.h_L, -1);  m_rapHists.h_PSR[1]->Add(rap_L2, -1);
+    meanY[0] = m_rapHists.h_PSR[0]->GetMean();   meanY[1] = m_rapHists.h_PSR[1]->GetMean();
+  }
+
+  for (size_t iF = 0; iF < m_outFiles.size(); ++iF) {
+    storeFactor(m_outFiles[iF], "mean_pT", ";;mean p_{T}", meanPT[iF], 0);
+    storeFactor(m_outFiles[iF], "mean_y", ";;mean |y|", meanY[iF], 0);
+  }
+}
+
+template<StateT State>
+void BkgHistoProducer<State>::store1DHists(bool PolLSB, bool PolRSB, bool PolNP, bool subtractNP)
+{
+  // TODO
+}
+
+// ================================================================================
 //                            STOREHISTOS SPEZIALIZATION
 // ================================================================================
+template<>
+void BkgHistoProducer<Chic>::storeHistos(bool PolLSB, bool PolRSB, bool PolNP, bool subtractNP)
+{
+  std::cout << "---------- IN BkgHistoProducer<Chic>::storeHistos()" << std::endl;
+
+  std::cout << "---------------------------------\n"
+            << "Build background histograms\n"
+            << "pT-rap-mass" << std::endl;
+  store3DHists(PolLSB, PolRSB, PolNP, subtractNP);
+
+  std::cout << "pT and y" << std::endl;
+  store1DHists(PolLSB, PolRSB, PolNP, subtractNP);
+
+
+  std::cout << "********** IN BkgHistoProducer<Chic>::storeHistos()" << std::endl;
+}
+
 template<StateT State>
-void BkgHistoProducer<State>::storeHistos()
+void BkgHistoProducer<State>::storeHistos(bool PolLSB, bool PolRSB, bool PolNP, bool subtractNP)
 {
   std::cerr << "BkgHistoProducer::storeHistos() not yet implemented for State (" << State << ")" << std::endl;
   // temporary output for testing!!!

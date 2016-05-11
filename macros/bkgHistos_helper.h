@@ -266,4 +266,143 @@ std::pair<int, int> determineBinning(const TH2D& hR, const TH2D& hL, const TH2D&
   return std::make_pair(nBinsPhi, nBinsCosth);
 }
 
+/**
+ * Normalize the histogram to the passed value f.
+ */
+template<typename HistT>
+inline void selfScale(HistT* h, const double f = 1.0)
+{
+  h->Scale(f / (1. * h->Integral()));
+}
+
+/**
+ * add the two histograms with a scaling factor. Returns a new histogram (for which the caller takes ownership!).
+ * If a file is passed as well, the returned histogram is also stored there prior to returning.
+ *
+ * Adding follows the following formula: \f$ h_{result} = f_{1} * h_{1} / N_{1} + (1 - f_{1}) * h_{2} / N_{2}) \f$,
+ * where \f$ N_{i} \f$ is the integral of the \f$ i \f$-th histogram.
+ *
+ * NOTE: h1 and h2 get scaled by a call to this function!
+ */
+template<typename HistT>
+HistT* addScaled(HistT* h1, HistT* h2, double f1, const std::string& name, TFile* file = NULL)
+{
+  selfScale(h1, f1);
+  selfScale(h2, 1 - f1);
+  HistT* hr = static_cast<HistT*>(h1->Clone(name.c_str()));
+  hr->Add(h2);
+
+  if (file) {
+    file->cd();
+    hr->Write();
+  }
+
+  return hr;
+}
+
+/**
+ * manually subract h2 from h1.
+ * Result: h(i,j,k) = h1(i,j,k) - h2(i,j,k), if h1(i,j,k) > 0 and h1(i,j,k) - h2(i,j,k) > 0.
+ *         h(i,j,k) = h1(i,j,k), if h1(i,j,k) <= 0.
+ *         h(i,j,k) = 0, if h1(i,j,k) - h2(i,j,k) < 0
+ * Errors are calculated as squared sum.
+ * NOTE: h1 gets modified by a call to this!
+ */
+TH3D* subtract3D(TH3D* h1, const TH3D* h2)
+{
+  const int nx = h1->GetXaxis()->GetNbins();
+  const int ny = h1->GetYaxis()->GetNbins();
+  const int nz = h1->GetZaxis()->GetNbins();
+
+  for (int j = 0; j <= nx; ++j) {
+    for (int k = 0; k <= ny; ++k) {
+      for (int l = 0; l <= nz; ++l) {
+        const double c1 = h1->GetBinContent(j,k,l);
+        if (c1 > 0) {
+          const double c2 = h2->GetBinContent(j,k,l);
+          const double e1 = h1->GetBinError(j,k,l);
+          const double e2 = h2->GetBinError(j,k,l);
+          double e3 = TMath::Sqrt(e1*e1 + e2*e2);
+          double c3 = c1 - 1. * c2;
+          if (c3 < 0 ) {
+            c3 = 0;
+            e3 = 0;
+          }
+          h1->SetBinContent(j,k,l, c3);
+          h1->SetBinError(j,k,l, e3);
+        }
+      } // l
+    } // k
+  } // j
+
+  return h1;
+}
+
+/**
+ * subtract h2 scaled by f from h1. Returns a new histogram (for which the caller takes ownership!).
+ * If a file is passed as well, the returned histogram is also stored there prior to returning.
+ *
+ * Subtracting follows the following formula: \f$ h_{result} = h_{1} / N_{1} - f * h_{2} / N_{2} \f$,
+ * where \f$ N_{i} \f$ is the integral of the \f$ i \f$-th histogram.
+ * NOTE: h1 gets modified by a call to this!
+ * NOTE: uses the subtract3D method to subtract h1 from h2!.
+ */
+TH3D* subtractScaled(TH3D* h1, const TH3D* h2, double f, const std::string& name, TFile* file = NULL)
+{
+  selfScale(h1);
+  TH3D* htmp = static_cast<TH3D*>(h2->Clone());
+  selfScale(htmp, f);
+  TH3D* hr = static_cast<TH3D*>(h1->Clone(name.c_str()));
+  hr = subtract3D(hr, htmp);
+  if (file) {
+    file->cd();
+    hr->Write();
+  }
+
+  return hr;
+}
+
+/**
+ * Subtracts h1 scaled by f from h2 (after normalization of both).
+ * returns the mean of h2 after all operations.
+ *
+ * NOTE: normalizes h1 and modifies h2 beyond that!
+ * TODO: this is a real beast, as it modifies all non-const inputs!
+ */
+double subtractScaledMean(TH1D* h1, TH1D* h2, const double f)
+{
+  selfScale(h1);
+  TH1D* htmp = static_cast<TH1D*>(h1->Clone());
+  selfScale(htmp, f);
+  selfScale(h2);
+  h2->Add(htmp, -1.);
+
+  return h2->GetMean();
+}
+
+/**
+ * Clones hL and hR, and adds them weighted.
+ * hL after running: \f$ h_{L, out} = f_{1} * h_{L} / N_{L} + (1 - f_{1}) * h_R / N_{R} \f$,
+ * returned hist: \f$ h_{result} = f_{2} * h_{L} / N_{L} + (1 - f_{2} * h_R / N_{R})\f$,
+ * where \f$ N_{i} \f$ is the integral of the \f$ i\f$-th histogram.
+ *
+ * NOTE: modifies both passed hists.
+ * TODO: this is another beast that is mainly present for less typing
+ */
+TH1D* addSideBands(TH1D* hL, TH1D* hR, const double f1, const double f2)
+{
+  TH1D* hL2 = static_cast<TH1D*>(hL->Clone());
+  selfScale(hL, f1);
+  selfScale(hL2, f2);
+
+  TH1D* hR2 = static_cast<TH1D*>(hR->Clone());
+  selfScale(hR, 1. - f1);
+  selfScale(hR2, 1. - f2);
+
+  hL->Add(hR);
+  hL2->Add(hR2);
+
+  return hL2;
+}
+
 #endif

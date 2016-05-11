@@ -22,6 +22,7 @@ int main(int argc, char* argv[])
   bool PolRSB = false;
   bool PolNP = false;
   bool folding = false;
+  bool subtractNP = false;
 
   for (int iArg = 0; iArg < argc; ++iArg) {
     const std::string arg = std::string(argv[iArg]);
@@ -37,6 +38,7 @@ int main(int argc, char* argv[])
     fromSplit("PolRSB", arg, PolRSB);
     fromSplit("PolNP", arg, PolNP);
     fromSplit("folding", arg, folding);
+    fromSplit("subtractNP", arg, folding);
   }
 
   BkgHistoProducerFactory factory;
@@ -58,7 +60,7 @@ int main(int argc, char* argv[])
       infilename << infileBase << "_rap" << iRap << "_pt" << iPt << ".root";
       bkgHistoProducer->initialize(infilename.str(), iRap, iPt, MC, FracLSB, refittedChic);
       bkgHistoProducer->fillHistos(iRap, iPt, refittedChic, MC, PolLSB, PolRSB, PolNP, folding);
-      bkgHistoProducer->storeHistos();
+      bkgHistoProducer->storeHistos(PolLSB, PolRSB, PolNP, subtractNP);
     }
   }
 

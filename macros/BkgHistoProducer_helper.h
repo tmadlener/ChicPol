@@ -85,6 +85,8 @@ struct BkgHistoPtRapMassHists {
   BkgHistoPtRapMassHists();
   /** destructor. Deletes all pointers. TODO: FIX! */
   ~BkgHistoPtRapMassHists();
+  /** store all histograms in the passed file. */
+  void storeToFile(TFile* file);
 
   TH3D* hBG_L; /**< LSB background */
   TH3D* hBG_R; /**< RSB background. */
@@ -369,6 +371,21 @@ BkgHistoPtRapMassHists::~BkgHistoPtRapMassHists()
   // delete hSR;
 
   std::cout << "********** DESTRUCTOR OF BkgHistoPtRapMassHists" << std::endl;
+}
+
+void BkgHistoPtRapMassHists::storeToFile(TFile* file)
+{
+  std::cout << "---------- BkgHistoPtRapMassHists::storeToFile()" << std::endl;
+
+  file->cd();
+  hBG_L->Write();
+  hBG_R->Write();
+  h_highct_L->Write();
+  h_highct_R->Write();
+  hNP->Write();
+  hSR->Write();
+
+  std::cout << "********** BkgHistoPtRapMassHists::storeToFile()" << std::endl;
 }
 
 // ================================================================================
