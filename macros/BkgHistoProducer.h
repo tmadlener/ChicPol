@@ -25,7 +25,7 @@ public:
   virtual void fillHistos(const int rapBin, const int ptBin, bool useRefittedChic, bool MC, bool PolLSB,
                           bool PolRSB, bool PolNP, bool folding) = 0;
   /** store the appropriate histograms to the output files. Call for every pt and rapidity bin separately. */
-  virtual void storeHistos(bool PolLSB, bool PolRSB, bool PolNP, bool subtractNP) = 0;
+  virtual void storeHistos(bool PolLSB, bool PolRSB, bool PolNP, bool subtractNP, bool folding) = 0;
   virtual ~IBkgHistoProducer() = 0; /**< destructor. */
 };
 
@@ -90,7 +90,7 @@ public:
   virtual void fillHistos(const int rapBin, const int ptBin, bool useRefittedChic, bool MC, bool PolLSB,
                           bool PolRSB, bool PolNP, bool folding) /*override*/;
   /** store all the filled histograms, and combine them together to have the correct output histograms. */
-  virtual void storeHistos(bool PolLSB, bool PolRSB, bool PolNP, bool subtractNP) /*override*/;
+  virtual void storeHistos(bool PolLSB, bool PolRSB, bool PolNP, bool subtractNP, bool folding) /*override*/;
   /** Destructor, do all the state independent clean-up work that is needed. */
   ~BkgHistoProducer();
 
@@ -188,6 +188,12 @@ private:
    * TODO: Refactor
    */
   void store1DHists(bool PolLSB, bool PolRSB, bool PolNP, bool subtractNP);
+
+  /**
+   * store the cosTheta Phi histograms (and do some combinations)
+   * TODO: Refactor
+   */
+  void store2DHists(bool PolLSB, bool PolRSB, bool PolNP, bool subtractNP, bool folding);
 
   typedef typename std::vector<TFile*>::iterator TFileIt; /**< private typedef for easier looping over files. */
   typedef typename std::vector<TTree*>::iterator TTreeIt; /**< private typedef for easier looping over TTrees. */
@@ -553,6 +559,9 @@ void BkgHistoProducer<State>::store1DFactors(bool MC)
   // TODO
 }
 
+// ================================================================================
+//                   FIND RAP PT BORDERS DI MUON KIN
+// ================================================================================
 template<>
 void BkgHistoProducer<Chic>::findRapPtBordersDiMuonKin(const int rapBin, const int ptBin)
 {
@@ -1214,10 +1223,104 @@ void BkgHistoProducer<State>::store1DHists(bool PolLSB, bool PolRSB, bool PolNP,
 }
 
 // ================================================================================
+//                               STORE 2D HISTS
+// ================================================================================
+template<>
+void BkgHistoProducer<Chic>::store2DHists(bool PolLSB, bool PolRSB, bool PolNP, bool subtractNP, bool folding)
+{
+  std::cout << "---------- IN BkgHistoProducer<Chic>::store2DHists()" << std::endl;
+
+  const std::vector<std::string> labels = charArrayToStrVec(onia::frameLabel, onia::kNbFrames);
+  const double fracLSB[] = { m_fitVars["fracLSB1"], m_fitVars["fracLSB2"] };
+  const double fBGinNP[] = { m_fitVars["fBGinNP1"], m_fitVars["fBGinNP2"] };
+  const double fBGsig[] = { m_fitVars["fBGsig1"], m_fitVars["fBGsig2"] };
+  const double fNPB[] = { m_fitVars["fNPB1"], m_fitVars["fNPB2"] };
+
+
+  const std::string tbgFolded = "background_folded_costhphi";
+  const std::string tbgUnfolded = "background_unfolded_costhphi";
+
+  for (size_t iFr = 0; iFr < labels.size(); ++iFr) {
+    for (size_t i = 0; i < 2; ++i) { // chic 1 and two (also size of m_outFiles, etc..)
+      // combinatorial background in signal region (prompt region), combination of left and right sideband
+      m_cosThetaPhi[i].hBG[iFr] = addScaled(m_cosThetaPhi[i].hBG_L[iFr], m_cosThetaPhi[i].hBG_R[iFr], fracLSB[i],
+                                            "com_background_costhphi" + labels[iFr], m_outFiles[i]);
+
+      // total background = combinatorial background
+      m_cosThetaPhi[i].hTBG[iFr] = clone(m_cosThetaPhi[i].hBG[iFr], tbgFolded + labels[iFr]);
+      if (!iFr && !i) { // output only once in the first run through
+        std::cout << "background histogram output:" << std::endl
+                  << "comb.: " << m_cosThetaPhi[i].hBG[iFr]->GetBinContent(3,12) << std::endl
+                  << "tot.: " << m_cosThetaPhi[i].hTBG[iFr]->GetBinContent(3,12) << std::endl;
+      }
+
+      // combinatorial background in high ctau region, combination of left and right sideband in high ctau region
+      m_cosThetaPhi[i].hBGinNP[iFr] = addScaled(m_cosThetaPhi[i].hBGinNP_L[iFr], m_cosThetaPhi[i].hBGinNP_R[iFr],
+                                                fracLSB[i],"background_NPR_costhphi" + labels[iFr],m_outFiles[i]);
+      if (PolNP) { // for non prompt polarization: only use high ctau background
+        m_cosThetaPhi[i].hTBG[iFr] = clone(m_cosThetaPhi[0].hBGinNP[iFr], tbgFolded + labels[iFr]);
+      }
+
+      // non prompt background in high ctau region
+      // (hNPBG)_norm - fBGinNP * (hBGinNP)_norm
+      m_cosThetaPhi[i].hNPS[iFr] = subtractScaled(m_cosThetaPhi[i].hNPBG[iFr], m_cosThetaPhi[i].hBGinNP[iFr],
+                                                  fBGinNP[i], "background_NPSR_costhphi" + labels[iFr],
+                                                  m_outFiles[i]);
+
+      // total background
+      // polarization of LSB and RSB, bkg = signal contamination in left and right sideband
+      if (PolLSB) { // NOTE: storing only SR1 (as in leptonBased.C)
+        m_cosThetaPhi[i].hTBG[iFr] = clone(m_cosThetaPhi[0].hSR[iFr], tbgFolded + labels[iFr]);
+      } else if (PolRSB) { // NOTE: storing only SR2 (NOT as in leptonBased.C!!!)
+        m_cosThetaPhi[i].hTBG[iFr] = clone(m_cosThetaPhi[1].hSR[iFr], tbgFolded + labels[iFr]);
+      } else if (subtractNP) { // fNPBG * (hNPS)_norm + fBGisg * (hBG)_norm
+        m_cosThetaPhi[i].hTBG[iFr] = addWeighted(m_cosThetaPhi[i].hBG[iFr], m_cosThetaPhi[i].hNPS[iFr],
+                                                 fBGsig[i], fNPB[i], tbgFolded + labels[iFr]); // don't store yet
+      }
+      if(!iFr && !i) { // once again only output once
+        std::cout << "final tot.: " << m_cosThetaPhi[i].hTBG[iFr]->GetBinContent(3,12) << std::endl;
+      }
+
+      // write folded histograms to files
+      m_outFiles[i]->cd();
+      m_cosThetaPhi[i].hTBG[iFr]->Write();
+
+      if (folding) {
+        if (!iFr && !i) { // some output again
+          int nx = m_cosThetaPhi[i].hTBG[iFr]->GetXaxis()->GetNbins();
+          int ny = m_cosThetaPhi[i].hTBG[iFr]->GetYaxis()->GetNbins();
+
+          std::cout << "------------------------------------------------------------" << std::endl
+                    << "Total background histogram" << std::endl
+                    << "number of cosTheta bins: " << nx << std::endl
+                    << "number of phi bins: " << ny << std::endl
+                    << "phi bins " << ny / 2 + 1 << " to " << 3 * ny / 4 << " are filled." << std::endl
+                    << "------------------------------------------------------------" << std::endl;
+        }
+        unfold(m_cosThetaPhi[i].hTBG[iFr]);
+      }
+
+      // write unfolded and final histogram to file (same histogram twice becaus of normApproach relic)
+      m_cosThetaPhi[i].hTBG[iFr]->SetName((tbgUnfolded + labels[iFr]).c_str());
+      m_cosThetaPhi[i].hTBG[iFr]->Write();
+    }
+  }
+
+  std::cout << "********** IN BkgHistoProducer<Chic>::store2DHists()" << std::endl;
+}
+
+template<StateT State>
+void BkgHistoProducer<State>::store2DHists(bool PolLSB, bool PolRSB, bool PolNP, bool subtractNP, bool folding)
+{
+  // TODO
+}
+
+
+// ================================================================================
 //                            STOREHISTOS SPEZIALIZATION
 // ================================================================================
 template<>
-void BkgHistoProducer<Chic>::storeHistos(bool PolLSB, bool PolRSB, bool PolNP, bool subtractNP)
+void BkgHistoProducer<Chic>::storeHistos(bool PolLSB, bool PolRSB, bool PolNP, bool subtractNP, bool folding)
 {
   std::cout << "---------- IN BkgHistoProducer<Chic>::storeHistos()" << std::endl;
 
@@ -1229,12 +1332,18 @@ void BkgHistoProducer<Chic>::storeHistos(bool PolLSB, bool PolRSB, bool PolNP, b
   std::cout << "pT and y" << std::endl;
   store1DHists(PolLSB, PolRSB, PolNP, subtractNP);
 
+  std::cout << "cosTheta-phi" << std::endl;
+  // store the currently filled cosThetaPhi histograms
+  for (size_t iF = 0; iF < m_outFiles.size(); ++iF) {
+    m_cosThetaPhi[iF].storeToFile(m_outFiles[iF]);
+  }
+  store2DHists(PolLSB, PolRSB, PolNP, subtractNP, folding);
 
   std::cout << "********** IN BkgHistoProducer<Chic>::storeHistos()" << std::endl;
 }
 
 template<StateT State>
-void BkgHistoProducer<State>::storeHistos(bool PolLSB, bool PolRSB, bool PolNP, bool subtractNP)
+void BkgHistoProducer<State>::storeHistos(bool PolLSB, bool PolRSB, bool PolNP, bool subtractNP, bool folding)
 {
   std::cerr << "BkgHistoProducer::storeHistos() not yet implemented for State (" << State << ")" << std::endl;
   // temporary output for testing!!!

@@ -60,7 +60,7 @@ int main(int argc, char* argv[])
       infilename << infileBase << "_rap" << iRap << "_pt" << iPt << ".root";
       bkgHistoProducer->initialize(infilename.str(), iRap, iPt, MC, FracLSB, refittedChic);
       bkgHistoProducer->fillHistos(iRap, iPt, refittedChic, MC, PolLSB, PolRSB, PolNP, folding);
-      bkgHistoProducer->storeHistos(PolLSB, PolRSB, PolNP, subtractNP);
+      bkgHistoProducer->storeHistos(PolLSB, PolRSB, PolNP, subtractNP, folding);
     }
   }
 

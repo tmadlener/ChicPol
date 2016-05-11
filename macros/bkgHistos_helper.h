@@ -276,6 +276,16 @@ inline void selfScale(HistT* h, const double f = 1.0)
 }
 
 /**
+ * Clone any TObject. Mainly for less typing effort.
+ * TODO: increase usage.
+ */
+template<typename T>
+inline T* clone(const T* obj, const std::string& name = "")
+{
+  return static_cast<T*>(obj->Clone(name.c_str()));
+}
+
+/**
  * add the two histograms with a scaling factor. Returns a new histogram (for which the caller takes ownership!).
  * If a file is passed as well, the returned histogram is also stored there prior to returning.
  *
@@ -285,12 +295,37 @@ inline void selfScale(HistT* h, const double f = 1.0)
  * NOTE: h1 and h2 get scaled by a call to this function!
  */
 template<typename HistT>
-HistT* addScaled(HistT* h1, HistT* h2, double f1, const std::string& name, TFile* file = NULL)
+HistT* addScaled(HistT* h1, HistT* h2, const double f1, const std::string& name, TFile* file = NULL)
 {
   selfScale(h1, f1);
   selfScale(h2, 1 - f1);
   HistT* hr = static_cast<HistT*>(h1->Clone(name.c_str()));
   hr->Add(h2);
+
+  if (file) {
+    file->cd();
+    hr->Write();
+  }
+
+  return hr;
+}
+
+/**
+ * add the two histograms with two different weight factors w1 and w2.
+ * If a file is passed the histogram is also stored there prior to returning.
+ *
+ * The returned histogram is calculated as: \f$ h_{result} = w_{1} * h_{1} / N_{1} + w_{2} * h_{2} / N_{2} \f$,
+ * where \f$ N_{i} \f$ is the integral of the \f$ i \f$-th histogram.
+ * NOTE: h1 and h2 get modified with a call to this function!
+ */
+template<typename HistT>
+HistT* addWeighted(HistT* h1, HistT* h2, const double w1, const double w2, const std::string& name,
+                   TFile* file = NULL)
+{
+  selfScale(h1, w1);
+  selfScale(h2, w2);
+  HistT* hr = static_cast<HistT*>(h2->Clone(name.c_str()));
+  hr->Add(h1);
 
   if (file) {
     file->cd();
@@ -308,7 +343,7 @@ HistT* addScaled(HistT* h1, HistT* h2, double f1, const std::string& name, TFile
  * Errors are calculated as squared sum.
  * NOTE: h1 gets modified by a call to this!
  */
-TH3D* subtract3D(TH3D* h1, const TH3D* h2)
+TH3D* subtractManual(TH3D* h1, const TH3D* h2)
 {
   const int nx = h1->GetXaxis()->GetNbins();
   const int ny = h1->GetYaxis()->GetNbins();
@@ -339,21 +374,54 @@ TH3D* subtract3D(TH3D* h1, const TH3D* h2)
 }
 
 /**
+ * manually subtract h2 from h1.
+ * For a more detailed description see the TH3D version of this.
+ * NOTE: modifies h1 within (also h1 is basically the return)
+ */
+TH2D* subtractManual(TH2D* h1, const TH2D* h2)
+{
+  int nx = h1->GetXaxis()->GetNbins();
+  int ny = h1->GetYaxis()->GetNbins();
+
+  for (int j = 0; j <= nx; ++j) {
+    for (int k = 0; k <= ny; ++k) {
+      const double c1 = h1->GetBinContent(j,k);
+      if (c1 > 0) {
+        const double c2 = h2->GetBinContent(j,k);
+        const double e1 = h1->GetBinError(j,k);
+        const double e2 = h2->GetBinError(j,k);
+        double c3 = c1 - 1. * c2;
+        double e3 = TMath::Sqrt(e1*e1 + e2*e2);
+        if (c3 < 0) {
+          c3 = 0;
+          e3 = 0;
+        }
+        h1->SetBinContent(j,k, c3);
+        h1->SetBinError(j,k, e3);
+      }
+    }
+  }
+
+  return h1;
+}
+
+/**
  * subtract h2 scaled by f from h1. Returns a new histogram (for which the caller takes ownership!).
  * If a file is passed as well, the returned histogram is also stored there prior to returning.
  *
  * Subtracting follows the following formula: \f$ h_{result} = h_{1} / N_{1} - f * h_{2} / N_{2} \f$,
  * where \f$ N_{i} \f$ is the integral of the \f$ i \f$-th histogram.
  * NOTE: h1 gets modified by a call to this!
- * NOTE: uses the subtract3D method to subtract h1 from h2!.
+ * NOTE: uses the subtractManual method to subtract h1 from h2!. (This has to be defined for the type!)
  */
-TH3D* subtractScaled(TH3D* h1, const TH3D* h2, double f, const std::string& name, TFile* file = NULL)
+template<typename HistT>
+HistT* subtractScaled(HistT* h1, const HistT* h2, double f, const std::string& name, TFile* file = NULL)
 {
   selfScale(h1);
-  TH3D* htmp = static_cast<TH3D*>(h2->Clone());
+  HistT* htmp = static_cast<HistT*>(h2->Clone());
   selfScale(htmp, f);
-  TH3D* hr = static_cast<TH3D*>(h1->Clone(name.c_str()));
-  hr = subtract3D(hr, htmp);
+  HistT* hr = static_cast<HistT*>(h1->Clone(name.c_str()));
+  hr = subtractManual(hr, htmp);
   if (file) {
     file->cd();
     hr->Write();
@@ -403,6 +471,47 @@ TH1D* addSideBands(TH1D* hL, TH1D* hR, const double f1, const double f2)
   hL2->Add(hR2);
 
   return hL2;
+}
+
+/** convert an array of c-style strings (char*) to a vector of strings. */
+std::vector<std::string> charArrayToStrVec(const char** charArr, const int arrSize)
+{
+  std::vector<std::string> retVec;
+  for (int iL = 0; iL < arrSize; ++iL) {
+    std::stringstream tmp;
+    tmp << charArr[iL];
+    retVec.push_back(tmp.str());
+  }
+  return retVec;
+}
+
+/** unfold the passed TH2D.*/
+void unfold(TH2D* h)
+{
+  const int nx = h->GetXaxis()->GetNbins();
+  const int ny = h->GetYaxis()->GetNbins();
+  const int yPhi = ny / 4;
+
+  for (int j = 0; j <= nx; ++j) {
+    for (int k = 2 * yPhi + 1; k <= 3*yPhi; ++k) {
+      const double c = h->GetBinContent(j,k);
+      const double e = h->GetBinError(j,k);
+
+      // flip in cosTheta
+      const int l = nx + 1 - j;
+
+      // set bin content and error of phiFolded in the other 3 (not yet filled) phi regions
+      // 90 - 180: flip phi (upwards), flip cosTheta
+      h->SetBinContent(l, 6 * yPhi + 1 - k, c);
+      h->SetBinError(l, 6 * yPhi + 1 - k, e);
+      // 0 - -90: flip phi (downwards)
+      h->SetBinContent(j, ny + 1 - k, c);
+      h->SetBinError(j, ny + 1 - k, e);
+      // -90 - -180: flip cosTheta, shift phi
+      h->SetBinContent(l, k - 2 * yPhi, c);
+      h->SetBinError(l, k - 2 * yPhi, e);
+    }
+  }
 }
 
 #endif
