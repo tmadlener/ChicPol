@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
     fromSplit("PolRSB", arg, PolRSB);
     fromSplit("PolNP", arg, PolNP);
     fromSplit("folding", arg, folding);
-    fromSplit("subtractNP", arg, folding);
+    fromSplit("subtractNP", arg, subtractNP);
   }
 
   BkgHistoProducerFactory factory;
