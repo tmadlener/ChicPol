@@ -11,16 +11,16 @@ basedir=$PWD
 cd macros
 
 # input arguments
-for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chic2
+for nState in 4;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chic2
   for FidCuts in 11;do #defines the set of cuts to be used, see macros/polFit/effsAndCuts.h
     cd $Cdir
 
-    COPY_AND_COMPILE=1
+    COPY_AND_COMPILE=0
 
     rapMin=1     #takes bins, not actual values
     rapMax=1     #if you only want to process 1 y bin, rapMax = rapMin
-    ptMin=3      #takes bins, not acutal values
-    ptMax=3      #if you only want to process 1 pt bin, ptMax = ptMin
+    ptMin=1      #takes bins, not acutal values
+    ptMax=5      #if you only want to process 1 pt bin, ptMax = ptMin
 
     Plotting=1   #plotting macro: 1 = plot all, 2 = plot mass, 3 = plot lifetime
     #plotting macro: 4 = plot lifetimeSR1, 5 = plot lifetimeSR2, 6 = plot lifetimeLSB, 7 = plot lifetimeRSB, 8 = plot lifetimeFullRegion
@@ -34,6 +34,7 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     rejectCowboys=false
     RequestTrigger=true
     MC=false
+    MCclosure=true # run MCclosure, CAUTION with setting what (and what not) to execute (not everything works!)
     drawRapPt2D=false  #draw Rap-Pt 2D map of Psi
     FixRegionsToInclusiveFit=false
     rapFixTo=1
@@ -63,7 +64,8 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
 
 
     #Define JobID
-    JobID=chic_11April2016_nonRefit_useRef_${useRefittedChic}_rejCBs # fChi1MassLow = 0.1
+    # JobID=chic_11April2016_nonRefit_useRef_${useRefittedChic}_rejCBs # fChi1MassLow = 0.1
+    JobID=jpsi_30May2016_MCclosure
     # JobID=chic_30March2016_ML30 # fChi1MassLow = 0.3
 
 
@@ -101,6 +103,9 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
       then
         inputTree1=/scratch/ikratsch/Polarization/Jpsi/InputFiles/TTree_Psi1S_Gun_Pt9p5_70p5_19Dec2012.root
       fi
+      if [ ${MCclosure} = 'true' ]; then
+        inputTree1=/afs/hephy.at/data/ikraetschmer01/ikraetschmer/TnP2012/InputFiles/validation/onia2MuMu_tree_validation.root
+      fi
     fi
 
     if [ ${nState} -eq 5 ]
@@ -119,6 +124,9 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
       if [ ${MC} = 'true' ]
       then
         inputTree1=/scratch/knuenz/Polarization/RootInput/ChicPol/chic_rootuple_MC_15M_sel.root
+      fi
+      if [ ${MCclosure} = 'true' ]; then
+        inputTree=1/afs/hephy.at/data/ikraetschmer01/ikraetschmer/Polarization/2012/InputFiles/ChiC/tuple-mc-chic-rec.root
       fi
     fi
 
@@ -156,6 +164,9 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
       cp PolChiData.h ${WorkDir}/PolChiData.h
       cp ../interface/effsAndCuts_chi.h ${WorkDir}/effsAndCuts.h
 
+      cp runMC_helperStructs.h ${WorkDir}/runMC_helperStructs.h
+      cp runMC.cc ${WorkDir}/runMC.cc
+
       cp runWorkspace.cc ${WorkDir}/runWorkspace.cc
       cp createWorkspace.C ${WorkDir}/createWorkspace.C
 
@@ -190,6 +201,11 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
       cp bkgHistos.C ${WorkDir}/bkgHistos.C
       cp bkgHistos_leptonBased.C ${WorkDir}/bkgHistos_chi.C
       cp calcPol.C ${WorkDir}/calcPol.C
+      cp bkgHistos_MCclosure.C  ${WorkDir}/bkgHistos_MCclosure.C
+
+      cp runBkgHistos_new.cc ${WorkDir}/runBkgHistos_new.cc
+      cp BkgHistoProducer*.h ${WorkDir}/
+      cp bkgHistos_helper.h ${WorkDir}/bkgHistos_helper.h
 
       cp PlotCosThetaPhiBG.cc ${WorkDir}/PlotCosThetaPhiBG.cc
       cp PlotMassRapPtBG.cc ${WorkDir}/PlotMassRapPtBG.cc
@@ -230,12 +246,16 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
 
     if [ ${execute_runChiData} -eq 1 ]
     then
-      ./runChiData ${inputTrees} rejectCowboys=${rejectCowboys} FidCuts=${FidCuts} nState=${nState} MC=${MC} RequestTrigger=${RequestTrigger} correctCtau=${correctCtau} useRefittedChic=${useRefittedChic}
+      if [ ${MCclosure} = 'true' ]; then
+        ./runMC ${inputTrees} rejectCowboys=${rejectCowboys} FidCuts=${FidCuts} nState=${nState} RequestTrigger=${requestTrigger}
+      else
+        ./runChiData ${inputTrees} rejectCowboys=${rejectCowboys} FidCuts=${FidCuts} nState=${nState} MC=${MC} RequestTrigger=${RequestTrigger} correctCtau=${correctCtau} useRefittedChic=${useRefittedChic}
+      fi
     fi
 
     if [ ${execute_runWorkspace} -eq 1 ]
     then
-      ./runWorkspace nState=${nState} correctCtau=${correctCtau} drawRapPt2D=${drawRapPt2D} useRefittedChic=${useRefittedChic}
+      ./runWorkspace nState=${nState} correctCtau=${correctCtau} drawRapPt2D=${drawRapPt2D} useRefittedChic=${useRefittedChic} mcClosure=${MCclosure}
     fi
 
     if [ ${execute_runMassFit} -eq 1 ]
@@ -312,8 +332,12 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
 
     if [ ${execute_runBkgHistos} -eq 1 ]
     then
-      cp runBkgHistos runBkgHistos_$[nState-3]S_rap${rapMin}_pt${ptMin}
-      ./runBkgHistos_$[nState-3]S_rap${rapMin}_pt${ptMin} rapMin=${rapMin} rapMax=${rapMax} ptMin=${ptMin} ptMax=${ptMax} nState=${nState} MC=${MC} doCtauUncer=${doCtauUncer} PolLSB=${PolLSB} PolRSB=${PolRSB} PolNP=${PolNP} ctauScen=${ctauScen} FracLSB=${FracLSB} forceBinning=${forceBinning} folding=${folding} normApproach=${normApproach} scaleFracBg=${scaleFracBg} polDataPath=${polDataPath} subtractNP=${subtractNP} useRefittedChic=${useRefittedChic}
+      if [ ${MCclosure} = 'true' ]; then
+        cp runBkgHistos_new runBkgHistos_$[nState-3]S_rap${rapMin}_pt${ptMin}
+      else
+        cp runBkgHistos runBkgHistos_$[nState-3]S_rap${rapMin}_pt${ptMin}
+      fi
+      ./runBkgHistos_$[nState-3]S_rap${rapMin}_pt${ptMin} rapMin=${rapMin} rapMax=${rapMax} ptMin=${ptMin} ptMax=${ptMax} nState=${nState} MC=${MC} doCtauUncer=${doCtauUncer} PolLSB=${PolLSB} PolRSB=${PolRSB} PolNP=${PolNP} ctauScen=${ctauScen} FracLSB=${FracLSB} forceBinning=${forceBinning} folding=${folding} normApproach=${normApproach} scaleFracBg=${scaleFracBg} polDataPath=${polDataPath} subtractNP=${subtractNP} useRefittedChic=${useRefittedChic} mcClosure=${MCclosure}
       rm runBkgHistos_$[nState-3]S_rap${rapMin}_pt${ptMin}
     fi
 

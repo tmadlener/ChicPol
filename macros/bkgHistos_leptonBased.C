@@ -634,6 +634,7 @@ void bkgHistos_chi(const std::string infilename, int rapBin, int ptBin, bool fol
   int MCevents2 = 0;
   int nAll = 0;
   int nSR = 0;
+  unsigned notAnyRegion = 0;
 
   for(int i = 0; i < n; i++){
 
@@ -824,7 +825,10 @@ void bkgHistos_chi(const std::string infilename, int rapBin, int ptBin, bool fol
             pT_highct_R->Fill(particle->Pt());
             rap_highct_R->Fill(TMath::Abs(particle->Rapidity()));
           }
-          else continue;
+          else {
+            notAnyRegion++; // tmadlener, 10.05.2016: check how many times this happens
+            continue;
+          }
         }// else (filling data histograms)
 
         ///////////////////////
@@ -887,7 +891,7 @@ void bkgHistos_chi(const std::string infilename, int rapBin, int ptBin, bool fol
   } // i
 
   std::cout << "--------------------------- \n"
-            << "nAll = " << nAll << ", nSR = " << nSR << std::endl;
+            << "nAll = " << nAll << ", nSR = " << nSR << ", not any region: " << notAnyRegion <<std::endl;
   std::cout << "total events in PRSR: " << count1 << " chic1, " << count2 << " chic2" << std::endl;
 
   //fill histograms with number of events for MC
@@ -1776,9 +1780,9 @@ void bkgHistos_chi(const std::string infilename, int rapBin, int ptBin, bool fol
 } // void
 
 //=================================================
-double rapSigma(double p0, double p1, double p2, double rap){
-  return p0 + p1 * TMath::Abs(rap) + p2 * TMath::Power(TMath::Abs(rap),2);
-}
+// double rapSigma(double p0, double p1, double p2, double rap){
+//   return p0 + p1 * TMath::Abs(rap) + p2 * TMath::Power(TMath::Abs(rap),2);
+// }
 
 
 //=================================================
