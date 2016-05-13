@@ -322,6 +322,10 @@ void BkgHisto1DHists::createHists(const std::string& prefix, const size_t nHists
   temp = prefix + "_highct_RSB";
   h_highct_R = new TH1D(temp.c_str(), temp.c_str(), nBins, min, max);
 
+  // clear the vectors in case the container has been used before
+  h_NP.clear();
+  h_PSR.clear();
+
   for (size_t i = 0; i < nHists; ++i) {
     temp = prefix + "NP";
     h_NP.push_back(new TH1D(temp.c_str(), temp.c_str(), nBins, min, max));

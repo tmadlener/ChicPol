@@ -123,6 +123,12 @@ private:
   void addOutputFile(const std::string& filename);
 
   /**
+   * close the output and (input)fit files for the current rap and pt bin. Furthermore does some "clean-up" work
+   * to be able to process any following bins.
+   */
+  void closeOutputAndFitFiles();
+
+  /**
    * Setup all TH2D cosThPhi histograms that are filled in the fillHistos function.
    * NOTE: when called for the first time, the histos get created as well
    * NOTE: leaves the histograms that are present in BkgHistoCosThetaHists but not used in fillHistos untouched
@@ -231,21 +237,6 @@ BkgHistoProducer<State>::~BkgHistoProducer()
   std::cout << "---------- DESTRUCTOR, STATE == " << State << std::endl;
   // close the input files (the way I understand root is, that this also destroys these objects)
   if (m_dataFile) { m_dataFile->Close(); }
-  if (m_fitFile) { m_fitFile->Close(); }
-
-  // write and close all output files
-  for (size_t iFile = 0; iFile < m_outFiles.size(); ++iFile) {
-    if (m_outFiles[iFile]) {
-      m_outFiles[iFile]->cd();
-      m_outTrees[iFile]->Write();
-      m_outFiles[iFile]->Write();
-      // NOTE: due to some strange ROOT behavior this call also seems to free some objects that are "attatched" to
-      // this file. At the moment I have no solution for this and simply commented all deletes that cause problems
-      // in any of the used helper structs.
-      m_outFiles[iFile]->Close();
-      delete m_outFiles[iFile];
-    }
-  }
 
   // delete m_particle; // DO NOT DO THIS! The ressource this pointer is pointing too is freed elsewhere!
 
@@ -1606,6 +1597,8 @@ void BkgHistoProducer<State>::storeHistos(bool PolLSB, bool PolRSB, bool PolNP, 
   }
   store2DHists(PolLSB, PolRSB, PolNP, subtractNP, folding);
 
+  closeOutputAndFitFiles();
+
   std::cout << "********** IN BkgHistoProducer<" << State << ">::storeHistos()" << std::endl;
 }
 
@@ -1708,6 +1701,34 @@ void BkgHistoProducer<State>::setupPtRapMassHists(const size_t nHists,
   }
 
   std::cout << "********** IN BkgHistoProducer<" << State << ">::setupPtRapMassHists" << std::endl;
+}
+
+template<StateT State>
+void BkgHistoProducer<State>::closeOutputAndFitFiles()
+{
+  if (m_fitFile) {
+    m_fitFile->Close();
+    delete m_fitFile;
+  }
+
+  for (size_t iFile = 0; iFile < m_outFiles.size(); ++iFile) {
+    m_outFiles[iFile]->cd();
+    m_outTrees[iFile]->Write();
+    m_outFiles[iFile]->Write();
+
+    // NOTE: due to some strange ROOT behavior this call also seems to free some objects that are "attatched" to
+    // this file. At the moment I have no solution for this and simply commented all deletes that cause problems
+    // in any of the used helper structs.
+    m_outFiles[iFile]->Close();
+    delete m_outFiles[iFile];
+  }
+
+  // clear the vectors for the next rap and pt bin
+  m_outFiles.clear();
+  m_outTrees.clear();
+  // have to clear the vector as ROOT leaves the contents in a state that is non-null but not "deleteable"
+  // clearing the vector results in the creation of a new container for the next bin which is NULL initialized
+  m_cosThetaPhi.clear();
 }
 
 #endif
