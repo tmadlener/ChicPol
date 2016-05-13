@@ -584,7 +584,7 @@ void BkgHistoProducer<Chic>::store1DFactors(bool MC)
 template<StateT State>
 void BkgHistoProducer<State>::store1DFactors(bool MC)
 {
-  // TODO
+  storeFactor(m_outFiles[0], "background_fraction", ";;fraction of total BG in PRSR", 0.001, 1e-6);
 }
 
 // ================================================================================
@@ -1567,6 +1567,8 @@ void BkgHistoProducer<State>::store2DHists(bool PolLSB, bool PolRSB, bool PolNP,
 
       // write unfolded and final histogram to file (same histogram twice becaus of normApproach relic)
       m_cosThetaPhi[i].hTBG[iFr]->SetName((tbgUnfolded + labels[iFr]).c_str());
+      m_cosThetaPhi[i].hTBG[iFr]->Write();
+      m_cosThetaPhi[i].hTBG[iFr]->SetName(("background_costhphi" + labels[iFr]).c_str());
       m_cosThetaPhi[i].hTBG[iFr]->Write();
     }
   }
