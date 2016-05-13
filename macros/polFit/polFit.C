@@ -425,7 +425,8 @@ void polFit(int n_sampledPoints=1,
   if (nEff > 100000) {
     for (int ieta = 0; ieta < bins; ieta++) {
       char graphName[100];
-      sprintf(graphName, "fitTotEff_DATA_pt_etaBin%i", ieta);
+      // sprintf(graphName, "fitTotEff_DATA_pt_etaBin%i", ieta);
+      sprintf(graphName, "fitTotEff_MC_pt_etaBin%i", ieta);
       func[ieta] = (TF1*)fInEff->Get(graphName);
     }
   }
