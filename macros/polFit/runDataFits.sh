@@ -6,9 +6,9 @@ cd ..
 cd ..
 basedir=$PWD
 cd macros/polFit
-storagedir=/afs/hephy.at/work/t/tmadlener/ChiPol/results
+storagedir=/afs/hephy.at/work/t/tmadlener/ChiPol/MCclosure
 datadir_Start=${basedir}/macros/DataFiles
-# datadir_Start=/afs/hephy.at/user/t/tmadlener/CMSSW_5_3_11/src/ChiPol/macros/DataFiles
+# datadir_Start=/afs/hephy.at/user/t/tmadlener/CMSSW_5_3_11/src/ChiPol/macros/DataFiles # dir of old data
 
 ########## INPUTS ##########
 
@@ -18,7 +18,7 @@ useBatch=0
 #fracL=50 #in percent #MC closure: 25 for data sigmas, 50 for MC sigmas
 #nSigma=3.00 #needed in 2 decimal accuracy (x.yz)
 
-for nState in 6;do # chic1 = 6, chic2 = 7
+for nState in 4;do # chic1 = 6, chic2 = 7
 
   StatVarTotBGfraction=0     #apply statistical fluctuations on f_background
   StatVarTotBGmodel=0        #apply statistical fluctuations on Bg model
@@ -26,7 +26,7 @@ for nState in 6;do # chic1 = 6, chic2 = 7
 
   rapBinMin=1
   rapBinMax=1
-  ptBinMin=1
+  ptBinMin=5
   ptBinMax=5
 
   FidCuts=11
@@ -52,15 +52,19 @@ for nState in 6;do # chic1 = 6, chic2 = 7
   nSkipGen=0
   MPValgo=3 		#1...mean,2...gauss,3...gauss-loop with chi2<2
 
-  # JobID=chic$[$nState-5]_30March2016_ML10_nEff100001 #fChi1MassLow = 0.1, sigmoid eff
+  useRefittedChic=true
+  # JobID=chic$[$nState-5]_30March2016_ML10_sigEff_postFix #fChi1MassLow = 0.1, sigmoid eff # NOTE: DO NOT USE "nEff" in this name!
+  JobID=jpsi_13May2016_mcClosure
   # JobID=chic$[$nState-5]_30March2016_ML30_defaultSett #fChi1MassLow = 0.3
-  JobID=chic$[$nState-5]_11April2016_nonRefit_MCEff
+  # JobID=chic$[$nState-5]_11April2016_useRef_${useRefittedChic}_rejCBs
   # DataID=_chic_30March2016_ML10 # fChi1MassLow = 0.1
-  DataID=_chic_11April2016_nonRefit
+  DataID=_jpsi_13May2016_MCclosure
+  # DataID=_chic_11April2016_nonRefit_useRef_${useRefittedChic}_rejCBs
   # DataID=_chic_30March2016_ML30 # fChi1MassLow = 0.3
 
   datadir=${datadir_Start}/SetOfCuts${FidCuts}${DataID}/tmpFiles
-  TreeID=chic$[nState-5]
+  # TreeID=chic$[nState-5]
+  TreeID=Psi1S
 
   ########################################
   #useCentralFracL=0

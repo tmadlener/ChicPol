@@ -9,9 +9,11 @@ cd macros/polFit
 #storagedir=$basedir/Psi/Data
 # storagedir=/afs/hephy.at/work/t/tmadlener/ChiPol/results
 # storagedir=/afs/hephy.at/work/t/tmadlener/ChiPol/testResults
-storagedir=/afs/hephy.at/work/t/tmadlener/ChiPol/testResults_newFW
+storagedir=/afs/hephy.at/work/t/tmadlener/ChiPol/MCclosure
 datadir_Start=${basedir}/macros/DataFiles
 # datadir_Start=/afs/hephy.at/user/t/tmadlener/CMSSW_5_3_11/src/ChiPol/macros/DataFiles
+
+useRefittedChic=true
 
 ########## INPUTS ##########
 
@@ -33,13 +35,17 @@ for nState in 6; do
 
   #for JobID in Psi$[nState-3]S_${NSigma}Sigma_11Dec2012; do
   # for JobID in chic$[$nState-5]_30March2016_ML10_defaultSett chic$[$nState-5]_30March2016_ML30_defaultSett; do
-  for JobID in chic$[$nState-5]_11April2016_runTest; do
-  # for JobID in chic$[$nState-5]_30March2016_ML10_nEff100001; do
+  # for JobID in chic$[$nState-5]_11April2016_nonRefit_MCEff; do
+  # for JobID in chic$[$nState-5]_11April2016_useRef_${useRefittedChic}_rejCBs; do
+  # for JobID in chic$[$nState-5]_11April2016_useRef_${useRefittedChic}; do
+  # for JobID in chic$[$nState-5]_30March2016_ML10_sigEff_postFix; do
+  for JobID in jpsi_13May2016_mcClosure; do
 
-    # DataID=_chic_30March2016_ML10 # fChi1MassLow = 0.1
+    DataID=_jpsi_13May2016_MCclosure
     # DataID=_chic_30March2016_ML30 # fChi1MassLow = 0.3
     # DataID=_chic_$(echo $JobID | awk -F'_' -v OFS='_' '{print $2,$3}') # get the DataID from the JobID since all info is stored there
-    DataID=_chic_11April2016_test
+    # DataID=_chic_11April2016_nonRefit_useRef_${useRefittedChic}_rejCB
+    # DataID=_chic_11April2016_nonRefit_useRef_${useRefittedChic}
 
     FidCuts=11
     if [ $nState -eq 4 ]
