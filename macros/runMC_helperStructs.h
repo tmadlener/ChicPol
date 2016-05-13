@@ -207,7 +207,7 @@ void PolDataMC::Loop(OutTree& outTree, OutHistograms& outHistos, int nState, int
 
   std::cout << "number of entries = " << nentries << std::endl;
 
-  nentries = 250000; // for development
+  // nentries = 250000; // for development
   for (Long64_t jentry = 0; jentry < nentries; ++jentry) {
     if (jentry % 100000 == 0) std::cout << "event " << jentry << " of " << nentries << std::endl;
 
