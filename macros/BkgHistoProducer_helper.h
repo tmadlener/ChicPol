@@ -167,14 +167,25 @@ public:
   BkgHistoRangeReport(bool SR1, bool SR2, bool NP, bool PR, bool LSB, bool RSB) :
     m_NP(NP), m_PR(PR), m_LSB(LSB), m_RSB(RSB)
   { m_SRs.push_back(SR1); m_SRs.push_back(SR2); }
+  /** ctor for jpsi case. */
+  BkgHistoRangeReport(bool SR, bool NP, bool PR, bool LSB, bool RSB) :
+    m_NP(NP), m_PR(PR), m_LSB(LSB), m_RSB(RSB) { m_SRs.push_back(SR); }
+
   bool isNP() const { return m_NP; } /**< is in non-prompt region. */
   bool isPR() const { return m_PR; } /**< is in prompt region. */
   bool isLSB() const { return m_LSB; } /**< is in LSB. */
   bool isRSB() const { return m_RSB; } /**< is in RSB. */
   bool isSR1() const { return m_SRs[0]; } /**< is in SR1. */
   bool isSR2() const { return m_SRs[1]; } /**< is in SR2. */
-  /** check if the event can be categorized into the predefined regions. */
+  bool isSR() const { return m_SRs[0]; } /**< is in SR. (same as in isSR1) */
+  /** check if the event can be categorized into the predefined regions.
+   * NOTE: this checks if the event can be classified into AT LEAST one event!
+   */
   bool isValidChicEvent() const { return ((m_NP || m_PR) && (m_LSB || m_RSB || m_SRs[0] || m_SRs[1])); }
+  /** check if the event can be categorized into the predefined regions.
+   * NOTE: this checks if the event can be classified into AT LEAST one event!
+   */
+  bool isValidJpsiEvent() const { return ((m_NP || m_PR) && (m_SRs[0] || m_LSB || m_RSB)); }
 private:
   std::vector<bool> m_SRs;
   bool m_NP;
