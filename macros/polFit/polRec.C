@@ -412,12 +412,12 @@ void polRec(double rapdilepton_min = 1,
     double effP = 0, effN = 0;
     if(nEff > 100000){
       int etaBin = -1.;
-      for(int i=1;i<bins;i++){
-        if(TMath::Abs(lepN_eta) > etaRange[i-1] && TMath::Abs(lepN_eta) < etaRange[i]) {etaBin=i; break; }
+      for(int i=0;i<bins;i++){
+        if(TMath::Abs(lepN_eta) > etaRange[i] && TMath::Abs(lepN_eta) < etaRange[i+1]) {etaBin=i; break; }
       }
       effN = evalParametrizedEff(lepN_pT, lepN_eta, func[etaBin]);
-      for(int i=1;i<bins;i++){
-        if(TMath::Abs(lepP_eta) > etaRange[i-1] && TMath::Abs(lepP_eta) < etaRange[i]) {etaBin=i; break; }
+      for(int i=0;i<bins;i++){
+        if(TMath::Abs(lepP_eta) > etaRange[i] && TMath::Abs(lepP_eta) < etaRange[i+1]) {etaBin=i; break; }
       }
       effP = evalParametrizedEff(lepP_pT, lepP_eta, func[etaBin]);
     }

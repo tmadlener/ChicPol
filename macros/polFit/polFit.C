@@ -900,12 +900,12 @@ void polFit(int n_sampledPoints=1,
     if(accept){
       if(nEff > 100000){
         int etaBin = -1.;
-        for(int i=1;i<bins;i++){
-          if(TMath::Abs(lepN_eta) > etaRange[i-1] && TMath::Abs(lepN_eta) < etaRange[i]) {etaBin=i; break; }
+        for(int i=0;i<bins;i++){
+          if(TMath::Abs(lepN_eta) > etaRange[i] && TMath::Abs(lepN_eta) < etaRange[i+1]) {etaBin=i; break; }
         }
         double eff_N = evalParametrizedEff(lepN_pT, lepN_eta, func[etaBin]);
-        for(int i=1;i<bins;i++){
-          if(TMath::Abs(lepP_eta) > etaRange[i-1] && TMath::Abs(lepP_eta) < etaRange[i]) {etaBin=i; break; }
+        for(int i=0;i<bins;i++){
+          if(TMath::Abs(lepP_eta) > etaRange[i] && TMath::Abs(lepP_eta) < etaRange[i+1]) {etaBin=i; break; }
         }
         double eff_P = evalParametrizedEff(lepP_pT, lepP_eta, func[etaBin]);
         epsilon = eff_N*eff_P;
@@ -1144,12 +1144,12 @@ void polFit(int n_sampledPoints=1,
     double epsilon = 0;
     if(nEff > 100000){
       int etaBin = -1.;
-      for(int i=1;i<bins;i++){
-        if(TMath::Abs(lepN_eta) > etaRange[i-1] && TMath::Abs(lepN_eta) < etaRange[i]) {etaBin=i; break; }
+      for(int i=0;i<bins;i++){
+        if(TMath::Abs(lepN_eta) > etaRange[i] && TMath::Abs(lepN_eta) < etaRange[i+1]) {etaBin=i; break; }
       }
       double eff_N = evalParametrizedEff(lepN_pT, lepN_eta, func[etaBin]);
-      for(int i=1;i<bins;i++){
-        if(TMath::Abs(lepP_eta) > etaRange[i-1] && TMath::Abs(lepP_eta) < etaRange[i]) {etaBin=i; break; }
+      for(int i=0;i<bins;i++){
+        if(TMath::Abs(lepP_eta) > etaRange[i] && TMath::Abs(lepP_eta) < etaRange[i+1]) {etaBin=i; break; }
       }
       double eff_P = evalParametrizedEff(lepP_pT, lepP_eta, func[etaBin]);
       epsilon = eff_N*eff_P;
@@ -1560,12 +1560,12 @@ void polFit(int n_sampledPoints=1,
     // efficiency:
     if(nEff > 100000){
       int etaBin = -1.;
-      for(int i=1;i<bins;i++){
-        if(TMath::Abs(lepN_eta) > etaRange[i-1] && TMath::Abs(lepN_eta) < etaRange[i]) {etaBin=i; break; }
+      for(int i=0;i<bins;i++){
+        if(TMath::Abs(lepN_eta) > etaRange[i] && TMath::Abs(lepN_eta) < etaRange[i+1]) {etaBin=i; break; }
       }
       double eff_N = evalParametrizedEff(lepN_pT, lepN_eta, func[etaBin]);
-      for(int i=1;i<bins;i++){
-        if(TMath::Abs(lepP_eta) > etaRange[i-1] && TMath::Abs(lepP_eta) < etaRange[i]) {etaBin=i; break; }
+      for(int i=0;i<bins;i++){
+        if(TMath::Abs(lepP_eta) > etaRange[i] && TMath::Abs(lepP_eta) < etaRange[i+1]) {etaBin=i; break; }
       }
       double eff_P = evalParametrizedEff(lepP_pT, lepP_eta, func[etaBin]);
       epsilon = eff_N*eff_P;
@@ -2011,12 +2011,12 @@ void polFit(int n_sampledPoints=1,
     double epsilon = 0;
     if(nEff > 100000){
       int etaBin = -1.;
-      for(int i=1;i<bins;i++){
-        if(TMath::Abs(lepN_eta) > etaRange[i-1] && TMath::Abs(lepN_eta) < etaRange[i]) {etaBin=i; break; }
+      for(int i=0;i<bins;i++){
+        if(TMath::Abs(lepN_eta) > etaRange[i] && TMath::Abs(lepN_eta) < etaRange[i+1]) {etaBin=i; break; }
       }
       double eff_N = evalParametrizedEff(lepN_pT, lepN_eta, func[etaBin]);
-      for(int i=1;i<bins;i++){
-        if(TMath::Abs(lepP_eta) > etaRange[i-1] && TMath::Abs(lepP_eta) < etaRange[i]) {etaBin=i; break; }
+      for(int i=0;i<bins;i++){
+        if(TMath::Abs(lepP_eta) > etaRange[i] && TMath::Abs(lepP_eta) < etaRange[i+1]) {etaBin=i; break; }
       }
       double eff_P = evalParametrizedEff(lepP_pT, lepP_eta, func[etaBin]);
       epsilon = eff_N*eff_P;
