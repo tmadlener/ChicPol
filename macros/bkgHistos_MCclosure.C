@@ -5,33 +5,6 @@
 
 #include "rootIncludes.inc"
 
-// ============================== directly copied from bkgHistos_leptonBased
-double rapSigma(double p0, double p1, double p2, double rap){
-  return p0 + p1 * TMath::Abs(rap) + p2 * TMath::Power(TMath::Abs(rap),2);
-}
-
-/**
- * Get the value from the RooRealVar stored in the workspace by name.
- * small helper function for less typing effort. COULDDO: safety measures.
- */
-double getVarVal(RooWorkspace* ws, const std::string& name) {
-  // for development:
-  std::cout << "getVarVal, " << name << ": " << static_cast<RooRealVar*>(ws->var(name.c_str())) << std::endl;
-
-  return static_cast<RooRealVar*>(ws->var(name.c_str()))->getVal();
-}
-
-/**
- * Get the pdf stored in the workspace by name
- * small helper function for less typing effort. COULDDO: safety measures.
- */
-RooAbsPdf* getPdf(RooWorkspace* ws, const std::string& name) {
-  // for develpment:
-  std::cout << "getPdf, " << name << ": " << static_cast<RooAbsPdf*>(ws->pdf(name.c_str())) << std::endl;
-
-  return static_cast<RooAbsPdf*>(ws->pdf(name.c_str()));
-}
-
 // forward declarations:
 void createHistograms(TH2D* hists[], const std::string& nameBase, /*const std::string& titleBase,*/
                       const std::string& suffix, const int nBinsX, const int nBinsY, bool replace = false);
@@ -447,61 +420,6 @@ void createHistograms(TH2D* hists[], const std::string& nameBase, /*const std::s
   }
 }
 
-/** create and store a TH1D in the rootfile pointed to by file */
-void storeFactor(TFile* file, const std::string& name, const std::string& title, const double val, const double valErr)
-{
-  file->cd();
-  TH1D* h = new TH1D(name.c_str(), title.c_str(), 1, 0., 1.);
-  h->SetBinContent(1, val);
-  h->SetBinError(1, valErr);
-  h->Write();
-  delete h;
-}
-
-/** calculate the cosTheta and phi values to be stored in the histograms.
- * Returntype is an onia::kNbFrames x 2 array of doubles, index 0 is CosTh, index 1 is Phi for each frame
- */
-std::vector<std::vector<double> > calcCosThetaPhiValues(const TLorentzVector& lepP, const TLorentzVector& lepN, bool folding)
-{
-  // NOTE: This writes to global variables, which are then used below
-  // usage of these variables is restricted to scope of this function in this case
-  // TODO: Refactor / Redesign
-  ////////////////////////
-  calcPol(lepP, lepN);
-  ////////////////////////
-
-  std::vector<std::vector<double> > returnVals;
-  for (int iFrame = 0; iFrame < onia::kNbFrames; ++iFrame) {
-    std::vector<double> frameVals;
-    double phi = thisPhi[iFrame]; // only usage of global vars!
-    double cosTh = thisCosTh[iFrame]; // only usage of global vars!
-
-    if (folding) { // map all values into first (?) octant
-      double phiFolded = phi;
-      double thetaAdjusted = cosTh;
-      if (phi > -90. && phi < 0.) {
-        phiFolded *= -1;
-      } else if (phi > 90. && phi < 180.) {
-        phiFolded = 180. - phi;
-        thetaAdjusted *= -1;
-      } else if (phi > -180. && phi < -90.) {
-        phiFolded = 180. + phi;
-        thetaAdjusted *= -1;
-      }
-      // asign again to values that will be stored
-      phi = phiFolded;
-      cosTh = thetaAdjusted;
-    }
-
-    frameVals.push_back(cosTh);
-    frameVals.push_back(phi);
-
-    returnVals.push_back(frameVals);
-  }
-
-  return returnVals;
-}
-
 /** scale the passed histogram to the Integral of itself.
  * Mainly for less typing effort.
  */
@@ -510,7 +428,7 @@ inline void selfScale(TH1D* h, double f = 1.0)
   h->Scale(f / (1. * h->Integral()));
 }
 
-/** calculate the mean pT or rap that should be stored.
+/** calculate the mean pT or rap that should be stored.b
  * NOTE: modifies the passed histograms (scaling and adding them together)
  * TODO: check if this actually does what is expected. The code in bkgHistos.C and bkgHistos_leptonBased.C is
  * somewhat conflicting
