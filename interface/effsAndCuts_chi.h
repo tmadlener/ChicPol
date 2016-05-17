@@ -185,7 +185,8 @@ void EvaluateEffFileName(int nEff, char EffFileName [200], bool singleLeptonEff)
     if(nEff==1102) sprintf(EffFileName,"MCTruthEfficiency_coarse-genPT_13Sept2012.root");// gen pT
 
     if(nEff==100001) sprintf(EffFileName,"singleMuonEff_noTracking_L3ptg2_final.root");
-
+    if(nEff==100002) sprintf(EffFileName,"singleMuonEff_noTracking_cowboys_L3ptg2_final.root");
+    if(nEff==100003) sprintf(EffFileName,"singleMuonEff_noTracking_seagulls_L3ptg2_final.root");
   }
 
   if(!singleLeptonEff) {
