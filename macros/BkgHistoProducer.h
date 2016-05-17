@@ -1478,7 +1478,7 @@ void BkgHistoProducer<State>::store1DHists(bool PolLSB, bool PolRSB, bool PolNP,
     meanY = m_rapHists.h_PSR[0]->GetMean();
   }
 
-  storeFactor(m_outFiles[0], "mean_pt", ";;mean p_{T}", meanPT, 0);
+  storeFactor(m_outFiles[0], "mean_pT", ";;mean p_{T}", meanPT, 0);
   storeFactor(m_outFiles[0], "mean_y", ";;mean |y|", meanY, 0);
 }
 
