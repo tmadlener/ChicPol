@@ -58,7 +58,7 @@ int main(int argc, char* argv[]){
       temp << "tmpFiles/backupWorkSpace/ws_MassLifetimeFit_Jpsi_rap" << iRap << "_pt" << iPT << ".root";
 
       bool MassLifetimeFile=true;
-      TFile *infileTest = new TFile(temp.str().c_str(), "UPDATE");
+      TFile *infileTest = TFile::Open(temp.str().c_str());
       if(!infileTest){
         std::cout << "Error: failed to open file with dataset" << std::endl;
         temp2 << "tmpFiles/backupWorkSpace/ws_MassFit_Jpsi_rap" << iRap << "_pt" << iPT << ".root";
