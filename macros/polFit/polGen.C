@@ -41,8 +41,8 @@ double func_pT_gen(double* x, double* par) {
   if(par[0]==1) {beta = 3.46; pTsq = 47.3;}  // Upsi(1S)
   if(par[0]==2) {beta = 3.27; pTsq = 65.7;}  // Upsi(2S)
   if(par[0]==3) {beta = 3.05; pTsq = 80.5;}  // Upsi(3S)
-  if(par[0]==4 || par[0] == 6 || par[0] == 7) {beta = 3.69; pTsq = 12.0;}  // Psi(1S)
-  if(par[0]==5) {beta = 3.71; pTsq = 19.5;}  // Psi(2S)
+  if(par[0]==4) {beta = 3.69; pTsq = 12.0;}  // Psi(1S)
+  if(par[0]==5 || par[0] == 6 || par[0] == 7) {beta = 3.71; pTsq = 19.5;}  // Psi(2S), chicJ
 
   return x[0] * pow( 1. + 1./(beta - 2.) * x[0]*x[0] / pTsq, -beta  );
 }
@@ -205,6 +205,18 @@ void polGen(double rapdilepton_min = 1,
     // pT:
     pT = pT_distr->GetRandom();
 
+    if(nState==6 || nState==7){
+
+  	    double M;//mother mass
+  	    if(nState==6) M=onia::Mchi1PDG;
+  	    if(nState==7) M=onia::Mchi2PDG;
+  	    double m  = onia::MpsiPDG;//daughter mass
+  	    //M  = onia::MpsiPDG;
+
+  	    pT*=m/M;
+
+    }
+
     // pL:
     double rap_sign = gRandom->Uniform(-1., 1.); rap_sign /= TMath::Abs(rap_sign);
     rap = rap_distr->GetRandom() * rap_sign;
@@ -212,6 +224,14 @@ void polGen(double rapdilepton_min = 1,
     double pL1 = 0.5 *mT * exp(rap);
     double pL2 = - 0.5 *mT * exp(-rap);
     double pL = pL1 + pL2;
+
+
+
+
+
+
+
+
 
     // Phi:
     double Phi = 2. * gPI * gRandom->Uniform(1.);

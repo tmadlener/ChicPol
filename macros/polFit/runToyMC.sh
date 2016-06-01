@@ -4,23 +4,23 @@
 
 nState=6	#6...chic1, 7...chic2
 
-JobID=test_5Oct2015
+JobID=ToyMC_Test_20160530
 
 #nGenerations=50
-nGenerations=1
+nGenerations=25
 
 rapBinMin=1
 rapBinMax=1
-ptBinMin=1
-ptBinMax=1
+ptBinMin=5
+ptBinMax=5
 
 polScenSig=3
 polScenBkg=3
 frameSig=3
 frameBkg=3
 
-nEff=1077 # 105 MCtruth Jpsi
-UseMCeff=true
+nEff=1050 # 105 MCtruth Jpsi
+UseMCeff=false
 nDileptonEff=1
 UseMCDileptoneff=true
 nRhoFactor=1
@@ -31,11 +31,11 @@ nSample=10000		#default:10000, includes burn-in
 nSkipGen=0
 
 #GENERATION SETTINGS
-ConstEvents=10000
+ConstEvents=1000
 UseConstEv=true #if false, the number of events is taken from ToyMC.h
 
 UseDifferingEff=false #if false, the next five lines do not matter
-nEffRec=1077 #1101
+nEffRec=1050 #1101
 UseMCReceff=false
 nDileptonEffRec=1
 UseMCDileptonReceff=true
@@ -63,13 +63,13 @@ cd ..
 cd ..
 basedir=$PWD
 cd macros/polFit
-storagedir=/afs/hephy.at/data/ikraetschmer01/ikraetschmer/Polarization/Chic/ToyMC #please define the directory storagedir in the file macros/polFit/storagedir
+storagedir=/afs/cern.ch/work/k/knuenz/storage/ChicPol #please define the directory storagedir in the file macros/polFit/storagedir
 
 ScenDir=Sig_frame${frameSig}scen${polScenSig}_Bkg_frame${frameBkg}scen${polScenBkg}
 
 mkdir -p ${storagedir}/${JobID}/${ScenDir}
 
-cp ${basedir}/macros/polFit/polGenRecFitPlot_new.cc ${storagedir}/${JobID}/${ScenDir}/polGenRecFitPlot.cc
+cp ${basedir}/macros/polFit/polGenRecFitPlot.cc ${storagedir}/${JobID}/${ScenDir}/polGenRecFitPlot.cc
 cp ${basedir}/macros/polFit/polRapPtPlot.cc ${storagedir}/${JobID}/${ScenDir}/polRapPtPlot.cc
 cp ${basedir}/macros/polFit/PlotFinalResults.cc ${storagedir}/${JobID}/${ScenDir}/PlotFinalResults.cc
 cp ${basedir}/macros/polFit/Makefile ${storagedir}/${JobID}/${ScenDir}/Makefile
@@ -111,7 +111,8 @@ do
 
 
       cp polGenRecFitPlot polGenRecFitPlot_rap${rap_}_pt${pT_}_Gen${nGen_}
-      ./polGenRecFitPlot_rap${rap_}_pt${pT_}_Gen${nGen_} ThisGen=${nGen_} JobID=${JobID} storagedir=${storagedir} basedir=${basedir} nGeneration=${nGenerations} polScenSig=${polScenSig} frameSig=${frameSig} polScenBkg=${polScenBkg} frameBkg=${frameBkg} rapBinMin=${rap_} rapBinMax=${rap_} ptBinMin=${pT_} ptBinMax=${pT_} nEff=${nEff} nDiEff=${nDileptonEff} nRecEff=${nEffRec} nRecDiEff=${nDileptonEffRec} FidCuts=${FidCuts} nSample=${nSample} ConstEvents=${ConstEvents} nSkipGen=${nSkipGen} UseConstEv=${UseConstEv} gen=${gen} rec=${rec} fit=${fit} plot=${plot} UseDifferingEff=${UseDifferingEff} UseMCeff=${UseMCeff} UseMCReceff=${UseMCReceff} UseMCDileptoneff=${UseMCDileptoneff} UseMCDileptonReceff=${UseMCDileptonReceff} nRhoFactor=${nRhoFactor} nRecRhoFactor=${nRecRhoFactor} MPValgo=${MPValgo} nSigma=${nSigma} nState=${nState} NewAccCalc=${NewAccCalc} deletePseudoData=${deletePseudoData} useAmapApproach=${useAmapApproach} nAmap=${nAmap} nDenominatorAmap=${nDenominatorAmap}
+      #./polGenRecFitPlot_rap${rap_}_pt${pT_}_Gen${nGen_} ThisGen=${nGen_} JobID=${JobID} storagedir=${storagedir} basedir=${basedir} nGeneration=${nGenerations} polScenSig=${polScenSig} frameSig=${frameSig} polScenBkg=${polScenBkg} frameBkg=${frameBkg} rapBinMin=${rap_} rapBinMax=${rap_} ptBinMin=${pT_} ptBinMax=${pT_} nEff=${nEff} nDiEff=${nDileptonEff} nRecEff=${nEffRec} nRecDiEff=${nDileptonEffRec} FidCuts=${FidCuts} nSample=${nSample} ConstEvents=${ConstEvents} nSkipGen=${nSkipGen} UseConstEv=${UseConstEv} gen=${gen} rec=${rec} fit=${fit} plot=${plot} UseDifferingEff=${UseDifferingEff} UseMCeff=${UseMCeff} UseMCReceff=${UseMCReceff} UseMCDileptoneff=${UseMCDileptoneff} UseMCDileptonReceff=${UseMCDileptonReceff} nRhoFactor=${nRhoFactor} nRecRhoFactor=${nRecRhoFactor} MPValgo=${MPValgo} nSigma=${nSigma} nState=${nState} NewAccCalc=${NewAccCalc} deletePseudoData=${deletePseudoData} useAmapApproach=${useAmapApproach} nAmap=${nAmap} nDenominatorAmap=${nDenominatorAmap}
+      ./polGenRecFitPlot_rap${rap_}_pt${pT_}_Gen${nGen_} ${nGen_}ThisGen ${JobID}=JobID ${storagedir}=storagedir ${basedir}=basedir ${nGenerations}nGenerations ${polScenSig}polScenSig ${frameSig}frameSig ${polScenBkg}polScenBkg ${frameBkg}frameBkg ${rap_}rapBinMin ${rap_}rapBinMax ${pT_}ptBinMin ${pT_}ptBinMax ${nEff}nEff ${nDileptonEff}nDiEff ${nEffRec}nRecEff ${nDileptonEffRec}nRecDiEff ${FidCuts}FidCuts ${nSample}nSample ${ConstEvents}ConstEvents ${nSkipGen}nSkipGen UseConstEv=${UseConstEv} gen=${gen} rec=${rec} fit=${fit} plot=${plot} UseDifferingEff=${UseDifferingEff} UseMCeff=${UseMCeff} UseMCReceff=${UseMCReceff} UseMCDileptoneff=${UseMCDileptoneff} UseMCDileptonReceff=${UseMCDileptonReceff}  ${nRhoFactor}nRhoFactor ${nRecRhoFactor}nRecRhoFactor ${MPValgo}MPValgo ${nSigma}nSigma ${nState}nState NewAccCalc=${NewAccCalc} deletePseudoData=${deletePseudoData} useAmapApproach=${useAmapApproach} ${nAmap}nAmap ${nDenominatorAmap}nDenominatorAmap
       rm polGenRecFitPlot_rap${rap_}_pt${pT_}_Gen${nGen_}
 
       nGen_=$[nGen_+1]
