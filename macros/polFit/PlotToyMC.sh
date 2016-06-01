@@ -5,8 +5,7 @@ cd ..
 cd ..
 basedir=$PWD
 cd macros/polFit
-storagedir=`more storagedir`/ToyMC #please define the directory storagedir in the file macros/polFit/storagedir
-#storagedir=${basedir}/Psi/ToyMC
+storagedir=/afs/cern.ch/work/k/knuenz/storage/ChicPol #please define the directory storagedir in the file macros/polFit/storagedir
 
 ########## INPUTS ##########
 
@@ -15,33 +14,33 @@ for nState in 6; do
 cp ../../interface/rootIncludes.inc               rootIncludes.inc
 cp ../../interface/commonVar.h    commonVar.h
 cp ../../interface/ToyMC.h        ToyMC.h
-cp ../../interface/effsAndCuts.h  effsAndCuts.h
+cp ../../interface/effsAndCuts_chi.h  effsAndCuts.h
 touch polRapPtPlot.cc
 make
 
-for JobID in JohannesTest; do
+for JobID in ToyMC_Test_20160530; do
 
 echo ${JobID}
 
 
 if [ $nState -eq 6 ]
 then
-ptBinMin=1
+ptBinMin=5
 ptBinMax=5
 fi
 if [ $nState -eq 7 ]
 then
-ptBinMin=1
+ptBinMin=5
 ptBinMax=5
 fi
 
 frameSig=3
-for polScenSig in 4;do
+for polScenSig in 3;do
 
 frameBkg=3
-for polScenBkg in 2;do
+for polScenBkg in 3;do
 
-nGenerations=15
+nGenerations=25
 
 MPValgo=3 		#1...mean,2...gauss,3...gauss-loop with chi2<2
 additionalName=MPV${MPValgo}

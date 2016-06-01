@@ -46,7 +46,7 @@ int main(int argc, char** argv) {
 
   bool ConstEvents_(false);
   bool gen(false);
-  bool rec(false);
+  bool rec=false;
   bool fit(false);
   bool plot(false);
   bool RealData(false);
@@ -158,6 +158,9 @@ int main(int argc, char** argv) {
   double lambda_phi_bkg_ = ToyMC::ScenarioBkg[1][polScenBkg-1];
   double lambda_thetaphi_bkg_ = ToyMC::ScenarioBkg[2][polScenBkg-1];
 
+  cout<<"polScenBkg = "<<polScenBkg<<endl;
+  cout<<"lambda_theta_bkg_ = "<<lambda_theta_bkg_<<endl;
+  cout<<"ToyMC::ScenarioBkg[0][polScenBkg-1] = "<<ToyMC::ScenarioBkg[0][polScenBkg-1]<<endl;
 
   bool injectRealDataPolarization(false);
   if(polScenSig==999) injectRealDataPolarization=true;
@@ -341,6 +344,19 @@ int main(int argc, char** argv) {
   //if(fit) gROOT->ProcessLine(".L polFit.C+");
   //if(plot) gROOT->ProcessLine(".L polPlot.C+");
 
+  double MassCorrFactor_polrec=1.;
+   if(nState==6 || nState==7){
+
+ 	    double M;//mother mass
+ 	    if(nState==6) M=onia::Mchi1PDG;
+ 	    if(nState==7) M=onia::Mchi2PDG;
+ 	    double m  = onia::MpsiPDG;//daughter mass
+ 	    //M  = onia::MpsiPDG;
+
+ 	    MassCorrFactor_polrec=m/M;
+ 	    MassCorrFactor_polrec=m/M;
+
+   }
 
   /// Extract number of signal and background events to be generated, as well as f_BG to be generated to result in desired effective f_BG:
 
@@ -355,11 +371,12 @@ int main(int argc, char** argv) {
     TFile* dataFile = new TFile(tmpfilename, "READ");
     cout<<"f_BG: "<<f_BG<<endl;
 
+
     if(dataFile->Get("isBGdistribution")==NULL || dataFile == NULL){
       OutputDirectory=rapptstruct;
       polGen(raplow,raphigh,ptlow,pthigh,mass_signal_peak,mass_signal_sigma,n_sigmas_signal,numEvCheck,f_BG,lambda_theta_sig_,lambda_phi_sig_,lambda_thetaphi_sig_,lambda_theta_bkg_,lambda_phi_bkg_,lambda_thetaphi_bkg_,frameSig,frameBkg,-999,nState,OutputDirectory);
       std::cout << "gen finished" << std::endl;
-      if(rec)polRec(raplow,raphigh,ptlow,pthigh,mass_signal_peak,mass_signal_sigma,n_sigmas_signal,nRecEff,nRecDileptonEff,nRecRhoFactor,FidCuts,OutputDirectory, true, effDir, MCReceff, MCDileptonReceff, iRap, iPt, useAmapApproach, nAmap, nDenominatorAmap);
+      if(rec)polRec(raplow,raphigh,ptlow*MassCorrFactor_polrec,pthigh*MassCorrFactor_polrec,mass_signal_peak,mass_signal_sigma,n_sigmas_signal,nRecEff,nRecDileptonEff,nRecRhoFactor,FidCuts,OutputDirectory, true, effDir, MCReceff, MCDileptonReceff, iRap, iPt, useAmapApproach, nAmap, nDenominatorAmap);
       sprintf(tmpfilename,"%s/genData.root",rapptstruct);			gSystem->Unlink(tmpfilename);
       sprintf(tmpfilename,"%s/GenResults.root",rapptstruct);		gSystem->Unlink(tmpfilename);
     }
@@ -399,7 +416,7 @@ int main(int argc, char** argv) {
   cout<<"basestruct: "<<basestruct<<endl;
 
   if(gen)polGen(raplow,raphigh,ptlow,pthigh,mass_signal_peak,mass_signal_sigma,n_sigmas_signal,n_events,f_BG,lambda_theta_sig_,lambda_phi_sig_,lambda_thetaphi_sig_,lambda_theta_bkg_,lambda_phi_bkg_,lambda_thetaphi_bkg_,frameSig,frameBkg,iGen,nState,OutputDirectory);
-  if(rec)polRec(raplow,raphigh,ptlow,pthigh,mass_signal_peak,mass_signal_sigma,n_sigmas_signal,nRecEff,nRecDileptonEff,nRecRhoFactor,FidCuts,OutputDirectory, false, effDir, MCReceff, MCDileptonReceff, iRap, iPt, useAmapApproach, nAmap, nDenominatorAmap, StatVarTotBGfraction, StatVarRho);
+  if(rec)polRec(raplow,raphigh,ptlow*MassCorrFactor_polrec,pthigh*MassCorrFactor_polrec,mass_signal_peak,mass_signal_sigma,n_sigmas_signal,nRecEff,nRecDileptonEff,nRecRhoFactor,FidCuts,OutputDirectory, false, effDir, MCReceff, MCDileptonReceff, iRap, iPt, useAmapApproach, nAmap, nDenominatorAmap, StatVarTotBGfraction, StatVarRho);
   if(fit)polFit(nSample,FidCuts, nEff, nDileptonEff, nRhoFactor, OutputDirectory, realdatadir, TreeBinID, TreeBinID_dataFile, RealData, effDir, MCeff, MCDileptoneff, iRap, iPt, NewAccCalc, MPValgo, useAmapApproach, nAmap, nDenominatorAmap, StatVarTotBGfraction, StatVarTotBGmodel, StatVarRho, cutDeltaREllDpt);
   if(plot)polPlot(OutputDirectory, TreeBinID, RealData, MPValgo, scalePlots, nTotalFits, nState, ptlow, pthigh, raplow, raphigh, PlotForPaper);
 
