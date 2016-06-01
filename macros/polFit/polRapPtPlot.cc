@@ -176,7 +176,7 @@ void PlotRapPt(int ptBinMin, int ptBinMax, int rapBin, double yMin, double yMax,
       TFile* dataFile = new TFile(rootFilename,"R");
       if(!dataFile) cout<<"error"<<endl;
       TH1D* hist_mean_pT = (TH1D*)dataFile->Get("mean_pT");
-      if(!hist_mean_pT) cout<<"error"<<endl;
+      if(!hist_mean_pT) cout<<"error: couldn't find mean_pT histogram in file: " << rootFilename <<endl;
       mean_pT = hist_mean_pT->GetBinContent(1);
       cout<<"rap"<<rapBin<<"_pt"<<ptBin<<" mean_pT: "<<mean_pT<<endl;
       dataFile->Close();

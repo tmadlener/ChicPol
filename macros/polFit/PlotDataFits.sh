@@ -20,7 +20,7 @@ useRefittedChic=true
 #Take Care of Mean pT in ToyMC.h
 NSigma=3.00 #needed in 2 decimal accuracy (x.yz)
 
-for nState in 6; do
+for nState in 4; do
 
   cp ../../interface/rootIncludes.inc               rootIncludes.inc
   # cp ../../interface/commonVar_Psi$[nState-3]S.h    commonVar.h
@@ -41,7 +41,7 @@ for nState in 6; do
   # for JobID in chic$[$nState-5]_30March2016_ML10_sigEff_postFix; do
   for JobID in jpsi_13May2016_mcClosure; do
 
-    DataID=_jpsi_13May2016_MCclosure
+    DataID=_jpsi_13May2016_MCclosure_rejCow_false_rejSea_false
     # DataID=_chic_30March2016_ML30 # fChi1MassLow = 0.3
     # DataID=_chic_$(echo $JobID | awk -F'_' -v OFS='_' '{print $2,$3}') # get the DataID from the JobID since all info is stored there
     # DataID=_chic_11April2016_nonRefit_useRef_${useRefittedChic}_rejCB
@@ -51,7 +51,7 @@ for nState in 6; do
     if [ $nState -eq 4 ]
     then
       ptBinMin=1
-      ptBinMax=12
+      ptBinMax=5
     fi
     if [ $nState -eq 5 ]
     then
@@ -76,7 +76,8 @@ for nState in 6; do
     additionalName=MPV${MPValgo}
 
     ############################
-    TreeID=chic$[nState-5]
+    # TreeID=chic$[nState-5]
+    TreeID=Psi1S
     #datadir=${datadir_Start}/SetOfCuts${FidCuts}${DataID}/Psi$[nState-3]S/tmpFiles
     datadir=${datadir_Start}/SetOfCuts${FidCuts}${DataID}/tmpFiles
 
@@ -86,13 +87,13 @@ for nState in 6; do
     frameBkg=1
     polScenBkg=3
 
-    nGenerations=30
+    nGenerations=10
 
 
     rapBinMin=1 #don't change
     if [ $nState -eq 4 ]
     then
-      rapBinMax=2 #don't change
+      rapBinMax=1 #don't change
     fi
     if [ $nState -eq 5 ]
     then

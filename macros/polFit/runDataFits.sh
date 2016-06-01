@@ -26,12 +26,13 @@ for nState in 4;do # chic1 = 6, chic2 = 7
 
   rapBinMin=1
   rapBinMax=1
-  ptBinMin=5
-  ptBinMax=5
+  ptBinMin=$1
+  ptBinMax=$2
 
   FidCuts=11
 
-  nEff=1050				  #1050 parametrized truth #100001 parametrization with sigmoid
+  nEff=100003				  #1050 parametrized truth #100001 parametrization with sigmoid
+  # 100002 -> cowboys only, 100003 -> seagulls only
   #Jpsi #1101 MCtruthFineEta, 1080 MCTnPparam      #1030=soft-1060=tight-1070=mixed-111=soft-112=tight
   UseMCeff=false
 
@@ -48,17 +49,17 @@ for nState in 4;do # chic1 = 6, chic2 = 7
   cutDeltaREllDpt=false      # deltaR cut for Jpsi analysis
 
   nSample=20000
-  nFits=30
+  nFits=10
   nSkipGen=0
   MPValgo=3 		#1...mean,2...gauss,3...gauss-loop with chi2<2
 
   useRefittedChic=true
   # JobID=chic$[$nState-5]_30March2016_ML10_sigEff_postFix #fChi1MassLow = 0.1, sigmoid eff # NOTE: DO NOT USE "nEff" in this name!
-  JobID=jpsi_13May2016_mcClosure
+  JobID=jpsi_13May2016_mcClosure_seagulls
   # JobID=chic$[$nState-5]_30March2016_ML30_defaultSett #fChi1MassLow = 0.3
   # JobID=chic$[$nState-5]_11April2016_useRef_${useRefittedChic}_rejCBs
   # DataID=_chic_30March2016_ML10 # fChi1MassLow = 0.1
-  DataID=_jpsi_13May2016_MCclosure
+  DataID=_jpsi_13May2016_MCclosure_rejCow_true_rejSea_false
   # DataID=_chic_11April2016_nonRefit_useRef_${useRefittedChic}_rejCBs
   # DataID=_chic_30March2016_ML30 # fChi1MassLow = 0.3
 
@@ -123,37 +124,37 @@ for nState in 4;do # chic1 = 6, chic2 = 7
         if [ $useBatch -eq 0 ]
         then
 
-          resultfilename=resultsMerged_chic$[nState-5]_rap${rap_}_pT${pT_}.root
+          resultfilename=resultsMerged_${TreeID}_rap${rap_}_pT${pT_}.root
           nActualGen=$[nGen_-nSkipGen]
           if [ $nSkipGen -ge 0 ]
           then
             if [ $nActualGen -eq 1 ]
             then
-              cp results_chic$[nState-5]_rap${rap_}_pT${pT_}.root ${resultfilename}
+              cp results_${TreeID}_rap${rap_}_pT${pT_}.root ${resultfilename}
             fi
           fi
 
         fi
 
-        cp ${storagedir}/${JobID}/polGenRecFitPlot ${storagedir}/${JobID}/polGenRecFitPlot_chic$[nState-5]_rap${rap_}_pt${pT_}_Gen${nGen_}
-        ./polGenRecFitPlot_chic$[nState-5]_rap${rap_}_pt${pT_}_Gen${nGen_} ${nGen_}ThisGen ${JobID}=JobID ${storagedir}=storagedir ${basedir}=basedir ${nGenerations}=nGenerations ${polScenSig}polScenSig ${frameSig}frameSig ${polScenBkg}polScenBkg ${frameBkg}frameBkg ${rap_}rapBinMin ${rap_}rapBinMax ${pT_}ptBinMin ${pT_}ptBinMax ${nEff}nEff ${nDileptonEff}nDiEff ${FidCuts}FidCuts ${nSample}nSample ${ConstEvents}ConstEvents ${nSkipGen}nSkipGen UseConstEv=${UseConstEv} gen=${gen} rec=${rec} fit=${fit} plot=${plot} ${TreeID}=TreeID ${datadir}=realdatadir UseMCeff=${UseMCeff} UseMCDileptoneff=${UseMCDileptoneff} ${nRhoFactor}nRhoFactor ${MPValgo}MPValgo NewAccCalc=${NewAccCalc} useAmapApproach=${useAmapApproach} nAmap=${nAmap} nDenominatorAmap=${nDenominatorAmap} useBatch=${useBatch} StatVarTotBGfraction=${StatVarTotBGfraction} StatVarTotBGmodel=${StatVarTotBGmodel} StatVarRho=${StatVarRho} nState=${nState}
-        rm polGenRecFitPlot_chic$[nState-5]_rap${rap_}_pt${pT_}_Gen${nGen_}
+        cp ${storagedir}/${JobID}/polGenRecFitPlot ${storagedir}/${JobID}/polGenRecFitPlot_${TreeID}_rap${rap_}_pt${pT_}_Gen${nGen_}
+        ./polGenRecFitPlot_${TreeID}_rap${rap_}_pt${pT_}_Gen${nGen_} ${nGen_}ThisGen ${JobID}=JobID ${storagedir}=storagedir ${basedir}=basedir ${nGenerations}=nGenerations ${polScenSig}polScenSig ${frameSig}frameSig ${polScenBkg}polScenBkg ${frameBkg}frameBkg ${rap_}rapBinMin ${rap_}rapBinMax ${pT_}ptBinMin ${pT_}ptBinMax ${nEff}nEff ${nDileptonEff}nDiEff ${FidCuts}FidCuts ${nSample}nSample ${ConstEvents}ConstEvents ${nSkipGen}nSkipGen UseConstEv=${UseConstEv} gen=${gen} rec=${rec} fit=${fit} plot=${plot} ${TreeID}=TreeID ${datadir}=realdatadir UseMCeff=${UseMCeff} UseMCDileptoneff=${UseMCDileptoneff} ${nRhoFactor}nRhoFactor ${MPValgo}MPValgo NewAccCalc=${NewAccCalc} useAmapApproach=${useAmapApproach} nAmap=${nAmap} nDenominatorAmap=${nDenominatorAmap} useBatch=${useBatch} StatVarTotBGfraction=${StatVarTotBGfraction} StatVarTotBGmodel=${StatVarTotBGmodel} StatVarRho=${StatVarRho} nState=${nState}
+        rm polGenRecFitPlot_${TreeID}_rap${rap_}_pt${pT_}_Gen${nGen_}
 
 
         if [ $useBatch -eq 0 ]
         then
 
-          mv results_chic$[nState-5]_rap${rap_}_pT${pT_}.root results_Fit${nGen_}_chic$[nState-5]_rap${rap_}_pT${pT_}.root
+          mv results_${TreeID}_rap${rap_}_pT${pT_}.root results_Fit${nGen_}_${TreeID}_rap${rap_}_pT${pT_}.root
 
           if [ $nGen_ -eq 1 ]
           then
-            cp results_Fit${nGen_}_chic$[nState-5]_rap${rap_}_pT${pT_}.root ${resultfilename}
+            cp results_Fit${nGen_}_${TreeID}_rap${rap_}_pT${pT_}.root ${resultfilename}
           fi
 
           if [ $nGen_ -ge 2 ]
           then
             mv ${resultfilename} BUFFER_${resultfilename}
-            hadd -f ${resultfilename} BUFFER_${resultfilename} results_Fit${nGen_}_chic$[nState-5]_rap${rap_}_pT${pT_}.root
+            hadd -f ${resultfilename} BUFFER_${resultfilename} results_Fit${nGen_}_${TreeID}_rap${rap_}_pT${pT_}.root
             rm BUFFER_${resultfilename}
           fi
 
@@ -166,10 +167,10 @@ for nState in 4;do # chic1 = 6, chic2 = 7
 
       if [ $useBatch -eq 0 ]
       then
-        mv ${resultfilename} results_chic$[nState-5]_rap${rap_}_pT${pT_}.root
-        cp ${storagedir}/${JobID}/polGenRecFitPlot ${storagedir}/${JobID}/polGenRecFitPlot_chic$[nState-5]_rap${rap_}_pt${pT_}
-        ./polGenRecFitPlot_chic$[nState-5]_rap${rap_}_pt${pT_} ${nGen_}ThisGen ${JobID}=JobID ${storagedir}=storagedir ${basedir}=basedir ${nGenerations}=nGenerations ${polScenSig}polScenSig ${frameSig}frameSig ${polScenBkg}polScenBkg ${frameBkg}frameBkg ${rap_}rapBinMin ${rap_}rapBinMax ${pT_}ptBinMin ${pT_}ptBinMax ${nEff}nEff ${nDileptonEff}nDiEff ${FidCuts}FidCuts ${nSample}nSample ${ConstEvents}ConstEvents ${nSkipGen}nSkipGen UseConstEv=${UseConstEv} gen=false rec=false fit=false plot=true ${TreeID}=TreeID ${datadir}=realdatadir UseMCeff=${UseMCeff} UseMCDileptoneff=${UseMCDileptoneff} ${nRhoFactor}nRhoFactor ${MPValgo}MPValgo scalePlots=true NewAccCalc=${NewAccCalc} useAmapApproach=${useAmapApproach} ${nAmap}nAmap ${nDenominatorAmap}nDenominatorAmap ${nState}nState
-        rm polGenRecFitPlot_chic$[nState-5]_rap${rap_}_pt${pT_}
+        mv ${resultfilename} results_${TreeID}_rap${rap_}_pT${pT_}.root
+        cp ${storagedir}/${JobID}/polGenRecFitPlot ${storagedir}/${JobID}/polGenRecFitPlot_${TreeID}_rap${rap_}_pt${pT_}
+        ./polGenRecFitPlot_${TreeID}_rap${rap_}_pt${pT_} ${nGen_}ThisGen ${JobID}=JobID ${storagedir}=storagedir ${basedir}=basedir ${nGenerations}=nGenerations ${polScenSig}polScenSig ${frameSig}frameSig ${polScenBkg}polScenBkg ${frameBkg}frameBkg ${rap_}rapBinMin ${rap_}rapBinMax ${pT_}ptBinMin ${pT_}ptBinMax ${nEff}nEff ${nDileptonEff}nDiEff ${FidCuts}FidCuts ${nSample}nSample ${ConstEvents}ConstEvents ${nSkipGen}nSkipGen UseConstEv=${UseConstEv} gen=false rec=false fit=false plot=true ${TreeID}=TreeID ${datadir}=realdatadir UseMCeff=${UseMCeff} UseMCDileptoneff=${UseMCDileptoneff} ${nRhoFactor}nRhoFactor ${MPValgo}MPValgo scalePlots=true NewAccCalc=${NewAccCalc} useAmapApproach=${useAmapApproach} ${nAmap}nAmap ${nDenominatorAmap}nDenominatorAmap ${nState}nState
+        rm polGenRecFitPlot_${TreeID}_rap${rap_}_pt${pT_}
 
       fi
 
