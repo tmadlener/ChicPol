@@ -31,6 +31,7 @@ int main(int argc, char* argv[])
   std::vector<std::string> inputTrees;
   bool requestTrigger = true;
   bool rejectCowboys = false;
+  bool rejectSeagulls = false;
   bool removeEta0p2_0p3 = false;
   bool cutDeltaREllDpt = false;
 
@@ -42,6 +43,7 @@ int main(int argc, char* argv[])
     fromSplit("rejectCowboys", arg, rejectCowboys);
     fromSplit("removeEta0p2_0p3", arg, removeEta0p2_0p3);
     fromSplit("cutDeltaREllDpt", arg, cutDeltaREllDpt);
+    fromSplit("rejectSeagulls", arg, rejectSeagulls);
 
     std::string str;
     fromSplit("inputTree", arg, str);
@@ -62,7 +64,8 @@ int main(int argc, char* argv[])
 
   BookHistosReco(nState, outHistos);
   PolDataMC polData(tree);
-  polData.Loop(outTree, outHistos, nState, FidCuts, requestTrigger, rejectCowboys, removeEta0p2_0p3, cutDeltaREllDpt);
+  polData.Loop(outTree, outHistos, nState, FidCuts, requestTrigger, rejectCowboys, rejectSeagulls,
+               removeEta0p2_0p3, cutDeltaREllDpt);
   WriteHistosReco(fNameOut, outTree, outHistos);
 
   fOut->Close();

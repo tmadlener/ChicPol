@@ -11,7 +11,7 @@ basedir=$PWD
 cd macros
 
 # input arguments
-for nState in 4;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chic2
+for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chic2
   for FidCuts in 11;do #defines the set of cuts to be used, see macros/polFit/effsAndCuts.h
     cd $Cdir
 
@@ -25,13 +25,14 @@ for nState in 4;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     Plotting=1   #plotting macro: 1 = plot all, 2 = plot mass, 3 = plot lifetime
     #plotting macro: 4 = plot lifetimeSR1, 5 = plot lifetimeSR2, 6 = plot lifetimeLSB, 7 = plot lifetimeRSB, 8 = plot lifetimeFullRegion
 
-    PlottingJpsi=1   #plotting macro: 1 = plot all, 2 = plot mass, 3 = plot lifetimeSBs, 4= lifetimeSR, 5= PlotMassRap, 6= plot lifetime, 7=pedagogical
+    PlottingJpsi=2   #plotting macro: 1 = plot all, 2 = plot mass, 3 = plot lifetimeSBs, 4= lifetimeSR, 5= PlotMassRap, 6= plot lifetime, 7=pedagogical
 
     PlottingDataDists=1 #0...all, 1...1D plots, 2...2D plots
 
-    runChiMassFitOnly=false
+    runChiMassFitOnly=true
     correctCtau=false   #correct pseudo-proper lifetime
     rejectCowboys=false
+    rejectSeagulls=false # not checked if cowboys are rejected! (Only implemented for MC at the moment!)
     RequestTrigger=true
     MC=false
     MCclosure=true # run MCclosure, CAUTION with setting what (and what not) to execute (not everything works!)
@@ -65,7 +66,8 @@ for nState in 4;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
 
     #Define JobID
     # JobID=chic_11April2016_nonRefit_useRef_${useRefittedChic}_rejCBs # fChi1MassLow = 0.1
-    JobID=jpsi_30May2016_MCclosure
+    # JobID=jpsi_13May2016_MCclosure_rejCow_${rejectCowboys}_rejSea_${rejectSeagulls}
+    JobID=chic_23May2016_MCclosure_test
     # JobID=chic_30March2016_ML30 # fChi1MassLow = 0.3
 
 
@@ -73,18 +75,18 @@ for nState in 4;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
 
     #following flags decide if the step is executed (1) or not (0):
     #IMPORTANT: for MC set execute_runWorkspace, execute_MassFit and execute_runLifetimeFit to 0
-    execute_runChiData=0			           		#independent of rapMin, rapMax, ptMin, ptMax
-    execute_runWorkspace=0	    					#independent of rapMin, rapMax, ptMin, ptMax
-    execute_runMassFit=0				    	    #can be executed for different pt and y bins
+    execute_runChiData=1			           		#independent of rapMin, rapMax, ptMin, ptMax
+    execute_runWorkspace=1	    					#independent of rapMin, rapMax, ptMin, ptMax
+    execute_runMassFit=1				    	    #can be executed for different pt and y bins
     execute_runLifetimeFit=0    				    #can be executed for different pt and y bins
     execute_runPlotJpsiMassLifetime=0    			#can be executed for different pt and y bins
     execute_PlotJpsiFitPar=0              			#can be executed for different pt and y bins
-    execute_runChiMassLifetimeFit=0		  	    	#can be executed for different pt and y bins
+    execute_runChiMassLifetimeFit=1		  	    	#can be executed for different pt and y bins
     execute_runDefineRegionsAndFractions=0			#can be executed for different pt and y bins
     execute_runPlotMassLifetime=0    				#can be executed for different pt and y bins
     execute_PlotFitPar=0              				#can be executed for different pt and y bins
     execute_runPlotDataDistributions=0		 		#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
-    execute_runBkgHistos=1          				#can be executed for different pt and y bins
+    execute_runBkgHistos=0          				#can be executed for different pt and y bins
     execute_PlotCosThetaPhiBG=0 		 			#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
     execute_PlotMassRapPtBG=0 		 			#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
     execute_PlotCosThetaPhiDistribution=0 			#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
@@ -126,7 +128,7 @@ for nState in 4;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
         inputTree1=/scratch/knuenz/Polarization/RootInput/ChicPol/chic_rootuple_MC_15M_sel.root
       fi
       if [ ${MCclosure} = 'true' ]; then
-        inputTree=1/afs/hephy.at/data/ikraetschmer01/ikraetschmer/Polarization/2012/InputFiles/ChiC/tuple-mc-chic-rec.root
+        inputTree1=/afs/hephy.at/data/ikraetschmer01/ikraetschmer/Polarization/2012/InputFiles/ChiC/tuple-mc-chic-rec.root
       fi
     fi
 
@@ -246,11 +248,12 @@ for nState in 4;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
 
     if [ ${execute_runChiData} -eq 1 ]
     then
-      if [ ${MCclosure} = 'true' ]; then
-        ./runMC ${inputTrees} rejectCowboys=${rejectCowboys} FidCuts=${FidCuts} nState=${nState} RequestTrigger=${requestTrigger}
-      else
+      ## TODO: the chic MC (closure) can be handled by the normal runChiData!!
+      # if [ ${MCclosure} = 'true' ]; then
+      #   ./runMC ${inputTrees} rejectCowboys=${rejectCowboys} FidCuts=${FidCuts} nState=${nState} RequestTrigger=${requestTrigger} rejectSeagulls=${rejectSeagulls}
+      # else
         ./runChiData ${inputTrees} rejectCowboys=${rejectCowboys} FidCuts=${FidCuts} nState=${nState} MC=${MC} RequestTrigger=${RequestTrigger} correctCtau=${correctCtau} useRefittedChic=${useRefittedChic}
-      fi
+      # fi
     fi
 
     if [ ${execute_runWorkspace} -eq 1 ]

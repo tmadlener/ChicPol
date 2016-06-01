@@ -62,6 +62,11 @@ struct PolDataMC {
   double JpsiMassErr;
   double JpsiVprob;
 
+  int muPosP_id;
+  int muNegP_id;
+  int muPosP_qual;
+  int muNegP_qual;
+
   // triggers
   std::vector<int> HLT_Dimuon8_Jpsi; /**< all different versions in one vector. */
   std::vector<int> HLT_Dimuon10_Jpsi; /**< all different versions in one vector. */
@@ -76,7 +81,7 @@ struct PolDataMC {
   virtual Long64_t LoadTree(Long64_t entry);
   virtual void Init(TTree* tree);
   virtual void Loop(OutTree& outTree, OutHistograms& outHistos, int nState, int FidCuts, bool RequestTrigger,
-                    bool rejectCowboys, bool removeEta0p2_0p3, bool cutDeltaREllDpt);
+                    bool rejectCowboys, bool rejectSeagulls, bool removeEta0p2_0p3, bool cutDeltaREllDpt);
   virtual bool Notify();
   virtual void Show(Long64_t entry = -1);
   bool jpsiTriggerDecision(); /**< returns true if ANY of the triggers fired. */
@@ -153,6 +158,10 @@ void PolDataMC::Init(TTree* tree)
   fChain->SetBranchAddress("JpsictErr", &JpsictErr);
   fChain->SetBranchAddress("JpsiMassErr", &JpsiMassErr);
   fChain->SetBranchAddress("JpsiVprob", &JpsiVprob);
+  fChain->SetBranchAddress("muPosP_id", &muPosP_id);
+  fChain->SetBranchAddress("muNegP_id", &muNegP_id);
+  fChain->SetBranchAddress("muPosP_qual", &muPosP_qual);
+  fChain->SetBranchAddress("muNegP_qual", &muNegP_qual);
 
   for (size_t i = 0; i < Dimuon8_vs.size(); ++i) {
     const std::string branchname = std::string("HLT_Dimuon8_Jpsi_v") + Dimuon8_vs[i];
@@ -196,7 +205,7 @@ int PolDataMC::Cut(Long64_t entry)
 }
 
 void PolDataMC::Loop(OutTree& outTree, OutHistograms& outHistos, int nState, int FidCuts, bool RequestTrigger,
-                     bool rejectCowboys, bool removeEta0p2_0p3, bool cutDeltaREllDpt)
+                     bool rejectCowboys, bool rejectSeagulls, bool removeEta0p2_0p3, bool cutDeltaREllDpt)
 {
   if (!fChain) return;
 
@@ -213,6 +222,9 @@ void PolDataMC::Loop(OutTree& outTree, OutHistograms& outHistos, int nState, int
 
     if (LoadTree(jentry) < 0) break;
     nb = fChain->GetEntry(jentry);
+
+    // check muon id
+    if (muPosP_id < 1 || muNegP_id < 1 || muPosP_qual < 1 || muNegP_qual < 1) continue;
 
     // process only reconstructed events
     if (onia->Pt() > 990.) continue;
@@ -241,6 +253,9 @@ void PolDataMC::Loop(OutTree& outTree, OutHistograms& outHistos, int nState, int
     if (rejectCowboys) {
       if (deltaPhi < 0.) continue;
       outHistos.Reco_StatEv->Fill(3.5); // count events after cowboy rejection
+    } else if (rejectSeagulls) { // keep the seagulls if the cowboys are already rejected!
+      if (deltaPhi > 0.) continue;
+      outHistos.Reco_StatEv->Fill(3.5);
     }
 
     double massMin = onia::massMin;

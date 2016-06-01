@@ -443,15 +443,16 @@ void BkgHistoProducer<State>::setupFitVariables(const int rapBin, const int ptBi
   m_fitVars.set("maxRap", onia::rapForPTRange[rapBin]);
 
   m_fitVars.setFromWS(m_ws, "var_fLSBpsi", "fracLSB");
+  m_fitVars.setFromWS(m_ws, "fracBkg_jpsi", "fBGsig");
 
   if (MC) {
     m_fitVars.set("PRmin", -1);  m_fitVars.set("PRmax", 1); // there is no non prompt component in MC so setting
     m_fitVars.set("NPmin", 1);   m_fitVars.set("NPmax", 10);// these to values that all events pass the PR cut
     m_fitVars.set("fNPB", 0.0001); // no non prompt contrib in MC
     m_fitVars.set("fBGinNP", 0.0001); // no non prompt contrib in MC
-    m_fitVars.set("fBGsig", 0.0001); // no BG in MC
-    m_fitVars.set("fSRinPLSB", 0.99); // only signal in MC
-    m_fitVars.set("fSRinPRSB", 0.99); // only signal in MC
+    // m_fitVars.set("fBGsig", 0.0001); // no BG in MC
+    m_fitVars.set("fSRinPLSB", 0.001); // only signal in MC
+    m_fitVars.set("fSRinPRSB", 0.001); // only signal in MC
   } else { // only implemented MC for Jpsi at the moment
     std::cerr << "### INFO: non MC not implemented for Jpsi ###" << std::endl;
   }
