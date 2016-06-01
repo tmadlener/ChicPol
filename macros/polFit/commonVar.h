@@ -1,3 +1,6 @@
+#ifndef COMMON_VAR_H__
+#define COMMON_VAR_H__
+
 #include "TLorentzVector.h"
 #include "TMath.h"
 
@@ -188,7 +191,6 @@ namespace onia{
       double cut_probFit = 0.; //0.01;
       double chirap = rapForPTRange[kNbRapForPTBins]; //chi rap
 
-
-
-
 }
+
+#endif
