@@ -22,7 +22,7 @@ using namespace RooFit;
 void chiMassLifetimeFit(const std::string &infilename, int rapBin, int ptBin, int nState, bool runChiMassFitOnly, bool MC){
   cout<<"chiMassLifetimeFit"<<endl;
 
-  TFile *infile = new TFile(infilename.c_str(), "UPDATE");
+  TFile *infile = TFile::Open(infilename.c_str(), "UPDATE");
   if(!infile){
     std::cout << "Error: failed to open file with dataset" << std::endl;
   }

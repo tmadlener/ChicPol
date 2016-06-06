@@ -33,7 +33,7 @@ int main(int argc, char* argv[]){
   }
 
   const std::string infilename = "tmpFiles/selEvents_data.root";
-  if (!mcClosure) {
+  if (!mcClosure || nState == 6) { // check if chic works out of the box
     createWorkspace(infilename, nState, correctCtau, drawRapPt2D, useRefittedMass);
   } else {
     createWorkspace_MC(infilename, nState, correctCtau, drawRapPt2D, useRefittedMass);
