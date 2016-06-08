@@ -31,7 +31,8 @@ int main(int argc, char* argv[]){
 
   bool runChiMassFitOnly = false;
   bool MC = false;
-
+  bool MCclosure = false;
+  
   // Loop over argument list
   for (int i=1; i < argc; i++)
     {
@@ -43,6 +44,7 @@ int main(int argc, char* argv[]){
       fromSplit("ptMax", arg, ptMax);
       fromSplit("nState", arg, nState);
       fromSplit("MC", arg, MC);
+      fromSplit("MCclosure", arg, MCclosure);
     }
 
   std::cout << "-----------------------\n"
@@ -68,7 +70,7 @@ int main(int argc, char* argv[]){
       std::cout << "CopyFile: " << gSystem->CopyFile(infilenameFrom.c_str(),infilenameTo.c_str(),kTRUE) << std::endl;
       cout<<"copy file finished"<<endl;
 
-      chiMassLifetimeFit(infilenameTo.c_str(), iRap, iPT, nState, runChiMassFitOnly, MC);
+      chiMassLifetimeFit(infilenameTo.c_str(), iRap, iPT, nState, runChiMassFitOnly, MC, MCclosure);
 
     }
   }

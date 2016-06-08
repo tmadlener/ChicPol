@@ -19,7 +19,7 @@
 
 using namespace RooFit;
 
-void chiMassLifetimeFit(const std::string &infilename, int rapBin, int ptBin, int nState, bool runChiMassFitOnly, bool MC){
+void chiMassLifetimeFit(const std::string &infilename, int rapBin, int ptBin, int nState, bool runChiMassFitOnly, bool MC, bool MCclosure=false){
   cout<<"chiMassLifetimeFit"<<endl;
 
   TFile *infile = TFile::Open(infilename.c_str(), "UPDATE");
@@ -39,63 +39,57 @@ void chiMassLifetimeFit(const std::string &infilename, int rapBin, int ptBin, in
 
   double ExtensionFactor=2.; //Allow total number of events to float from ev/ExtensionFactor to ev*ExtensionFactor
 
-  bool ConstrainMassDifferenceWithPESandSigmaWithScale=true;
+  bool ConstrainMassDifferenceWithPESandSigmaWithScale=true; // kept for compatibility at the moment. COULDDO: remove
 
   if(MC) ConstrainMassDifferenceWithPESandSigmaWithScale=false;
+
+
+  bool ConstrainMassDifferenceWithPES = ConstrainMassDifferenceWithPESandSigmaWithScale;
+  bool ConstrainSigmaWithScale = ConstrainMassDifferenceWithPESandSigmaWithScale;
+
+  if (MCclosure && ptBin == 4) { // lift mass width constrain for 4th pT bin to have a converging fit
+    ConstrainMassDifferenceWithPES = false;
+  }
 
   //------------------------------------------------------------------------------------------------------------------
   // mass pdf
   std::cout << "Building mass pdf" << std::endl;
 
   //define mass shape
+  // common setup
+  ws->factory("RooCBShape::M_chic1(chicMass,CBmass1[3.5,3.45,3.54],CBsigma1[0.008,0.003,0.02],CBalpha1[0.6,.2,1.1],CBn[2.5,1.8,3.2])");
 
-  if(ConstrainMassDifferenceWithPESandSigmaWithScale){
+  RooFormulaVar PES("PES",Form("(@0-%f)/%f",onia::MpsiPDG, onia::Mchi1PDG-onia::MpsiPDG),RooArgList(*ws->var("CBmass1")));
+  ws->import(PES);
 
-    ws->factory("RooCBShape::M_chic1(chicMass,CBmass1[3.5,3.45,3.54],CBsigma1[0.008,0.003,0.02],CBalpha1[0.6,.2,1.1],CBn[2.5,1.8,3.2])");
+  RooFormulaVar CBmass0("CBmass0",Form("@0*%f+%f",onia::Mchi0PDG-onia::MpsiPDG, onia::MpsiPDG),RooArgList(*ws->function("PES")));
+  RooFormulaVar CBsigma0("CBsigma0",Form("@0*%f",(onia::Mchi0PDG-onia::MpsiPDG)/(onia::Mchi1PDG-onia::MpsiPDG)),RooArgList(*ws->var("CBsigma1")));
+  ws->import(CBmass0);
+  ws->import(CBsigma0);
 
-    RooFormulaVar PES("PES",Form("(@0-%f)/%f",onia::MpsiPDG, onia::Mchi1PDG-onia::MpsiPDG),RooArgList(*ws->var("CBmass1")));
-    ws->import(PES);
-
-    RooFormulaVar CBmass0("CBmass0",Form("@0*%f+%f",onia::Mchi0PDG-onia::MpsiPDG, onia::MpsiPDG),RooArgList(*ws->function("PES")));
-    RooFormulaVar CBsigma0("CBsigma0",Form("@0*%f",(onia::Mchi0PDG-onia::MpsiPDG)/(onia::Mchi1PDG-onia::MpsiPDG)),RooArgList(*ws->var("CBsigma1")));
-    ws->import(CBmass0);
-    ws->import(CBsigma0);
+  if (ConstrainMassDifferenceWithPES) { // constrain mass parameter of chic2 CB
     RooFormulaVar CBmass2("CBmass2",Form("@0*%f+%f",onia::Mchi2PDG-onia::MpsiPDG, onia::MpsiPDG),RooArgList(*ws->function("PES")));
-    RooFormulaVar CBsigma2("CBsigma2",Form("@0*%f",(onia::Mchi2PDG-onia::MpsiPDG)/(onia::Mchi1PDG-onia::MpsiPDG)),RooArgList(*ws->var("CBsigma1")));
     ws->import(CBmass2);
-    ws->import(CBsigma2);
+  } else {
+    ws->factory("CBmass2[3.54,3.49,3.58]");
+  }
 
+  if (ConstrainSigmaWithScale) { // taking the n-parameter into the witdth
+    RooFormulaVar CBsigma2("CBsigma2",Form("@0*%f",(onia::Mchi2PDG-onia::MpsiPDG)/(onia::Mchi1PDG-onia::MpsiPDG)),RooArgList(*ws->var("CBsigma1")));
+    ws->import(CBsigma2);
     RooFormulaVar CBn2("CBn2",Form("@0"),RooArgList(*ws->var("CBn")));
     ws->import(CBn2);
-    ws->factory("RooCBShape::M_chic2(chicMass,CBmass2,CBsigma2,CBalpha2[0.6,.2,1.1],CBn2)");
-
-    RooFormulaVar CBalpha0("CBalpha0","(@0+@1)/2.",RooArgList(*ws->var("CBalpha1"),*ws->var("CBalpha2")));
-    ws->import(CBalpha0);
-
-    ws->factory("RooVoigtian::M_chic0(chicMass,CBmass0,CBsigma0, CBwidth0[0.0104])");
-
-  }
-  else{
-
-    ws->factory("RooCBShape::M_chic1(chicMass,CBmass1[3.5,3.45,3.54],CBsigma1[0.008,0.003,0.02],CBalpha1[0.6,.2,1.1],CBn[2.5,1.8,3.2])");
-
-    RooFormulaVar PES("PES",Form("(@0-%f)/%f",onia::MpsiPDG, onia::Mchi1PDG-onia::MpsiPDG),RooArgList(*ws->var("CBmass1")));
-    ws->import(PES);
-
-    RooFormulaVar CBmass0("CBmass0",Form("@0*%f+%f",onia::Mchi0PDG-onia::MpsiPDG, onia::MpsiPDG),RooArgList(*ws->function("PES")));
-    RooFormulaVar CBsigma0("CBsigma0",Form("@0*%f",(onia::Mchi0PDG-onia::MpsiPDG)/(onia::Mchi1PDG-onia::MpsiPDG)),RooArgList(*ws->var("CBsigma1")));
-    ws->import(CBmass0);
-    ws->import(CBsigma0);
-
-    ws->factory("RooCBShape::M_chic2(chicMass,CBmass2[3.54,3.49,3.58],CBsigma2[0.008,0.003,0.02],CBalpha2[0.6,.2,1.1],CBn2[2.5,1.8,3.2])");
-
-    RooFormulaVar CBalpha0("CBalpha0","(@0+@1)/2.",RooArgList(*ws->var("CBalpha1"),*ws->var("CBalpha2")));
-    ws->import(CBalpha0);
-
-    ws->factory("RooVoigtian::M_chic0(chicMass,CBmass0,CBsigma0, CBwidth0[0.0104])");
-
+  } else {
+    ws->factory("CBsigma2[0.008,0.003,0.02]");
+    ws->factory("CBn2[2.5,1.8,3.2]");
   }
 
+  ws->factory("RooCBShape::M_chic2(chicMass, CBmass2, CBsigma2, CBalpha2[0.6,0.2,1.1],CBn2)");
+
+  RooFormulaVar CBalpha0("CBalpha0","(@0+@1)/2.",RooArgList(*ws->var("CBalpha1"),*ws->var("CBalpha2")));
+  ws->import(CBalpha0);
+
+  ws->factory("RooVoigtian::M_chic0(chicMass,CBmass0,CBsigma0, CBwidth0[0.0104])");
 
   //background
 
@@ -128,67 +122,77 @@ void chiMassLifetimeFit(const std::string &infilename, int rapBin, int ptBin, in
 
   //ws->factory("RooPolynomial::M_background(chicMass,poly1[0., -10., 10.])");
 
-  //lifetime pdf
-  std::cout << "Building lifetime pdf" << std::endl;
+  // define some variables that are used regardless of mass or mass-lifetime fit
+  ws->factory("fracSignal_chic1[0.7,0.6,0.8]");
+  ws->factory("fracSignal_chic0[0.03,0.,0.1]");
+  ws->factory("fracBackground[0.6,0.,1.]");
 
-  //define lifetime shape
-  //prompt
-  //resolution function
-  ws->factory("RooGaussModel::promptLifetime(Jpsict,promptMean[0,-.01,.01],ctResolution[0.8,.5,1.], 1, JpsictErr)");
-  ((RooGaussModel*)ws->pdf("promptLifetime"))->advertiseFlatScaleFactorIntegral(true);
-  ws->factory("RooGaussModel::promptLifetime2(Jpsict,promptMean, ctResolution2[1.5,1.,2.5], 1, JpsictErr)");
-  ((RooGaussModel*)ws->pdf("promptLifetime2"))->advertiseFlatScaleFactorIntegral(true);
-  RooGaussModel* promptLifetime = (RooGaussModel*)ws->pdf("promptLifetime");
-  RooGaussModel* promptLifetime2 = (RooGaussModel*)ws->pdf("promptLifetime2");
-  RooRealVar fracGauss2("fracGauss2","fracGauss2",0.2,0.1,0.45);
-  RooAddModel L_TotalPromptLifetime_punzi("L_TotalPromptLifetime_punzi","L_TotalPromptLifetime_punzi",
-                                          RooArgSet(*promptLifetime2,*promptLifetime),fracGauss2);
-  ws->import(fracGauss2);
-  ws->import(L_TotalPromptLifetime_punzi);
-  L_TotalPromptLifetime_punzi.Print();
-  ws->factory("PROD::L_TotalPromptLifetime(L_TotalPromptLifetime_punzi|JpsictErr, pdf_ctauerrModelPR)");
+  if (!runChiMassFitOnly) {
+    ///lifetime pdf
+    std::cout << "Building lifetime pdf" << std::endl;
 
-  //nonprompt signal
-  ws->factory("RooDecay::L_chic1_NP_punzi(Jpsict,NP_TauChic[.4,.25,0.5],L_TotalPromptLifetime_punzi,RooDecay::SingleSided)");
-  ws->factory("RooDecay::L_chic2_NP_punzi(Jpsict,NP_TauChic,L_TotalPromptLifetime_punzi,RooDecay::SingleSided)");
-  ws->factory("RooDecay::L_chic0_NP_punzi(Jpsict,NP_TauChic,L_TotalPromptLifetime_punzi,RooDecay::SingleSided)");
-  ws->factory("PROD::L_chic1_NP(L_chic1_NP_punzi|JpsictErr, pdf_ctauerrModelNP)");
-  ws->factory("PROD::L_chic2_NP(L_chic1_NP_punzi|JpsictErr, pdf_ctauerrModelNP)");
-  ws->factory("PROD::L_chic0_NP(L_chic1_NP_punzi|JpsictErr, pdf_ctauerrModelNP)");
-  //Jpsi background
-  ws->factory("RooDecay::L_background_NP_punzi(Jpsict,NP_TauBkg[.37,.35,0.425],L_TotalPromptLifetime_punzi,RooDecay::SingleSided)");
-  ws->factory("PROD::L_background_NP(L_background_NP_punzi|JpsictErr, pdf_ctauerrModelNP)");
-  ws->factory("SUM::L_background(fBkgNP[.5,0,1.]*L_background_NP, L_TotalPromptLifetime)");
-  //Combinatorial mumugamma background
-  ws->factory("RooDecay::L_comb_backgroundSSD(Jpsict,jpsi_bkgTauSSD,L_TotalPromptLifetime_punzi,RooDecay::SingleSided)");
-  ws->factory("RooDecay::L_comb_backgroundFD(Jpsict,jpsi_bkgTauFD,L_TotalPromptLifetime_punzi,RooDecay::Flipped)");
-  ws->factory("RooDecay::L_comb_backgroundDSD(Jpsict,jpsi_bkgTauDSD,L_TotalPromptLifetime_punzi,RooDecay::DoubleSided)");
-  ws->factory("SUM::L_comb_background_punzi(jpsi_fBkgSSDR*L_comb_backgroundSSD,jpsi_fBkgSSDL*L_comb_backgroundFD,L_comb_backgroundDSD)");
-  ws->factory("PROD::L_comb_background(L_comb_background_punzi|JpsictErr, pdf_ctauerrModelBG)");
+    //define lifetime shape
+    //prompt
+    //resolution function
+    ws->factory("RooGaussModel::promptLifetime(Jpsict,promptMean[0,-.01,.01],ctResolution[0.8,.5,1.], 1, JpsictErr)");
+    ((RooGaussModel*)ws->pdf("promptLifetime"))->advertiseFlatScaleFactorIntegral(true);
+    ws->factory("RooGaussModel::promptLifetime2(Jpsict,promptMean, ctResolution2[1.5,1.,2.5], 1, JpsictErr)");
+    ((RooGaussModel*)ws->pdf("promptLifetime2"))->advertiseFlatScaleFactorIntegral(true);
+    RooGaussModel* promptLifetime = (RooGaussModel*)ws->pdf("promptLifetime");
+    RooGaussModel* promptLifetime2 = (RooGaussModel*)ws->pdf("promptLifetime2");
+    RooRealVar fracGauss2("fracGauss2","fracGauss2",0.2,0.1,0.45);
+    RooAddModel L_TotalPromptLifetime_punzi("L_TotalPromptLifetime_punzi","L_TotalPromptLifetime_punzi",
+                                            RooArgSet(*promptLifetime2,*promptLifetime),fracGauss2);
+    ws->import(fracGauss2);
+    ws->import(L_TotalPromptLifetime_punzi);
+    L_TotalPromptLifetime_punzi.Print();
+    ws->factory("PROD::L_TotalPromptLifetime(L_TotalPromptLifetime_punzi|JpsictErr, pdf_ctauerrModelPR)");
 
-  //combine mass and lifetime
-  ws->factory("PROD::ML_chic1_PR(M_chic1,L_TotalPromptLifetime)");
-  ws->factory("PROD::ML_chic1_NP(M_chic1,L_chic1_NP)");
-  ws->factory("SUM::ML_chic1(fracNP_chic1[0.25,0.1,0.4]*ML_chic1_NP, ML_chic1_PR)");
+    //nonprompt signal
+    ws->factory("RooDecay::L_chic1_NP_punzi(Jpsict,NP_TauChic[.4,.25,0.5],L_TotalPromptLifetime_punzi,RooDecay::SingleSided)");
+    ws->factory("RooDecay::L_chic2_NP_punzi(Jpsict,NP_TauChic,L_TotalPromptLifetime_punzi,RooDecay::SingleSided)");
+    ws->factory("RooDecay::L_chic0_NP_punzi(Jpsict,NP_TauChic,L_TotalPromptLifetime_punzi,RooDecay::SingleSided)");
+    ws->factory("PROD::L_chic1_NP(L_chic1_NP_punzi|JpsictErr, pdf_ctauerrModelNP)");
+    ws->factory("PROD::L_chic2_NP(L_chic1_NP_punzi|JpsictErr, pdf_ctauerrModelNP)");
+    ws->factory("PROD::L_chic0_NP(L_chic1_NP_punzi|JpsictErr, pdf_ctauerrModelNP)");
+    //Jpsi background
+    ws->factory("RooDecay::L_background_NP_punzi(Jpsict,NP_TauBkg[.37,.35,0.425],L_TotalPromptLifetime_punzi,RooDecay::SingleSided)");
+    ws->factory("PROD::L_background_NP(L_background_NP_punzi|JpsictErr, pdf_ctauerrModelNP)");
+    ws->factory("SUM::L_background(fBkgNP[.5,0,1.]*L_background_NP, L_TotalPromptLifetime)");
+    //Combinatorial mumugamma background
+    ws->factory("RooDecay::L_comb_backgroundSSD(Jpsict,jpsi_bkgTauSSD,L_TotalPromptLifetime_punzi,RooDecay::SingleSided)");
+    ws->factory("RooDecay::L_comb_backgroundFD(Jpsict,jpsi_bkgTauFD,L_TotalPromptLifetime_punzi,RooDecay::Flipped)");
+    ws->factory("RooDecay::L_comb_backgroundDSD(Jpsict,jpsi_bkgTauDSD,L_TotalPromptLifetime_punzi,RooDecay::DoubleSided)");
+    ws->factory("SUM::L_comb_background_punzi(jpsi_fBkgSSDR*L_comb_backgroundSSD,jpsi_fBkgSSDL*L_comb_backgroundFD,L_comb_backgroundDSD)");
+    ws->factory("PROD::L_comb_background(L_comb_background_punzi|JpsictErr, pdf_ctauerrModelBG)");
 
-  ws->factory("PROD::ML_chic2_PR(M_chic2,L_TotalPromptLifetime)");
-  ws->factory("PROD::ML_chic2_NP(M_chic2,L_chic2_NP)");
-  ws->factory("SUM::ML_chic2(fracNP_chic2[0.15,0.,0.3]*ML_chic2_NP, ML_chic2_PR)");
+    //combine mass and lifetime
+    ws->factory("PROD::ML_chic1_PR(M_chic1,L_TotalPromptLifetime)");
+    ws->factory("PROD::ML_chic1_NP(M_chic1,L_chic1_NP)");
+    ws->factory("SUM::ML_chic1(fracNP_chic1[0.25,0.1,0.4]*ML_chic1_NP, ML_chic1_PR)");
 
-  ws->factory("PROD::ML_chic0_PR(M_chic0,L_TotalPromptLifetime)");
-  ws->factory("PROD::ML_chic0_NP(M_chic0,L_chic0_NP)");
-  ws->factory("SUM::ML_chic0(fracNP_chic0[0.5,0.2,0.7]*ML_chic0_NP, ML_chic0_PR)");
+    ws->factory("PROD::ML_chic2_PR(M_chic2,L_TotalPromptLifetime)");
+    ws->factory("PROD::ML_chic2_NP(M_chic2,L_chic2_NP)");
+    ws->factory("SUM::ML_chic2(fracNP_chic2[0.15,0.,0.3]*ML_chic2_NP, ML_chic2_PR)");
 
-  ws->factory("PROD::ML_background(M_background,L_background)");
-  ws->factory("PROD::ML_comb_background(M_background,L_comb_background)");
-  ws->factory("SUM::ML_signal(fracSignal_chic1[0.7,0.6,0.8]*ML_chic1, fracSignal_chic0[0.03,0.,0.1]*ML_chic0, ML_chic2)");
+    ws->factory("PROD::ML_chic0_PR(M_chic0,L_TotalPromptLifetime)");
+    ws->factory("PROD::ML_chic0_NP(M_chic0,L_chic0_NP)");
+    ws->factory("SUM::ML_chic0(fracNP_chic0[0.5,0.2,0.7]*ML_chic0_NP, ML_chic0_PR)");
 
-  RooFormulaVar fracSignal_chic2("fracSignal_chic2","1-@0-@1",RooArgList(*ws->var("fracSignal_chic0"),*ws->var("fracSignal_chic1")));
-  ws->import(fracSignal_chic2);
+    ws->factory("PROD::ML_background(M_background,L_background)");
+    ws->factory("PROD::ML_comb_background(M_background,L_comb_background)");
+    ws->factory("SUM::ML_signal(fracSignal_chic1*ML_chic1, fracSignal_chic0*ML_chic0, ML_chic2)");
 
-  //full mass lifetime shape
-  ws->factory("SUM::ML_fullModel(fracBackground[0.6,0.,1.]*ML_background, jpsi_fBkg*ML_comb_background, ML_signal)");
-  //ws->factory(Form("ExtendPdf::ML_fullModel(ML_fullModelNonE, NumEvE[%f,%f,%f])",ev, ev/ExtensionFactor, ev*ExtensionFactor));
+    RooFormulaVar fracSignal_chic2("fracSignal_chic2","1-@0-@1",RooArgList(*ws->var("fracSignal_chic0"),*ws->var("fracSignal_chic1")));
+    ws->import(fracSignal_chic2);
+
+    //full mass lifetime shape
+    ws->factory("SUM::ML_fullModel(fracBackground*ML_background, jpsi_fBkg*ML_comb_background, ML_signal)");
+    //ws->factory(Form("ExtendPdf::ML_fullModel(ML_fullModelNonE, NumEvE[%f,%f,%f])",ev, ev/ExtensionFactor, ev*ExtensionFactor));
+  } else {
+    // TODO: Find the exact value to use and maybe keep this under a different flag
+    ws->factory("jpsi_fBkg[0.0182726]");
+  }
 
   //full mass shape
   ws->factory("SUM::M_signal(fracSignal_chic1*M_chic1, fracSignal_chic0*M_chic0, M_chic2)");
@@ -205,12 +209,13 @@ void chiMassLifetimeFit(const std::string &infilename, int rapBin, int ptBin, in
 
   RooRealVar chicMass(*ws->var("chicMass"));
 
-
   //ws->var("q01S")->setVal(3.2);
   //ws->var("q01S")->setConstant(kTRUE);
 
-  ws->var("promptMean")->setVal(0.);
-  ws->var("promptMean")->setConstant(kTRUE);
+  if (!runChiMassFitOnly) {
+    ws->var("promptMean")->setVal(0.);
+    ws->var("promptMean")->setConstant(kTRUE);
+  }
 
   ws->var("BK_p2")->setVal(1.e-10);
   ws->var("BK_p2")->setConstant(kTRUE);
@@ -219,8 +224,10 @@ void chiMassLifetimeFit(const std::string &infilename, int rapBin, int ptBin, in
     ws->var("fracBackground")->setVal(1.e-10);
     ws->var("fracBackground")->setConstant(kTRUE);
 
-    ws->var("fracNP_chic0")->setVal(1.e-10);
-    ws->var("fracNP_chic0")->setConstant(kTRUE);
+    if (!runChiMassFitOnly) {
+      ws->var("fracNP_chic0")->setVal(1.e-10);
+      ws->var("fracNP_chic0")->setConstant(kTRUE);
+    }
 
     ws->var("fracSignal_chic0")->setVal(1.e-10);
     ws->var("fracSignal_chic0")->setConstant(kTRUE);
@@ -287,21 +294,25 @@ void chiMassLifetimeFit(const std::string &infilename, int rapBin, int ptBin, in
 
   //Fix comb background from jpsi fit
 
-  ws->var("ctResolution2")->setVal(ws->var("jpsi_ctResolution2")->getVal());
-  ws->var("ctResolution2")->setConstant(kTRUE);
-  ws->var("ctResolution")->setVal(ws->var("jpsi_ctResolution")->getVal());
-  ws->var("ctResolution")->setConstant(kTRUE);
-  ws->var("fracGauss2")->setVal(ws->var("jpsi_fracGauss2")->getVal());
-  ws->var("fracGauss2")->setConstant(kTRUE);
+  if (!runChiMassFitOnly) {
+    ws->var("ctResolution2")->setVal(ws->var("jpsi_ctResolution2")->getVal());
+    ws->var("ctResolution2")->setConstant(kTRUE);
+    ws->var("ctResolution")->setVal(ws->var("jpsi_ctResolution")->getVal());
+    ws->var("ctResolution")->setConstant(kTRUE);
+    ws->var("fracGauss2")->setVal(ws->var("jpsi_fracGauss2")->getVal());
+    ws->var("fracGauss2")->setConstant(kTRUE);
+  }
 
   //Fix comb background from jpsi fit
 
   ws->var("jpsi_fBkg")->setConstant(kTRUE);
-  ws->var("jpsi_fBkgSSDR")->setConstant(kTRUE);
-  ws->var("jpsi_fBkgSSDL")->setConstant(kTRUE);
-  ws->var("jpsi_bkgTauSSD")->setConstant(kTRUE);
-  ws->var("jpsi_bkgTauFD")->setConstant(kTRUE);
-  ws->var("jpsi_bkgTauDSD")->setConstant(kTRUE);
+  if (!runChiMassFitOnly) {
+    ws->var("jpsi_fBkgSSDR")->setConstant(kTRUE);
+    ws->var("jpsi_fBkgSSDL")->setConstant(kTRUE);
+    ws->var("jpsi_bkgTauSSD")->setConstant(kTRUE);
+    ws->var("jpsi_bkgTauFD")->setConstant(kTRUE);
+    ws->var("jpsi_bkgTauDSD")->setConstant(kTRUE);
+  }
 
   //ws->var("fracGauss2")->setVal(0.);
   //ws->var("fracGauss2")->setConstant(kTRUE);
