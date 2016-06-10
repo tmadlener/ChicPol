@@ -43,6 +43,7 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     doFractionUncer=true #chic
     useRefittedChic=true # use the refitted mass for chic or use M_chic - M_jpsi + M_jpsi_pdg, NOTE: this will be set to false in bkgHistos_leptonBased.C if onia::KinParticleChi == false
     subtractNP=false #default == false
+    cutDimuon10Gev=true # apply a 10 GeV cut in dimuon pt (at event selection stage)
 
     #PlotFitPar:::
     AddInclusiveResult=false #Inclusive defined by rapFixTo, ptFixTo
@@ -75,9 +76,9 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
 
     #following flags decide if the step is executed (1) or not (0):
     #IMPORTANT: for MC set execute_runWorkspace, execute_MassFit and execute_runLifetimeFit to 0
-    execute_runChiData=1			           		#independent of rapMin, rapMax, ptMin, ptMax
-    execute_runWorkspace=1	    					#independent of rapMin, rapMax, ptMin, ptMax
-    execute_runMassFit=1				    	    #can be executed for different pt and y bins
+    execute_runChiData=0			           		#independent of rapMin, rapMax, ptMin, ptMax
+    execute_runWorkspace=0	    					#independent of rapMin, rapMax, ptMin, ptMax
+    execute_runMassFit=0				    	    #can be executed for different pt and y bins
     execute_runLifetimeFit=0    				    #can be executed for different pt and y bins
     execute_runPlotJpsiMassLifetime=0    			#can be executed for different pt and y bins
     execute_PlotJpsiFitPar=0              			#can be executed for different pt and y bins
@@ -252,7 +253,7 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
       # if [ ${MCclosure} = 'true' ]; then
       #   ./runMC ${inputTrees} rejectCowboys=${rejectCowboys} FidCuts=${FidCuts} nState=${nState} RequestTrigger=${requestTrigger} rejectSeagulls=${rejectSeagulls}
       # else
-        ./runChiData ${inputTrees} rejectCowboys=${rejectCowboys} FidCuts=${FidCuts} nState=${nState} MC=${MC} RequestTrigger=${RequestTrigger} correctCtau=${correctCtau} useRefittedChic=${useRefittedChic}
+        ./runChiData ${inputTrees} rejectCowboys=${rejectCowboys} FidCuts=${FidCuts} nState=${nState} MC=${MC} RequestTrigger=${RequestTrigger} correctCtau=${correctCtau} useRefittedChic=${useRefittedChic} cutDimuon10Gev=${cutDimuon10Gev}
       # fi
     fi
 
@@ -290,7 +291,7 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     if [ ${execute_runChiMassLifetimeFit} -eq 1 ]
     then
       cp runChiMassLifetimeFit runChiMassLifetimeFit_rap${rapMin}_pt${ptMin}
-      ./runChiMassLifetimeFit_rap${rapMin}_pt${ptMin} runChiMassFitOnly=${runChiMassFitOnly} rapMin=${rapMin} rapMax=${rapMax} ptMin=${ptMin} ptMax=${ptMax} nState=${nState} MC=${MC}
+      ./runChiMassLifetimeFit_rap${rapMin}_pt${ptMin} runChiMassFitOnly=${runChiMassFitOnly} rapMin=${rapMin} rapMax=${rapMax} ptMin=${ptMin} ptMax=${ptMax} nState=${nState} MC=${MC} MCclosure=${MCclosure}
       rm runChiMassLifetimeFit_rap${rapMin}_pt${ptMin}
     fi
 

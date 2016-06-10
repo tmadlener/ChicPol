@@ -22,7 +22,8 @@ TLorentzVector *lepP, *photon, *jpsi, *chic, *lepN;
 TLorentzVector *lepP_rf, *photon_rf, *jpsi_rf, *chic_rf, *lepN_rf;
 
 
-void PolChiData::Loop(int nState, bool rejectCowboys, int FidCuts, bool MC, bool RequestTrigger, bool removeEta0p2_0p3, bool cutDeltaREllDpt, bool correctCtau, bool useRefittedChic) {
+void PolChiData::Loop(int nState, bool rejectCowboys, int FidCuts, bool MC, bool RequestTrigger, bool removeEta0p2_0p3,
+                      bool cutDeltaREllDpt, bool correctCtau, bool useRefittedChic, bool cutDimuon10Gev) {
 
   if (fChain == 0) return;
 
@@ -147,6 +148,9 @@ void PolChiData::Loop(int nState, bool rejectCowboys, int FidCuts, bool MC, bool
     //Dimuon CUTS
 
     if(onia_pt > 990.) continue;
+    if (cutDimuon10Gev) {
+      if (onia_pt < 10.) continue;
+    }
     //if(jpsiVprob < onia::cut_vtxProb) continue;
     if(rejectCowboys)
       if(deltaPhi < 0.)  continue;

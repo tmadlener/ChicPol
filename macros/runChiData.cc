@@ -38,6 +38,7 @@ int main(int argc, char* argv[]){
     cutDeltaREllDpt=false;
   bool correctCtau  = false;
   bool useRefittedChic = true;
+  bool cutDimuon10Gev = false;
   std::vector<std::string> inputTrees;
   int
     FidCuts = 999,
@@ -59,6 +60,7 @@ int main(int argc, char* argv[]){
       fromSplit("inputTree", arg, str);
       fromSplit("correctCtau", arg, correctCtau);
       if (!str.empty()) inputTrees.push_back(str);
+      fromSplit("cutDimuon10Gev", arg, cutDimuon10Gev);
     }
 
   std::cout << "-----------------------------------\n" <<
@@ -85,7 +87,7 @@ int main(int argc, char* argv[]){
   BookHistosReco(nState);
   printf("after booking of histo\n");
   //tree->GetEvent(1);
-  treeReco.Loop(nState, rejectCowboys, FidCuts, MC, RequestTrigger, removeEta0p2_0p3, cutDeltaREllDpt, correctCtau, useRefittedChic);
+  treeReco.Loop(nState, rejectCowboys, FidCuts, MC, RequestTrigger, removeEta0p2_0p3, cutDeltaREllDpt, correctCtau, useRefittedChic, cutDimuon10Gev);
   printf("writing out the histograms\n");
   WriteHistosReco(fNameOut.c_str());
 
