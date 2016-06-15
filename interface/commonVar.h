@@ -81,11 +81,15 @@ namespace onia{
 
   //chic
   const int kNbPTMaxBins = 5;
-  //const int kNbPTMaxBins = 4;
+  // const int kNbPTMaxBins = 4; // chic2 binning
   const int kNbPTBins[kNbRapForPTBins+1] = {kNbPTMaxBins, kNbPTMaxBins};//all y, y1
   double pTRange[kNbRapForPTBins+1][kNbPTMaxBins+1] = {
-    {10., 15., 20., 25., 30., 50.},//all rapidities
-    {10., 15., 20., 25., 30., 50.}};//forward rapidity
+    // chic1 binning (standard)
+    // {10., 15., 20., 25., 30., 50.},//all rapidities
+    // {10., 15., 20., 25., 30., 50.}};//forward rapidity
+    // chic2 binning (last two pt bins merged)
+    // {10., 15., 20., 25., 50.}, // all rapidities
+    // {10., 15., 20., 25., 50.}}; // forward rapidity
   //chic1
   //{10., 14., 18., 22., 30., 50.},//all rapidities
   //{10., 14., 18., 22., 30., 50.}};
