@@ -60,10 +60,13 @@ void createHists(std::vector<TH2D*>& hists, const std::string& nameBase, /*const
  */
 inline double getVarVal(RooWorkspace* ws, const std::string& name)
 {
-  // for development:
-  std::cout << "### getVarVal, " << name << ": " << static_cast<RooRealVar*>(ws->var(name.c_str())) << std::endl;
-
-  return static_cast<RooRealVar*>(ws->var(name.c_str()))->getVal();
+  RooRealVar* var = static_cast<RooRealVar*>(ws->var(name.c_str()));
+  if (var) return var->getVal();
+  // std::cout << name << " is a RooFormulaVar!" << std::endl;
+  var = static_cast<RooRealVar*>(ws->function(name.c_str()));
+  if (var) return var->getVal();
+  std::cout << "Could not get " << name << " from workspace" << std::endl;
+  return /*nullptr; //*/ NULL;
 }
 
 /**
