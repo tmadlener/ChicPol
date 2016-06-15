@@ -16,6 +16,7 @@
 #include "RooRealVar.h"
 #include "RooCBShape.h"
 
+#include "bkgHistos_helper.h" // for getVarVal
 
 using namespace RooFit;
 
@@ -47,7 +48,7 @@ void chiMassLifetimeFit(const std::string &infilename, int rapBin, int ptBin, in
   bool ConstrainMassDifferenceWithPES = ConstrainMassDifferenceWithPESandSigmaWithScale;
   bool ConstrainSigmaWithScale = ConstrainMassDifferenceWithPESandSigmaWithScale;
 
-  if (MCclosure && ptBin == 4) { // lift mass width constrain for 4th pT bin to have a converging fit
+  if (MCclosure /*&& ptBin == 4*/) { // lift mass constrain for MCclosure since fit does not converge for 3 of 5 bins
     ConstrainMassDifferenceWithPES = false;
   }
 
@@ -189,9 +190,11 @@ void chiMassLifetimeFit(const std::string &infilename, int rapBin, int ptBin, in
     //full mass lifetime shape
     ws->factory("SUM::ML_fullModel(fracBackground*ML_background, jpsi_fBkg*ML_comb_background, ML_signal)");
     //ws->factory(Form("ExtendPdf::ML_fullModel(ML_fullModelNonE, NumEvE[%f,%f,%f])",ev, ev/ExtensionFactor, ev*ExtensionFactor));
-  } else {
-    // TODO: Find the exact value to use and maybe keep this under a different flag
-    ws->factory("jpsi_fBkg[0.0182726]");
+  }
+
+  if (MCclosure) { // take the background fraction from the jpsi mass fit for MCclosure since no lifetime information is available
+    RooRealVar jpsi_fBkg("jpsi_fBkg", "jpsi_fBkg", getVarVal(ws, "fracBkg_jpsi"));
+    ws->import(jpsi_fBkg);
   }
 
   //full mass shape

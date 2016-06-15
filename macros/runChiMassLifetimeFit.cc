@@ -32,7 +32,7 @@ int main(int argc, char* argv[]){
   bool runChiMassFitOnly = false;
   bool MC = false;
   bool MCclosure = false;
-  
+
   // Loop over argument list
   for (int i=1; i < argc; i++)
     {
@@ -43,7 +43,7 @@ int main(int argc, char* argv[]){
       fromSplit("ptMin", arg, ptMin);
       fromSplit("ptMax", arg, ptMax);
       fromSplit("nState", arg, nState);
-      fromSplit("MC", arg, MC);
+      // fromSplit("MC", arg, MC); // have a bug here at the moment! Not needed at the moment but has to be fixed!!
       fromSplit("MCclosure", arg, MCclosure);
     }
 
@@ -57,8 +57,11 @@ int main(int argc, char* argv[]){
     for(int iPT = ptMin; iPT <= ptMax; iPT++){
 
       std::stringstream tempFrom;
-      // tempFrom << "tmpFiles/backupWorkSpace/ws_MassLifetimeFit_Jpsi_rap" << iRap << "_pt" << iPT << ".root";
-      tempFrom << "tmpFiles/backupWorkSpace/ws_MassFit_Jpsi_rap" << iRap << "_pt" << iPT << ".root";
+      if (!MCclosure) {
+        tempFrom << "tmpFiles/backupWorkSpace/ws_MassLifetimeFit_Jpsi_rap" << iRap << "_pt" << iPT << ".root";
+      } else {
+        tempFrom << "tmpFiles/backupWorkSpace/ws_MassFit_Jpsi_rap" << iRap << "_pt" << iPT << ".root";
+      }
       const std::string infilenameFrom = tempFrom.str().c_str();
 
 
