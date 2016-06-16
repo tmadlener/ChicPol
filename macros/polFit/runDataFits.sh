@@ -18,7 +18,7 @@ useBatch=0
 #fracL=50 #in percent #MC closure: 25 for data sigmas, 50 for MC sigmas
 #nSigma=3.00 #needed in 2 decimal accuracy (x.yz)
 
-for nState in 4;do # chic1 = 6, chic2 = 7
+for nState in 6;do # chic1 = 6, chic2 = 7
 
   StatVarTotBGfraction=0     #apply statistical fluctuations on f_background
   StatVarTotBGmodel=0        #apply statistical fluctuations on Bg model
@@ -49,23 +49,24 @@ for nState in 4;do # chic1 = 6, chic2 = 7
   cutDeltaREllDpt=false      # deltaR cut for Jpsi analysis
 
   nSample=20000
-  nFits=10
+  nFits=5
   nSkipGen=0
   MPValgo=3 		#1...mean,2...gauss,3...gauss-loop with chi2<2
 
   useRefittedChic=true
   # JobID=chic$[$nState-5]_30March2016_ML10_sigEff_postFix #fChi1MassLow = 0.1, sigmoid eff # NOTE: DO NOT USE "nEff" in this name!
-  JobID=jpsi_13May2016_mcClosure_seagulls
+  JobID=chic_16June2016_MCclosure_rejCow_chic1Binning
   # JobID=chic$[$nState-5]_30March2016_ML30_defaultSett #fChi1MassLow = 0.3
   # JobID=chic$[$nState-5]_11April2016_useRef_${useRefittedChic}_rejCBs
   # DataID=_chic_30March2016_ML10 # fChi1MassLow = 0.1
-  DataID=_jpsi_13May2016_MCclosure_rejCow_true_rejSea_false
+  # DataID=_jpsi_13May2016_MCclosure_rejCow_true_rejSea_false
   # DataID=_chic_11April2016_nonRefit_useRef_${useRefittedChic}_rejCBs
   # DataID=_chic_30March2016_ML30 # fChi1MassLow = 0.3
+  DataID=_chic_16June2016_MCclosure_rejCow_cutDiMu10_chic1Binning
 
   datadir=${datadir_Start}/SetOfCuts${FidCuts}${DataID}/tmpFiles
-  # TreeID=chic$[nState-5]
-  TreeID=Psi1S
+  TreeID=chic$[nState-5]
+  # TreeID=Psi1S
 
   ########################################
   #useCentralFracL=0
@@ -98,7 +99,8 @@ for nState in 4;do # chic1 = 6, chic2 = 7
   cp ${basedir}/macros/polFit/polPlot.C ${storagedir}/${JobID}/polPlot.C
 
   cp ../../interface/rootIncludes.inc ${storagedir}/${JobID}/rootIncludes.inc
-  cp ../../interface/commonVar.h ${storagedir}/${JobID}/commonVar.h
+  # cp ../../interface/commonVar.h ${storagedir}/${JobID}/commonVar.h
+  cp ${datadir_Start}/SetOfCuts${FidCuts}${DataID}/commonVar.h ${storagedir}/${JobID}/commonVar.h # copy actually used definition
   cp ../../interface/ToyMC_chi.h ${storagedir}/${JobID}/ToyMC.h
   cp ../../interface/effsAndCuts_chi.h ${storagedir}/${JobID}/effsAndCuts.h
 
