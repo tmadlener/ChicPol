@@ -126,6 +126,8 @@ void chiMassLifetimeFit(const std::string &infilename, int rapBin, int ptBin, in
   // define some variables that are used regardless of mass or mass-lifetime fit
   ws->factory("fracSignal_chic1[0.7,0.6,0.8]");
   ws->factory("fracSignal_chic0[0.03,0.,0.1]");
+  RooFormulaVar fracSignal_chic2("fracSignal_chic2","1-@0-@1",RooArgList(*ws->var("fracSignal_chic0"),*ws->var("fracSignal_chic1")));
+  ws->import(fracSignal_chic2);
   ws->factory("fracBackground[0.6,0.,1.]");
 
   if (!runChiMassFitOnly) {
@@ -183,9 +185,6 @@ void chiMassLifetimeFit(const std::string &infilename, int rapBin, int ptBin, in
     ws->factory("PROD::ML_background(M_background,L_background)");
     ws->factory("PROD::ML_comb_background(M_background,L_comb_background)");
     ws->factory("SUM::ML_signal(fracSignal_chic1*ML_chic1, fracSignal_chic0*ML_chic0, ML_chic2)");
-
-    RooFormulaVar fracSignal_chic2("fracSignal_chic2","1-@0-@1",RooArgList(*ws->var("fracSignal_chic0"),*ws->var("fracSignal_chic1")));
-    ws->import(fracSignal_chic2);
 
     //full mass lifetime shape
     ws->factory("SUM::ML_fullModel(fracBackground*ML_background, jpsi_fBkg*ML_comb_background, ML_signal)");
