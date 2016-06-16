@@ -15,7 +15,7 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
   for FidCuts in 11;do #defines the set of cuts to be used, see macros/polFit/effsAndCuts.h
     cd $Cdir
 
-    COPY_AND_COMPILE=0
+    COPY_AND_COMPILE=1
 
     rapMin=1     #takes bins, not actual values
     rapMax=1     #if you only want to process 1 y bin, rapMax = rapMin
@@ -40,7 +40,7 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     FixRegionsToInclusiveFit=false
     rapFixTo=1
     ptFixTo=1
-    doFractionUncer=true #chic
+    doFractionUncer=false #chic # false for MC closure
     useRefittedChic=true # use the refitted mass for chic or use M_chic - M_jpsi + M_jpsi_pdg, NOTE: this will be set to false in bkgHistos_leptonBased.C if onia::KinParticleChi == false
     subtractNP=false #default == false
     cutDimuon10Gev=true # apply a 10 GeV cut in dimuon pt (at event selection stage)
@@ -68,7 +68,7 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     #Define JobID
     # JobID=chic_11April2016_nonRefit_useRef_${useRefittedChic}_rejCBs # fChi1MassLow = 0.1
     # JobID=jpsi_13May2016_MCclosure_rejCow_${rejectCowboys}_rejSea_${rejectSeagulls}
-    JobID=chic_23May2016_MCclosure_test
+    JobID=chic_16June2016_MCclosure_rejCow_cutDiMu10_chic1Binning
     # JobID=chic_30March2016_ML30 # fChi1MassLow = 0.3
 
 
@@ -76,18 +76,18 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
 
     #following flags decide if the step is executed (1) or not (0):
     #IMPORTANT: for MC set execute_runWorkspace, execute_MassFit and execute_runLifetimeFit to 0
-    execute_runChiData=0			           		#independent of rapMin, rapMax, ptMin, ptMax
-    execute_runWorkspace=0	    					#independent of rapMin, rapMax, ptMin, ptMax
-    execute_runMassFit=0				    	    #can be executed for different pt and y bins
+    execute_runChiData=1			           		#independent of rapMin, rapMax, ptMin, ptMax
+    execute_runWorkspace=1	    					#independent of rapMin, rapMax, ptMin, ptMax
+    execute_runMassFit=1				    	    #can be executed for different pt and y bins
     execute_runLifetimeFit=0    				    #can be executed for different pt and y bins
     execute_runPlotJpsiMassLifetime=0    			#can be executed for different pt and y bins
     execute_PlotJpsiFitPar=0              			#can be executed for different pt and y bins
     execute_runChiMassLifetimeFit=1		  	    	#can be executed for different pt and y bins
-    execute_runDefineRegionsAndFractions=0			#can be executed for different pt and y bins
+    execute_runDefineRegionsAndFractions=1			#can be executed for different pt and y bins
     execute_runPlotMassLifetime=0    				#can be executed for different pt and y bins
     execute_PlotFitPar=0              				#can be executed for different pt and y bins
     execute_runPlotDataDistributions=0		 		#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
-    execute_runBkgHistos=0          				#can be executed for different pt and y bins
+    execute_runBkgHistos=1          				#can be executed for different pt and y bins
     execute_PlotCosThetaPhiBG=0 		 			#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
     execute_PlotMassRapPtBG=0 		 			#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
     execute_PlotCosThetaPhiDistribution=0 			#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
@@ -142,7 +142,6 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     WorkDir=${CutDir}
     mkdir -p ${CutDir}
     mkdir -p ${WorkDir}
-    cp ../interface/commonVar.h ${WorkDir}/commonVar.h
 
     mkdir -p DataFiles
     mkdir -p ${WorkDir}/tmpFiles/backupWorkSpace
@@ -154,6 +153,7 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     if [ ${COPY_AND_COMPILE} -eq 1 ]
     then
 
+      cp ../interface/commonVar.h ${WorkDir}/commonVar.h
       # Copy files to directory
       cp Makefile ${WorkDir}/Makefile
       cp ../interface/rootIncludes.inc ${WorkDir}/rootIncludes.inc
