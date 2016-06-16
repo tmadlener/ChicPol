@@ -328,8 +328,14 @@ void BkgHistoProducer<Chic>::setupFitVariables(const int rapBin, const int ptBin
     m_fitVars.set("fracLSBpsi", (double)FracLSB / 100.);
   }
 
-  m_fitVars.setFromWS(m_ws, "var_fracBackgroundInPRSR1", "fBGsig1"); // comb. background in PRSR1
-  m_fitVars.setFromWS(m_ws, "var_fracBackgroundInPRSR2", "fBGsig2"); // comb. background in PRSR2
+  if (MC) { // take the background fraction without PR and NP for MC closure
+    m_fitVars.setFromWS(m_ws, "var_fracBackgroundInSR1", "fBGsig1"); // comb. background in SR1
+    m_fitVars.setFromWS(m_ws, "var_fracBackgroundInSR2", "fBGsig2"); // comb. background in SR2
+  } else {
+    m_fitVars.setFromWS(m_ws, "var_fracBackgroundInPRSR1", "fBGsig1"); // comb. background in PRSR1
+    m_fitVars.setFromWS(m_ws, "var_fracBackgroundInPRSR2", "fBGsig2"); // comb. background in PRSR2
+  }
+  // non-prompt does not matter that much, since it is set to 0 (or close to) anyway before
   m_fitVars.setFromWS(m_ws, "var_fracBackgroundInNPSR1", "fBGinNP1"); // comb. background in NPSR1
   m_fitVars.setFromWS(m_ws, "var_fracBackgroundInNPSR2", "fBGinNP2"); // comb. background in NPSR2
   m_fitVars.setFromWS(m_ws, "var_fracNPChic1InPRSR1", "fNPB1"); // non prompt background in PRSR1
