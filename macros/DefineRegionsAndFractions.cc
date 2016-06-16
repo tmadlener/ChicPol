@@ -12,6 +12,8 @@
 #include "RooAddPdf.h"
 #include "RooArgList.h"
 
+#include "bkgHistos_helper.h"
+
 #include <iomanip>
 
 using namespace RooFit;
@@ -29,12 +31,13 @@ void DefineRegionsAndFractions(const std::string &infilename, int rapBin, int pt
 
   RooAbsPdf *fullPdf;
   RooAbsPdf *fullMassPdf;
-  RooAbsPdf *backgroundMassPdf;
+  RooAbsPdf *Prompt;
 
-  fullPdf = (RooAbsPdf*)ws->pdf("ML_fullModel");
+  if (!runChiMassFitOnly) {
+    fullPdf = (RooAbsPdf*)ws->pdf("ML_fullModel");
+    Prompt = (RooAbsPdf*)ws->pdf("L_TotalPromptLifetime");
+  }
   fullMassPdf = (RooAbsPdf*)ws->pdf("M_fullModel");
-
-  RooAbsPdf *Prompt = (RooAbsPdf*)ws->pdf("L_TotalPromptLifetime");
 
   std::stringstream binName;
   binName << "data_rap" << rapBin << "_pt" << ptBin<< "_SR";
@@ -54,24 +57,15 @@ void DefineRegionsAndFractions(const std::string &infilename, int rapBin, int pt
   RooRealVar *mass = (RooRealVar*)ws->var("chicMass");
   RooRealVar *ct = (RooRealVar*)ws->var("Jpsict");
   RooRealVar *ctErr = (RooRealVar*)ws->var("JpsictErr");
-  RooRealVar *cbmass1 =  (RooRealVar*)ws->var("CBmass1");
-  RooRealVar *cbsigma1 = (RooRealVar*)ws->var("CBsigma1");
-
-  RooAbsReal *cbmass2;
-  if(ws->function("CBmass2")==NULL) cbmass2 =  (RooRealVar*)ws->var("CBmass2");
-  else cbmass2 =  (RooRealVar*)ws->function("CBmass2");
-  RooAbsReal *cbsigma2;
-  if(ws->function("CBsigma2")==NULL) cbsigma2 =  (RooRealVar*)ws->var("CBsigma2");
-  else cbsigma2 =  (RooRealVar*)ws->function("CBsigma2");
 
   // calculate mean and sigma for defining regions
-  double mean1 = cbmass1->getVal();
-  double mean2 = cbmass2->getVal();
-  double sigma1 = cbsigma1->getVal();
-  double sigma2 = cbsigma2->getVal();
+  double mean1 = getVarVal(ws, "CBmass1");
+  double mean2 = getVarVal(ws, "CBmass2");
+  double sigma1 = getVarVal(ws, "CBsigma1");
+  double sigma2 = getVarVal(ws, "CBsigma2");
 
-  std::cout<< "mean2" << mean2<<std::endl;
-  std::cout<< "sigma2" << sigma2<<std::endl;
+  std::cout<< "mean2 = " << mean2<<std::endl;
+  std::cout<< "sigma2 = " << sigma2<<std::endl;
 
   //DEFINE MASS REGIONS
   double sig1MaxMass;//  = mean1+sigma1*onia::nSigChi1MassHigh;
@@ -307,51 +301,60 @@ void DefineRegionsAndFractions(const std::string &infilename, int rapBin, int pt
 
 
   //DEFINE LIFETIME REGIONS
-  //Calculate sigma of ctau from resolution function
-  std::stringstream cutSR;
-  cutSR << "chicMass > " << sig1MinMass << " && chicMass < " << sig2MaxMass;
+  double PRMin = -onia::ctVarMax; // for mass only case everything is prompt
+  double PRMax = onia::ctVarMax; // for mass only case everything is prompt
+  double NPMin = onia::ctVarMax*2; // arbitrary large value for initialization that does not interfere with mass only case
+  double NPMax = onia::ctVarMax*2; // arbitrary large value for initialization that does not interfere with mass only case
+  double ctres;
 
-  RooAbsData* dataSR = data->reduce(Cut(cutSR.str().c_str()));
-  RooDataSet *dataJpsictErr = (RooDataSet*)dataSR->reduce(SelectVars(RooArgSet(*ctErr)),Name("dataJpsictErr"));
-  RooDataSet *PromptPseudoData = Prompt->generate(*ct,ProtoData(*dataJpsictErr));
+  // determine values from lifetime fit if requested
+  if (!runChiMassFitOnly) {
+    //Calculate sigma of ctau from resolution function
+    std::stringstream cutSR;
+    cutSR << "chicMass > " << sig1MinMass << " && chicMass < " << sig2MaxMass;
 
-  int nbinsSigmaDef=200;
-  //TH2F* hist2D = (TH2F*)PromptPseudoData->createHistogram("hist2D",*ct,Binning(nbinsSigmaDef),YVar(*ctErr,Binning(nbinsSigmaDef)));
-  //TH1F* hist = (TH1F*)hist2D->ProjectionX();
-  TH1F* hist1D = (TH1F*)PromptPseudoData->createHistogram("hist1D",*ct,Binning(nbinsSigmaDef));
+    RooAbsData* dataSR = data->reduce(Cut(cutSR.str().c_str()));
+    RooDataSet *dataJpsictErr = (RooDataSet*)dataSR->reduce(SelectVars(RooArgSet(*ctErr)),Name("dataJpsictErr"));
+    RooDataSet *PromptPseudoData = Prompt->generate(*ct,ProtoData(*dataJpsictErr));
 
-  //sumW2
-  //hist->Scale(1./hist->Integral());
-  //hist->SetLineColor(kRed);
-  //hist->SetMarkerColor(kRed);
-  //hist->GetXaxis()->SetLimits(-.2,.2);
-  hist1D->Scale(1./hist1D->Integral());
-  hist1D->SetLineColor(kRed);
-  hist1D->SetMarkerColor(kRed);
-  hist1D->GetXaxis()->SetLimits(-.2,.2);
+    int nbinsSigmaDef=200;
+    //TH2F* hist2D = (TH2F*)PromptPseudoData->createHistogram("hist2D",*ct,Binning(nbinsSigmaDef),YVar(*ctErr,Binning(nbinsSigmaDef)));
+    //TH1F* hist = (TH1F*)hist2D->ProjectionX();
+    TH1F* hist1D = (TH1F*)PromptPseudoData->createHistogram("hist1D",*ct,Binning(nbinsSigmaDef));
 
-  double ctres = hist1D->GetRMS();
-  double err_ctres = hist1D->GetRMSError();
+    //sumW2
+    //hist->Scale(1./hist->Integral());
+    //hist->SetLineColor(kRed);
+    //hist->SetMarkerColor(kRed);
+    //hist->GetXaxis()->SetLimits(-.2,.2);
+    hist1D->Scale(1./hist1D->Integral());
+    hist1D->SetLineColor(kRed);
+    hist1D->SetMarkerColor(kRed);
+    hist1D->GetXaxis()->SetLimits(-.2,.2);
 
-  RooRealVar var_ctres("var_ctres","var_ctres",ctres); var_ctres.setError(err_ctres); if(!ws->var("var_ctres")) ws->import(var_ctres); else{ ws->var("var_ctres")->setVal(ctres); ws->var("var_ctres")->setError(err_ctres); }
-  RooRealVar var_err_ctres("var_err_ctres","var_err_ctres",err_ctres); if(!ws->var("var_err_ctres")) ws->import(var_err_ctres); else ws->var("var_err_ctres")->setVal(err_ctres);
+    ctres = hist1D->GetRMS();
+    double err_ctres = hist1D->GetRMSError();
 
-  cout<<"ctau resolution   = "<<ctres*1000<<" +- "<<err_ctres*1000<<" micron"<<endl;
+    RooRealVar var_ctres("var_ctres","var_ctres",ctres); var_ctres.setError(err_ctres); if(!ws->var("var_ctres")) ws->import(var_ctres); else{ ws->var("var_ctres")->setVal(ctres); ws->var("var_ctres")->setError(err_ctres); }
+    RooRealVar var_err_ctres("var_err_ctres","var_err_ctres",err_ctres); if(!ws->var("var_err_ctres")) ws->import(var_err_ctres); else ws->var("var_err_ctres")->setVal(err_ctres);
 
-  // define sigma of prompt p.d.f., got from fit the trend
-  // define function y = a + b * pT
-  double a = 0.073, b = 0.0027;
-  //proper decay length
-  double L_decay = a + b * ws->var("var_chicMeanPt")->getVal();
-  //pseudo-proper decay length
-  double l_sigma = L_decay * onia::MpsiPDG / ws->var("var_chicMeanPt")->getVal() ;
+    cout<<"ctau resolution   = "<<ctres*1000<<" +- "<<err_ctres*1000<<" micron"<<endl;
 
-  cout<<"   ->  "<<ctres/l_sigma<<" with respect to 2011 definition"<<endl;
+    // define sigma of prompt p.d.f., got from fit the trend
+    // define function y = a + b * pT
+    double a = 0.073, b = 0.0027;
+    //proper decay length
+    double L_decay = a + b * ws->var("var_chicMeanPt")->getVal();
+    //pseudo-proper decay length
+    double l_sigma = L_decay * onia::MpsiPDG / ws->var("var_chicMeanPt")->getVal() ;
 
-  double PRMin=-onia::nSigLifetimePR*ctres;
-  double PRMax=onia::nSigLifetimePR*ctres;
-  double NPMin=onia::nSigLifetimeNP*ctres;
-  double NPMax=onia::ctVarMax;
+    cout<<"   ->  "<<ctres/l_sigma<<" with respect to 2011 definition"<<endl;
+
+    PRMin=-onia::nSigLifetimePR*ctres;
+    PRMax=onia::nSigLifetimePR*ctres;
+    NPMin=onia::nSigLifetimeNP*ctres;
+    NPMax=onia::ctVarMax;
+  }
 
   if(FixRegionsToInclusiveFit){
 
@@ -508,11 +511,13 @@ void DefineRegionsAndFractions(const std::string &infilename, int rapBin, int pt
             << "LSB max: " << lsbMaxMass << ", RSB min: " << rsbMinMass << "\n"
             << "----------------------------------------" << std::endl;
 
-  std::cout << "-------------- lifetime range --------------\n"
-            << "l_sigma = " << ctres*1000 << " micron\n"
-            << "PR: " << PRMin << " - " << PRMax << "mm \n"
-            << "NP: " << NPMin << " - " << NPMax << "mm \n"
-            << "----------------------------------------" << std::endl;
+  if (!runChiMassFitOnly) {
+    std::cout << "-------------- lifetime range --------------\n"
+              << "l_sigma = " << ctres*1000 << " micron\n"
+              << "PR: " << PRMin << " - " << PRMax << "mm \n"
+              << "NP: " << NPMin << " - " << NPMax << "mm \n"
+              << "----------------------------------------" << std::endl;
+  }
 
   // define data in different regions
   std::stringstream cutSR1, cutSR2, cutLSB, cutRSB;
@@ -545,8 +550,8 @@ void DefineRegionsAndFractions(const std::string &infilename, int rapBin, int pt
   RooAbsData* dataNPLSB = dataLSB->reduce(Cut(cutNP.str().c_str()));
   RooAbsData* dataNPRSB = dataRSB->reduce(Cut(cutNP.str().c_str()));
 
-  double fJpsiBackground=ws->var("fracBackground")->getVal();
-  double fCombBackground=ws->var("jpsi_fBkg")->getVal();
+  double fJpsiBackground = getVarVal(ws, "fracBackground");
+  double fCombBackground = getVarVal(ws, "jpsi_fBkg");
   double fTotBackground = fCombBackground + fJpsiBackground;
   double fractionCombBGofTotalBackground = fCombBackground / fTotBackground;
   double fractionJpsiBGofTotalBackground = fJpsiBackground / fTotBackground;
@@ -559,16 +564,21 @@ void DefineRegionsAndFractions(const std::string &infilename, int rapBin, int pt
 
   bool calcFractions=true;
   if(calcFractions){
-    double nBackground=ev*(ws->var("fracBackground")->getVal()+ws->var("jpsi_fBkg")->getVal());
+    double nBackground = ev * fJpsiBackground + fCombBackground;
     double nChic=ev-nBackground;
-    double nChic0=nChic*ws->var("fracSignal_chic0")->getVal();
-    double nChic1=nChic*ws->var("fracSignal_chic1")->getVal();
+    double nChic0=nChic * getVarVal(ws, "fracSignal_chic0");
+    double nChic1=nChic * getVarVal(ws, "fracSignal_chic1");
     double nChic2=nChic-nChic0-nChic1;
-    double nChic0NP=nChic0*ws->var("fracNP_chic0")->getVal();
+    double nChic0NP = 0;
+    double nChic1NP = 0;
+    double nChic2NP = 0;
+    if (!runChiMassFitOnly) {
+      nChic0NP=nChic0*ws->var("fracNP_chic0")->getVal();
+      nChic1NP=nChic1*ws->var("fracNP_chic1")->getVal();
+      nChic2NP=nChic2*ws->var("fracNP_chic2")->getVal();
+    }
     double nChic0PR=nChic0-nChic0NP;
-    double nChic1NP=nChic1*ws->var("fracNP_chic1")->getVal();
     double nChic1PR=nChic1-nChic1NP;
-    double nChic2NP=nChic2*ws->var("fracNP_chic2")->getVal();
     double nChic2PR=nChic2-nChic2NP;
 
     cout<<"FULL MASS REGION:"<<endl;
@@ -694,38 +704,57 @@ void DefineRegionsAndFractions(const std::string &infilename, int rapBin, int pt
 
     cout<<"FRACTIONS OF INDIVIDUAL COMPONENT-PDFs IN EACH LIFETIME REGION"<<endl;
 
-    RooAbsReal* real_fBackgroundInPR = ws->pdf("L_background")->createIntegral(RooArgSet(*ct), NormSet(RooArgSet(*ct)), Range("PR"));
-    RooAbsReal* real_fBackgroundInNP = ws->pdf("L_background")->createIntegral(RooArgSet(*ct), NormSet(RooArgSet(*ct)), Range("NP"));
-    double fBackgroundInPR=real_fBackgroundInPR->getVal();
-    double fBackgroundInNP=real_fBackgroundInNP->getVal();
+    // default values are for mass only fits (i.e. everything is prompt)
+    double fBackgroundInPR = 1e-6;
+    double fBackgroundInNP = 1e-6;
+    double fPRChicInPR = 1 - 1e-6;
+    double fPRChicInNP = 1e-6;
+    double fNPChic0InPR = 1e-6;
+    double fNPChic0InNP = 1e-6;
+    double fNPChic1InPR = 1e-6;
+    double fNPChic1InNP = 1e-6;
+    double fNPChic2InPR = 1e-6;
+    double fNPChic2InNP = 1e-6;
+
+    if (!runChiMassFitOnly) {
+      RooAbsReal* real_fBackgroundInPR = ws->pdf("L_background")->createIntegral(RooArgSet(*ct), NormSet(RooArgSet(*ct)), Range("PR"));
+      RooAbsReal* real_fBackgroundInNP = ws->pdf("L_background")->createIntegral(RooArgSet(*ct), NormSet(RooArgSet(*ct)), Range("NP"));
+      fBackgroundInPR=real_fBackgroundInPR->getVal();
+      fBackgroundInNP=real_fBackgroundInNP->getVal();
+
+      RooAbsReal* real_fPRChicInPR = ws->pdf("L_TotalPromptLifetime")->createIntegral(RooArgSet(*ct), NormSet(RooArgSet(*ct)), Range("PR"));
+      RooAbsReal* real_fPRChicInNP = ws->pdf("L_TotalPromptLifetime")->createIntegral(RooArgSet(*ct), NormSet(RooArgSet(*ct)), Range("NP"));
+      double fPRChicInPR=real_fPRChicInPR->getVal();
+      double fPRChicInNP=real_fPRChicInNP->getVal();
+
+      RooAbsReal* real_fNPChic0InPR = ws->pdf("L_chic0_NP")->createIntegral(RooArgSet(*ct), NormSet(RooArgSet(*ct)), Range("PR"));
+      RooAbsReal* real_fNPChic0InNP = ws->pdf("L_chic0_NP")->createIntegral(RooArgSet(*ct), NormSet(RooArgSet(*ct)), Range("NP"));
+      fNPChic0InPR=real_fNPChic0InPR->getVal();
+      fNPChic0InNP=real_fNPChic0InNP->getVal();
+
+      RooAbsReal* real_fNPChic1InPR = ws->pdf("L_chic1_NP")->createIntegral(RooArgSet(*ct), NormSet(RooArgSet(*ct)), Range("PR"));
+      RooAbsReal* real_fNPChic1InNP = ws->pdf("L_chic1_NP")->createIntegral(RooArgSet(*ct), NormSet(RooArgSet(*ct)), Range("NP"));
+      fNPChic1InPR=real_fNPChic1InPR->getVal();
+      fNPChic1InNP=real_fNPChic1InNP->getVal();
+
+      RooAbsReal* real_fNPChic2InPR = ws->pdf("L_chic2_NP")->createIntegral(RooArgSet(*ct), NormSet(RooArgSet(*ct)), Range("PR"));
+      RooAbsReal* real_fNPChic2InNP = ws->pdf("L_chic2_NP")->createIntegral(RooArgSet(*ct), NormSet(RooArgSet(*ct)), Range("NP"));
+      fNPChic2InPR=real_fNPChic2InPR->getVal();
+      fNPChic2InNP=real_fNPChic2InNP->getVal();
+    }
+
     cout<<"fBackgroundInPR    = "<<fBackgroundInPR   <<endl;
     cout<<"fBackgroundInNP    = "<<fBackgroundInNP   <<endl;
 
-    RooAbsReal* real_fPRChicInPR = ws->pdf("L_TotalPromptLifetime")->createIntegral(RooArgSet(*ct), NormSet(RooArgSet(*ct)), Range("PR"));
-    RooAbsReal* real_fPRChicInNP = ws->pdf("L_TotalPromptLifetime")->createIntegral(RooArgSet(*ct), NormSet(RooArgSet(*ct)), Range("NP"));
-    double fPRChicInPR=real_fPRChicInPR->getVal();
-    double fPRChicInNP=real_fPRChicInNP->getVal();
     cout<<"fPRChicInPR    = "<<fPRChicInPR   <<endl;
     cout<<"fPRChicInNP    = "<<fPRChicInNP   <<endl;
 
-    RooAbsReal* real_fNPChic0InPR = ws->pdf("L_chic0_NP")->createIntegral(RooArgSet(*ct), NormSet(RooArgSet(*ct)), Range("PR"));
-    RooAbsReal* real_fNPChic0InNP = ws->pdf("L_chic0_NP")->createIntegral(RooArgSet(*ct), NormSet(RooArgSet(*ct)), Range("NP"));
-    double fNPChic0InPR=real_fNPChic0InPR->getVal();
-    double fNPChic0InNP=real_fNPChic0InNP->getVal();
     cout<<"fNPChic0InPR    = "<<fNPChic0InPR   <<endl;
     cout<<"fNPChic0InNP    = "<<fNPChic0InNP   <<endl;
 
-    RooAbsReal* real_fNPChic1InPR = ws->pdf("L_chic1_NP")->createIntegral(RooArgSet(*ct), NormSet(RooArgSet(*ct)), Range("PR"));
-    RooAbsReal* real_fNPChic1InNP = ws->pdf("L_chic1_NP")->createIntegral(RooArgSet(*ct), NormSet(RooArgSet(*ct)), Range("NP"));
-    double fNPChic1InPR=real_fNPChic1InPR->getVal();
-    double fNPChic1InNP=real_fNPChic1InNP->getVal();
     cout<<"fNPChic1InPR    = "<<fNPChic1InPR   <<endl;
     cout<<"fNPChic1InNP    = "<<fNPChic1InNP   <<endl;
 
-    RooAbsReal* real_fNPChic2InPR = ws->pdf("L_chic2_NP")->createIntegral(RooArgSet(*ct), NormSet(RooArgSet(*ct)), Range("PR"));
-    RooAbsReal* real_fNPChic2InNP = ws->pdf("L_chic2_NP")->createIntegral(RooArgSet(*ct), NormSet(RooArgSet(*ct)), Range("NP"));
-    double fNPChic2InPR=real_fNPChic2InPR->getVal();
-    double fNPChic2InNP=real_fNPChic2InNP->getVal();
     cout<<"fNPChic2InPR    = "<<fNPChic2InPR   <<endl;
     cout<<"fNPChic2InNP    = "<<fNPChic2InNP   <<endl;
 
@@ -1108,15 +1137,15 @@ void DefineRegionsAndFractions(const std::string &infilename, int rapBin, int pt
 
   RooRealVar var_fTotBackground("var_fTotBackground","var_fTotBackground",fTotBackground); if(!ws->var("var_fTotBackground")) ws->import(var_fTotBackground); else ws->var("var_fTotBackground")->setVal(fTotBackground);
 
-  double relerr_fracSignal_chic0 = ws->var("fracSignal_chic0")->getError()/ws->var("fracSignal_chic0")->getVal();
-  double relerr_fracNP_chic0 = ws->var("fracNP_chic0")->getError()/ws->var("fracNP_chic0")->getVal();
-  double relerr_fracPR_chic0 = ws->var("fracNP_chic0")->getError()/(1.-ws->var("fracNP_chic0")->getVal());
-  double relerr_fracSignal_chic1 = ws->var("fracSignal_chic1")->getError()/ws->var("fracSignal_chic1")->getVal();
-  double relerr_fracNP_chic1 = ws->var("fracNP_chic1")->getError()/ws->var("fracNP_chic1")->getVal();
-  double relerr_fracPR_chic1 = ws->var("fracNP_chic1")->getError()/(1.-ws->var("fracNP_chic1")->getVal());
-  double relerr_fracSignal_chic2 = (ws->var("fracSignal_chic0")->getError()+ws->var("fracSignal_chic1")->getError())/ws->function("fracSignal_chic2")->getVal();
-  double relerr_fracNP_chic2 = ws->var("fracNP_chic2")->getError()/ws->var("fracNP_chic2")->getVal();
-  double relerr_fracPR_chic2 = ws->var("fracNP_chic2")->getError()/(1.-ws->var("fracNP_chic2")->getVal());
+  double relerr_fracSignal_chic0 = getVarError(ws, "fracSignal_chic0") / getVarVal(ws, "fracSignal_chic0");
+  double relerr_fracNP_chic0 = runChiMassFitOnly ? 1e-6 : getVarError(ws, "fracNP_chic0") / getVarVal(ws, "fracNP_chic0");
+  double relerr_fracPR_chic0 = runChiMassFitOnly ? 1e-6 : getVarError(ws, "fracNP_chic0") / (1. - getVarVal(ws, "fracNP_chic0"));
+  double relerr_fracSignal_chic1 = getVarError(ws, "fracSignal_chic1") / getVarVal(ws, "fracSignal_chic1");
+  double relerr_fracNP_chic1 = runChiMassFitOnly ? 1e-6 : getVarError(ws, "fracNP_chic1") / getVarVal(ws, "fracNP_chic1");
+  double relerr_fracPR_chic1 = runChiMassFitOnly ? 1e-6 : getVarError(ws, "fracNP_chic1") / (1. - getVarVal(ws, "fracNP_chic1"));
+  double relerr_fracSignal_chic2 = (getVarError(ws, "fracSignal_chic0") + getVarError(ws, "fracSignal_chic1")) / getVarVal(ws, "fracSignal_chic2");
+  double relerr_fracNP_chic2 = runChiMassFitOnly ? 1e-6 : getVarError(ws, "fracNP_chic2") / getVarVal(ws, "fracNP_chic2");
+  double relerr_fracPR_chic2 = runChiMassFitOnly ? 1e-6 : getVarError(ws, "fracNP_chic2") / (1. - getVarVal(ws, "fracNP_chic2"));
 
   double relerr_fracSignal_chic0_times_relerr_fracNP_chic0 = relerr_fracSignal_chic0+relerr_fracNP_chic0;
   double relerr_fracSignal_chic0_times_relerr_fracPR_chic0 = relerr_fracSignal_chic0+relerr_fracPR_chic0;
@@ -1129,8 +1158,8 @@ void DefineRegionsAndFractions(const std::string &infilename, int rapBin, int pt
   double relerr_fracBackgroundJpsi=ws->var("fracBackground")->getError()/ws->var("fracBackground")->getVal();
 
   double err_fracTotBackground=ws->var("jpsi_fBkg")->getError()+ws->var("fracBackground")->getError();
-  double relerr_fracJpsiBackgroundInPRregion=ws->var("fBkgNP")->getError()/(1.-ws->var("fBkgNP")->getVal());
-  double relerr_fracJpsiBackgroundInNPregion=ws->var("fBkgNP")->getError()/(ws->var("fBkgNP")->getVal());
+  double relerr_fracJpsiBackgroundInPRregion = runChiMassFitOnly ? 1e-6 : getVarError(ws, "fBkgNP") / (1. - getVarVal(ws, "fBkgNP"));
+  double relerr_fracJpsiBackgroundInNPregion = runChiMassFitOnly ? 1e-6 : getVarError(ws, "fBkgNP") / getVarVal(ws, "fBkgNP");
 
   double relerr_fracTotBackground=err_fracTotBackground/fTotBackground;
   double relerr_fracTotBackgroundInPR=TMath::Sqrt(relerr_fracTotBackground*relerr_fracTotBackground+relerr_fracJpsiBackgroundInPRregion*relerr_fracJpsiBackgroundInPRregion);
@@ -1983,13 +2012,12 @@ void DefineRegionsAndFractions(const std::string &infilename, int rapBin, int pt
 
 
 
-
-  //Define fullPdf with correct fractions in each mass region
-
-  RooAddPdf ML_fullModel_SR1= RooAddPdf("ML_fullModel_SR1","ML_fullModel_SR1",RooArgList(*ws->pdf("ML_background"),*ws->pdf("ML_comb_background"),*ws->pdf("ML_chic0"),*ws->pdf("ML_chic1"),*ws->pdf("ML_chic2")),RooArgList(*ws->var("var_fracJpsiBackgroundInSR1"), *ws->var("var_fracCombBackgroundInSR1"), *ws->var("var_fracChic0InSR1"), *ws->var("var_fracChic1InSR1"), *ws->var("var_fracChic2InSR1"))); ws->import(ML_fullModel_SR1);
-  RooAddPdf ML_fullModel_SR2= RooAddPdf("ML_fullModel_SR2","ML_fullModel_SR2",RooArgList(*ws->pdf("ML_background"),*ws->pdf("ML_comb_background"),*ws->pdf("ML_chic0"),*ws->pdf("ML_chic1"),*ws->pdf("ML_chic2")),RooArgList(*ws->var("var_fracJpsiBackgroundInSR2"), *ws->var("var_fracCombBackgroundInSR2"), *ws->var("var_fracChic0InSR2"), *ws->var("var_fracChic1InSR2"), *ws->var("var_fracChic2InSR2"))); ws->import(ML_fullModel_SR2);
-  RooAddPdf ML_fullModel_LSB= RooAddPdf("ML_fullModel_LSB","ML_fullModel_LSB",RooArgList(*ws->pdf("ML_background"),*ws->pdf("ML_comb_background"),*ws->pdf("ML_chic0"),*ws->pdf("ML_chic1"),*ws->pdf("ML_chic2")),RooArgList(*ws->var("var_fracJpsiBackgroundInLSB"), *ws->var("var_fracCombBackgroundInLSB"), *ws->var("var_fracChic0InLSB"), *ws->var("var_fracChic1InLSB"), *ws->var("var_fracChic2InLSB"))); ws->import(ML_fullModel_LSB);
-  RooAddPdf ML_fullModel_RSB= RooAddPdf("ML_fullModel_RSB","ML_fullModel_RSB",RooArgList(*ws->pdf("ML_background"),*ws->pdf("ML_comb_background"),*ws->pdf("ML_chic0"),*ws->pdf("ML_chic1"),*ws->pdf("ML_chic2")),RooArgList(*ws->var("var_fracJpsiBackgroundInRSB"), *ws->var("var_fracCombBackgroundInRSB"), *ws->var("var_fracChic0InRSB"), *ws->var("var_fracChic1InRSB"), *ws->var("var_fracChic2InRSB"))); ws->import(ML_fullModel_RSB);
+  if (!runChiMassFitOnly) { // only makes sense if a lifetime fit was performed!
+    //Define fullPdf with correct fractions in each mass region
+    RooAddPdf ML_fullModel_SR1= RooAddPdf("ML_fullModel_SR1","ML_fullModel_SR1",RooArgList(*ws->pdf("ML_background"),*ws->pdf("ML_comb_background"),*ws->pdf("ML_chic0"),*ws->pdf("ML_chic1"),*ws->pdf("ML_chic2")),RooArgList(*ws->var("var_fracJpsiBackgroundInSR1"), *ws->var("var_fracCombBackgroundInSR1"), *ws->var("var_fracChic0InSR1"), *ws->var("var_fracChic1InSR1"), *ws->var("var_fracChic2InSR1"))); ws->import(ML_fullModel_SR1);
+    RooAddPdf ML_fullModel_SR2= RooAddPdf("ML_fullModel_SR2","ML_fullModel_SR2",RooArgList(*ws->pdf("ML_background"),*ws->pdf("ML_comb_background"),*ws->pdf("ML_chic0"),*ws->pdf("ML_chic1"),*ws->pdf("ML_chic2")),RooArgList(*ws->var("var_fracJpsiBackgroundInSR2"), *ws->var("var_fracCombBackgroundInSR2"), *ws->var("var_fracChic0InSR2"), *ws->var("var_fracChic1InSR2"), *ws->var("var_fracChic2InSR2"))); ws->import(ML_fullModel_SR2);
+    RooAddPdf ML_fullModel_LSB= RooAddPdf("ML_fullModel_LSB","ML_fullModel_LSB",RooArgList(*ws->pdf("ML_background"),*ws->pdf("ML_comb_background"),*ws->pdf("ML_chic0"),*ws->pdf("ML_chic1"),*ws->pdf("ML_chic2")),RooArgList(*ws->var("var_fracJpsiBackgroundInLSB"), *ws->var("var_fracCombBackgroundInLSB"), *ws->var("var_fracChic0InLSB"), *ws->var("var_fracChic1InLSB"), *ws->var("var_fracChic2InLSB"))); ws->import(ML_fullModel_LSB);
+    RooAddPdf ML_fullModel_RSB= RooAddPdf("ML_fullModel_RSB","ML_fullModel_RSB",RooArgList(*ws->pdf("ML_background"),*ws->pdf("ML_comb_background"),*ws->pdf("ML_chic0"),*ws->pdf("ML_chic1"),*ws->pdf("ML_chic2")),RooArgList(*ws->var("var_fracJpsiBackgroundInRSB"), *ws->var("var_fracCombBackgroundInRSB"), *ws->var("var_fracChic0InRSB"), *ws->var("var_fracChic1InRSB"), *ws->var("var_fracChic2InRSB"))); ws->import(ML_fullModel_RSB);
 
   /*
     RooRealVar var_fracPRChic0InSR1("var_fracPRChic0InSR1","var_fracPRChic0InSR1",ws->var("var_fracChic0InSR1")->getVal()*(1-ws->var("fracNP_chic0")->getVal())); if(!ws->var("var_fracPRChic0InSR1")) ws->import(var_fracPRChic0InSR1); else ws->var("var_fracPRChic0InSR1")->setVal(ws->var("var_fracChic0InSR1")->getVal()*(1-ws->var("fracNP_chic0")->getVal()));
@@ -2002,61 +2030,61 @@ void DefineRegionsAndFractions(const std::string &infilename, int rapBin, int pt
     RooAddPdf L_fullModel_SR1= RooAddPdf("L_fullModel_SR1","L_fullModel_SR1",RooArgList(*ws->pdf("L_background"),*ws->pdf("L_comb_background"),*ws->pdf("L_TotalPromptLifetime"),*ws->pdf("L_chic0_NP"),*ws->pdf("L_TotalPromptLifetime"),*ws->pdf("L_chic1_NP"),*ws->pdf("L_TotalPromptLifetime"),*ws->pdf("L_chic2_NP")),RooArgList(var_fracJpsiBackgroundInSR1, var_fracCombBackgroundInSR1, var_fracPRChic0InSR1, var_fracNPChic0InSR1, var_fracPRChic1InSR1, var_fracNPChic1InSR1, var_fracPRChic2InSR1, var_fracNPChic2InSR1)); ws->import(L_fullModel_SR1);
   */
 
-  RooAbsReal* real_fPRLSBInLSB = ML_fullModel_LSB.createIntegral(RooArgSet(*ct), NormSet(RooArgSet(*ct)), Range("PR"));
-  double fPRLSBInLSB=real_fPRLSBInLSB->getVal();
-  cout<<"fPRLSBInLSB    = "<<fPRLSBInLSB   <<endl;
-  RooAbsReal* real_fNPLSBInLSB = ML_fullModel_LSB.createIntegral(RooArgSet(*ct), NormSet(RooArgSet(*ct)), Range("NP"));
-  double fNPLSBInLSB=real_fNPLSBInLSB->getVal();
-  cout<<"fNPLSBInLSB    = "<<fNPLSBInLSB   <<endl;
-  RooAbsReal* real_fPRRSBInRSB = ML_fullModel_RSB.createIntegral(RooArgSet(*ct), NormSet(RooArgSet(*ct)), Range("PR"));
-  double fPRRSBInRSB=real_fPRRSBInRSB->getVal();
-  cout<<"fPRRSBInRSB    = "<<fPRRSBInRSB   <<endl;
-  RooAbsReal* real_fNPRSBInRSB = ML_fullModel_RSB.createIntegral(RooArgSet(*ct), NormSet(RooArgSet(*ct)), Range("NP"));
-  double fNPRSBInRSB=real_fNPRSBInRSB->getVal();
-  cout<<"fNPRSBInRSB    = "<<fNPRSBInRSB   <<endl;
-  RooAbsReal* real_fPRSR1InSR1 = ML_fullModel_SR1.createIntegral(RooArgSet(*ct), NormSet(RooArgSet(*ct)), Range("PR"));
-  double fPRSR1InSR1=real_fPRSR1InSR1->getVal();
-  cout<<"fPRSR1InSR1    = "<<fPRSR1InSR1   <<endl;
-  RooAbsReal* real_fNPSR1InSR1 = ML_fullModel_SR1.createIntegral(RooArgSet(*ct), NormSet(RooArgSet(*ct)), Range("NP"));
-  double fNPSR1InSR1=real_fNPSR1InSR1->getVal();
-  cout<<"fNPSR1InSR1    = "<<fNPSR1InSR1   <<endl;
-  RooAbsReal* real_fPRSR2InSR2 = ML_fullModel_SR2.createIntegral(RooArgSet(*ct), NormSet(RooArgSet(*ct)), Range("PR"));
-  double fPRSR2InSR2=real_fPRSR2InSR2->getVal();
-  cout<<"fPRSR2InSR2    = "<<fPRSR2InSR2   <<endl;
-  RooAbsReal* real_fNPSR2InSR2 = ML_fullModel_SR2.createIntegral(RooArgSet(*ct), NormSet(RooArgSet(*ct)), Range("NP"));
-  double fNPSR2InSR2=real_fNPSR2InSR2->getVal();
-  cout<<"fNPSR2InSR2    = "<<fNPSR2InSR2   <<endl;
 
-  RooRealVar var_fPRLSBInLSB("var_fPRLSBInLSB","var_fPRLSBInLSB",fPRLSBInLSB); if(!ws->var("var_fPRLSBInLSB")) ws->import(var_fPRLSBInLSB); else ws->var("var_fPRLSBInLSB")->setVal(fPRLSBInLSB);
-  RooRealVar var_fNPLSBInLSB("var_fNPLSBInLSB","var_fNPLSBInLSB",fNPLSBInLSB); if(!ws->var("var_fNPLSBInLSB")) ws->import(var_fNPLSBInLSB); else ws->var("var_fNPLSBInLSB")->setVal(fNPLSBInLSB);
-  RooRealVar var_fPRRSBInRSB("var_fPRRSBInRSB","var_fPRRSBInRSB",fPRRSBInRSB); if(!ws->var("var_fPRRSBInRSB")) ws->import(var_fPRRSBInRSB); else ws->var("var_fPRRSBInRSB")->setVal(fPRRSBInRSB);
-  RooRealVar var_fNPRSBInRSB("var_fNPRSBInRSB","var_fNPRSBInRSB",fNPRSBInRSB); if(!ws->var("var_fNPRSBInRSB")) ws->import(var_fNPRSBInRSB); else ws->var("var_fNPRSBInRSB")->setVal(fNPRSBInRSB);
-  RooRealVar var_fPRSR1InSR1("var_fPRSR1InSR1","var_fPRSR1InSR1",fPRSR1InSR1); if(!ws->var("var_fPRSR1InSR1")) ws->import(var_fPRSR1InSR1); else ws->var("var_fPRSR1InSR1")->setVal(fPRSR1InSR1);
-  RooRealVar var_fNPSR1InSR1("var_fNPSR1InSR1","var_fNPSR1InSR1",fNPSR1InSR1); if(!ws->var("var_fNPSR1InSR1")) ws->import(var_fNPSR1InSR1); else ws->var("var_fNPSR1InSR1")->setVal(fNPSR1InSR1);
-  RooRealVar var_fPRSR2InSR2("var_fPRSR2InSR2","var_fPRSR2InSR2",fPRSR2InSR2); if(!ws->var("var_fPRSR2InSR2")) ws->import(var_fPRSR2InSR2); else ws->var("var_fPRSR2InSR2")->setVal(fPRSR2InSR2);
-  RooRealVar var_fNPSR2InSR2("var_fNPSR2InSR2","var_fNPSR2InSR2",fNPSR2InSR2); if(!ws->var("var_fNPSR2InSR2")) ws->import(var_fNPSR2InSR2); else ws->var("var_fNPSR2InSR2")->setVal(fNPSR2InSR2);
+    RooAbsReal* real_fPRLSBInLSB = ML_fullModel_LSB.createIntegral(RooArgSet(*ct), NormSet(RooArgSet(*ct)), Range("PR"));
+    double fPRLSBInLSB=real_fPRLSBInLSB->getVal();
+    cout<<"fPRLSBInLSB    = "<<fPRLSBInLSB   <<endl;
+    RooAbsReal* real_fNPLSBInLSB = ML_fullModel_LSB.createIntegral(RooArgSet(*ct), NormSet(RooArgSet(*ct)), Range("NP"));
+    double fNPLSBInLSB=real_fNPLSBInLSB->getVal();
+    cout<<"fNPLSBInLSB    = "<<fNPLSBInLSB   <<endl;
+    RooAbsReal* real_fPRRSBInRSB = ML_fullModel_RSB.createIntegral(RooArgSet(*ct), NormSet(RooArgSet(*ct)), Range("PR"));
+    double fPRRSBInRSB=real_fPRRSBInRSB->getVal();
+    cout<<"fPRRSBInRSB    = "<<fPRRSBInRSB   <<endl;
+    RooAbsReal* real_fNPRSBInRSB = ML_fullModel_RSB.createIntegral(RooArgSet(*ct), NormSet(RooArgSet(*ct)), Range("NP"));
+    double fNPRSBInRSB=real_fNPRSBInRSB->getVal();
+    cout<<"fNPRSBInRSB    = "<<fNPRSBInRSB   <<endl;
+    RooAbsReal* real_fPRSR1InSR1 = ML_fullModel_SR1.createIntegral(RooArgSet(*ct), NormSet(RooArgSet(*ct)), Range("PR"));
+    double fPRSR1InSR1=real_fPRSR1InSR1->getVal();
+    cout<<"fPRSR1InSR1    = "<<fPRSR1InSR1   <<endl;
+    RooAbsReal* real_fNPSR1InSR1 = ML_fullModel_SR1.createIntegral(RooArgSet(*ct), NormSet(RooArgSet(*ct)), Range("NP"));
+    double fNPSR1InSR1=real_fNPSR1InSR1->getVal();
+    cout<<"fNPSR1InSR1    = "<<fNPSR1InSR1   <<endl;
+    RooAbsReal* real_fPRSR2InSR2 = ML_fullModel_SR2.createIntegral(RooArgSet(*ct), NormSet(RooArgSet(*ct)), Range("PR"));
+    double fPRSR2InSR2=real_fPRSR2InSR2->getVal();
+    cout<<"fPRSR2InSR2    = "<<fPRSR2InSR2   <<endl;
+    RooAbsReal* real_fNPSR2InSR2 = ML_fullModel_SR2.createIntegral(RooArgSet(*ct), NormSet(RooArgSet(*ct)), Range("NP"));
+    double fNPSR2InSR2=real_fNPSR2InSR2->getVal();
+    cout<<"fNPSR2InSR2    = "<<fNPSR2InSR2   <<endl;
 
-  RooRealVar var_nPRChic1InPRSR1("var_nPRChic1InPRSR1","var_nPRChic1InPRSR1",nPRChic1InPRSR1_); var_nPRChic1InPRSR1.setError(nPRChic1InPRSR1_Err_); if(!ws->var("var_nPRChic1InPRSR1")) ws->import(var_nPRChic1InPRSR1); else {ws->var("var_nPRChic1InPRSR1")->setVal(nPRChic1InPRSR1_); ws->var("var_nPRChic1InPRSR1")->setError(nPRChic1InPRSR1_Err_);}
-  RooRealVar var_nPRChic2InPRSR2("var_nPRChic2InPRSR2","var_nPRChic2InPRSR2",nPRChic2InPRSR2_); var_nPRChic2InPRSR2.setError(nPRChic2InPRSR2_Err_); if(!ws->var("var_nPRChic2InPRSR2")) ws->import(var_nPRChic2InPRSR2); else {ws->var("var_nPRChic2InPRSR2")->setVal(nPRChic2InPRSR2_); ws->var("var_nPRChic2InPRSR2")->setError(nPRChic2InPRSR2_Err_);}
+    RooRealVar var_fPRLSBInLSB("var_fPRLSBInLSB","var_fPRLSBInLSB",fPRLSBInLSB); if(!ws->var("var_fPRLSBInLSB")) ws->import(var_fPRLSBInLSB); else ws->var("var_fPRLSBInLSB")->setVal(fPRLSBInLSB);
+    RooRealVar var_fNPLSBInLSB("var_fNPLSBInLSB","var_fNPLSBInLSB",fNPLSBInLSB); if(!ws->var("var_fNPLSBInLSB")) ws->import(var_fNPLSBInLSB); else ws->var("var_fNPLSBInLSB")->setVal(fNPLSBInLSB);
+    RooRealVar var_fPRRSBInRSB("var_fPRRSBInRSB","var_fPRRSBInRSB",fPRRSBInRSB); if(!ws->var("var_fPRRSBInRSB")) ws->import(var_fPRRSBInRSB); else ws->var("var_fPRRSBInRSB")->setVal(fPRRSBInRSB);
+    RooRealVar var_fNPRSBInRSB("var_fNPRSBInRSB","var_fNPRSBInRSB",fNPRSBInRSB); if(!ws->var("var_fNPRSBInRSB")) ws->import(var_fNPRSBInRSB); else ws->var("var_fNPRSBInRSB")->setVal(fNPRSBInRSB);
+    RooRealVar var_fPRSR1InSR1("var_fPRSR1InSR1","var_fPRSR1InSR1",fPRSR1InSR1); if(!ws->var("var_fPRSR1InSR1")) ws->import(var_fPRSR1InSR1); else ws->var("var_fPRSR1InSR1")->setVal(fPRSR1InSR1);
+    RooRealVar var_fNPSR1InSR1("var_fNPSR1InSR1","var_fNPSR1InSR1",fNPSR1InSR1); if(!ws->var("var_fNPSR1InSR1")) ws->import(var_fNPSR1InSR1); else ws->var("var_fNPSR1InSR1")->setVal(fNPSR1InSR1);
+    RooRealVar var_fPRSR2InSR2("var_fPRSR2InSR2","var_fPRSR2InSR2",fPRSR2InSR2); if(!ws->var("var_fPRSR2InSR2")) ws->import(var_fPRSR2InSR2); else ws->var("var_fPRSR2InSR2")->setVal(fPRSR2InSR2);
+    RooRealVar var_fNPSR2InSR2("var_fNPSR2InSR2","var_fNPSR2InSR2",fNPSR2InSR2); if(!ws->var("var_fNPSR2InSR2")) ws->import(var_fNPSR2InSR2); else ws->var("var_fNPSR2InSR2")->setVal(fNPSR2InSR2);
+
+    RooRealVar var_nPRChic1InPRSR1("var_nPRChic1InPRSR1","var_nPRChic1InPRSR1",nPRChic1InPRSR1_); var_nPRChic1InPRSR1.setError(nPRChic1InPRSR1_Err_); if(!ws->var("var_nPRChic1InPRSR1")) ws->import(var_nPRChic1InPRSR1); else {ws->var("var_nPRChic1InPRSR1")->setVal(nPRChic1InPRSR1_); ws->var("var_nPRChic1InPRSR1")->setError(nPRChic1InPRSR1_Err_);}
+    RooRealVar var_nPRChic2InPRSR2("var_nPRChic2InPRSR2","var_nPRChic2InPRSR2",nPRChic2InPRSR2_); var_nPRChic2InPRSR2.setError(nPRChic2InPRSR2_Err_); if(!ws->var("var_nPRChic2InPRSR2")) ws->import(var_nPRChic2InPRSR2); else {ws->var("var_nPRChic2InPRSR2")->setVal(nPRChic2InPRSR2_); ws->var("var_nPRChic2InPRSR2")->setError(nPRChic2InPRSR2_Err_);}
 
 
+    double relerr_ratio_PR_chic2_over_chic1 = TMath::Sqrt(relerr_fracSignal_chic2_times_relerr_fracPR_chic2*relerr_fracSignal_chic2_times_relerr_fracPR_chic2+relerr_fracSignal_chic1_times_relerr_fracPR_chic1*relerr_fracSignal_chic1_times_relerr_fracPR_chic1);
+    double relerr_ratio_NP_chic2_over_chic1 = TMath::Sqrt(relerr_fracSignal_chic2_times_relerr_fracNP_chic2*relerr_fracSignal_chic2_times_relerr_fracNP_chic2+relerr_fracSignal_chic1_times_relerr_fracNP_chic1*relerr_fracSignal_chic1_times_relerr_fracNP_chic1);
 
+    double ratio_PR_chic2_over_chic1;
+    double ratio_PR_chic2_over_chic1_Err=0;
+    ratio_PR_chic2_over_chic1 = (ws->function("fracSignal_chic2")->getVal()*(1.-ws->function("fracNP_chic2")->getVal())) / (ws->var("fracSignal_chic1")->getVal()*(1.-ws->var("fracNP_chic1")->getVal()));
+    ratio_PR_chic2_over_chic1_Err = ratio_PR_chic2_over_chic1*relerr_ratio_PR_chic2_over_chic1;
+    RooRealVar var_ratio_PR_chic2_over_chic1("var_ratio_PR_chic2_over_chic1","var_ratio_PR_chic2_over_chic1",ratio_PR_chic2_over_chic1); var_ratio_PR_chic2_over_chic1.setError(ratio_PR_chic2_over_chic1_Err); if(!ws->var("var_ratio_PR_chic2_over_chic1")) ws->import(var_ratio_PR_chic2_over_chic1); else {ws->var("var_ratio_PR_chic2_over_chic1")->setVal(ratio_PR_chic2_over_chic1); ws->var("var_ratio_PR_chic2_over_chic1")->setError(ratio_PR_chic2_over_chic1_Err);}
 
-  double relerr_ratio_PR_chic2_over_chic1 = TMath::Sqrt(relerr_fracSignal_chic2_times_relerr_fracPR_chic2*relerr_fracSignal_chic2_times_relerr_fracPR_chic2+relerr_fracSignal_chic1_times_relerr_fracPR_chic1*relerr_fracSignal_chic1_times_relerr_fracPR_chic1);
-  double relerr_ratio_NP_chic2_over_chic1 = TMath::Sqrt(relerr_fracSignal_chic2_times_relerr_fracNP_chic2*relerr_fracSignal_chic2_times_relerr_fracNP_chic2+relerr_fracSignal_chic1_times_relerr_fracNP_chic1*relerr_fracSignal_chic1_times_relerr_fracNP_chic1);
+    double ratio_NP_chic2_over_chic1;
+    double ratio_NP_chic2_over_chic1_Err=0;
+    ratio_NP_chic2_over_chic1 = (ws->function("fracSignal_chic2")->getVal()*ws->function("fracNP_chic2")->getVal()) / (ws->var("fracSignal_chic1")->getVal()*ws->var("fracNP_chic1")->getVal());
+    ratio_NP_chic2_over_chic1_Err = ratio_NP_chic2_over_chic1*relerr_ratio_NP_chic2_over_chic1;
+    RooRealVar var_ratio_NP_chic2_over_chic1("var_ratio_NP_chic2_over_chic1","var_ratio_NP_chic2_over_chic1",ratio_NP_chic2_over_chic1); var_ratio_NP_chic2_over_chic1.setError(ratio_NP_chic2_over_chic1_Err); if(!ws->var("var_ratio_NP_chic2_over_chic1")) ws->import(var_ratio_NP_chic2_over_chic1); else {ws->var("var_ratio_NP_chic2_over_chic1")->setVal(ratio_NP_chic2_over_chic1); ws->var("var_ratio_NP_chic2_over_chic1")->setError(ratio_NP_chic2_over_chic1_Err);}
 
-  double ratio_PR_chic2_over_chic1;
-  double ratio_PR_chic2_over_chic1_Err=0;
-  ratio_PR_chic2_over_chic1 = (ws->function("fracSignal_chic2")->getVal()*(1.-ws->function("fracNP_chic2")->getVal())) / (ws->var("fracSignal_chic1")->getVal()*(1.-ws->var("fracNP_chic1")->getVal()));
-  ratio_PR_chic2_over_chic1_Err = ratio_PR_chic2_over_chic1*relerr_ratio_PR_chic2_over_chic1;
-  RooRealVar var_ratio_PR_chic2_over_chic1("var_ratio_PR_chic2_over_chic1","var_ratio_PR_chic2_over_chic1",ratio_PR_chic2_over_chic1); var_ratio_PR_chic2_over_chic1.setError(ratio_PR_chic2_over_chic1_Err); if(!ws->var("var_ratio_PR_chic2_over_chic1")) ws->import(var_ratio_PR_chic2_over_chic1); else {ws->var("var_ratio_PR_chic2_over_chic1")->setVal(ratio_PR_chic2_over_chic1); ws->var("var_ratio_PR_chic2_over_chic1")->setError(ratio_PR_chic2_over_chic1_Err);}
-
-  double ratio_NP_chic2_over_chic1;
-  double ratio_NP_chic2_over_chic1_Err=0;
-  ratio_NP_chic2_over_chic1 = (ws->function("fracSignal_chic2")->getVal()*ws->function("fracNP_chic2")->getVal()) / (ws->var("fracSignal_chic1")->getVal()*ws->var("fracNP_chic1")->getVal());
-  ratio_NP_chic2_over_chic1_Err = ratio_NP_chic2_over_chic1*relerr_ratio_NP_chic2_over_chic1;
-  RooRealVar var_ratio_NP_chic2_over_chic1("var_ratio_NP_chic2_over_chic1","var_ratio_NP_chic2_over_chic1",ratio_NP_chic2_over_chic1); var_ratio_NP_chic2_over_chic1.setError(ratio_NP_chic2_over_chic1_Err); if(!ws->var("var_ratio_NP_chic2_over_chic1")) ws->import(var_ratio_NP_chic2_over_chic1); else {ws->var("var_ratio_NP_chic2_over_chic1")->setVal(ratio_NP_chic2_over_chic1); ws->var("var_ratio_NP_chic2_over_chic1")->setError(ratio_NP_chic2_over_chic1_Err);}
-
+  }
 
   //Update mean pT/rap for chic and jpsi (before: Jpsi full region, now: Jpsi SR events)
 
