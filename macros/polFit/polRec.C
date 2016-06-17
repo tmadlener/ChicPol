@@ -26,7 +26,7 @@ const int bins = 10;
 //=======
 bool isMuonInAcceptance(int iCut, double pT, double eta);
 double singleLeptonEfficiency( double& pT, double& eta, int nEff, TFile *fInEff, TH2D* hEvalEff, bool MCeff, TEfficiency* TEff);
-double evalParametrizedEff(double& pT, double& eta, TF1* func);
+// double evalParametrizedEff(double& pT, double& eta, TF1* func);
 void EvaluateEffFileName(int nEff, char EffFileName [200], bool singleLeptonEff);
 double DiLeptonEfficiency( double& Dilepton_pT, double& Dilepton_rap, int nDileptonEff, TFile *fInDileptonEff, bool MCeff);
 double EvaluateRhoFactor( double& costh, double& phi, int nEff, TFile* fInRhoFactor, double rap, double pT, bool StatVarRho);

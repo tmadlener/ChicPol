@@ -27,6 +27,18 @@
 // 12000 is already perfectly good for obtaining central values and errors
 // more itetarions necessary for smooth 2D distributions
 
+// tmadlener: switching between efficiencies stored as TF1 and as TGraphAsymmErrors via this preprocessor directive
+// set to value greater than 0 for using TF1
+#define USE_TF1_EFFICIENCIES 0
+
+// NOTE: do not comment this part!
+#if USE_TF1_EFFICIENCIES>0
+typedef TF1 EffFuncType;
+#else
+typedef TGraphAsymmErrors EffFuncType;
+#endif
+
+
 // number of discarded intial random extractions (burn-in period):
 int n_burnIn = 10000; // do not change this, 2000 is default
 int Toy_n_burnIn = 2000; // do not change this, 2000 is default
@@ -69,7 +81,7 @@ const double min_dileptonEff = 0.01;
 
 bool isMuonInAcceptance(int iCut, double pT, double eta);
 double singleLeptonEfficiency( double& pT, double& eta, int nEff, TFile *fInEff, TH2D* hEvalEff, bool MCeff, TEfficiency* TEff);
-double evalParametrizedEff( double& pT, double& eta, TF1 *func);
+// double evalParametrizedEff( double& pT, double& eta, TF1 *func);
 void EvaluateEffFileName(int nEff, char EffFileName [200], bool singleLeptonEff);
 double DiLeptonEfficiency( double& Dilepton_pT, double& Dilepton_rap, int nDileptonEff, TFile *fInDileptonEff, bool MCeff);
 double EvaluateRhoFactor( double& costh, double& phi, int nEff, TFile* fInRhoFactor, double rap, double pT, bool StatVarRho);
@@ -230,7 +242,9 @@ void polFit(int n_sampledPoints=1,
             bool StatVarTotBGfraction=false,
             bool StatVarTotBGmodel=false,
             bool StatVarRho=false,
-            bool cutDeltaREllDpt=false){
+            bool cutDeltaREllDpt=false,
+            std::string DataType="DATA",
+            int iGen=-1){
 
   cout<<"/////////////////////////////////"<<endl;
   cout<<"running polFit.C ........////////"<<endl;
@@ -276,7 +290,6 @@ void polFit(int n_sampledPoints=1,
   sprintf(EffFile,"%s/%s",effDir,EffFileName);
   TFile *fInRhoFactor = new TFile(EffFile);
   //cout<<"EffFile: "<<EffFile<<endl;
-
 
   cout<<"Filling Efficiency Evaluation Histogram"<<endl;
   TH2D*  hEvalEff1D;
@@ -421,13 +434,15 @@ void polFit(int n_sampledPoints=1,
 
   else if (nEff > 10000 && nEff < 100000) hEvalEff = (TH2D*)hEvalEff2D->Clone("hEvalEff");
 
-  TF1 *func[bins];
+  // TF1 *func[bins];
+  std::vector<EffFuncType*> func(bins, NULL);
   if (nEff > 100000) {
     for (int ieta = 0; ieta < bins; ieta++) {
       char graphName[100];
       // sprintf(graphName, "fitTotEff_DATA_pt_etaBin%i", ieta);
-      sprintf(graphName, "fitTotEff_MC_pt_etaBin%i", ieta);
-      func[ieta] = (TF1*)fInEff->Get(graphName);
+      // sprintf(graphName, "fitTotEff_MC_pt_etaBin%i", ieta);
+      sprintf(graphName, "gEffHybrid_%s_PT_AETA%i", DataType.c_str(), ieta);
+      func[ieta] = dynamic_cast<EffFuncType*>(fInEff->Get(graphName));
     }
   }
 
@@ -540,7 +555,6 @@ void polFit(int n_sampledPoints=1,
 
   double  f_background = background_fraction->GetBinContent( 1 );
   cout << "f_background: " << f_background << endl;
-
   // apply statistical fluctuations on f_background with guassian distribution
   if(StatVarTotBGfraction && f_background>0.){
     double  f_backgroundPre    = background_fraction->GetBinContent( 1 );
@@ -632,9 +646,14 @@ void polFit(int n_sampledPoints=1,
 
   // output file
   sprintf(filename,"%s/results.root",dirstruct);
-  if(RealData) sprintf(filename,"%s/results_%s.root",dirstruct,TreeBinID);
-  TFile* resultsFile = new TFile(filename, "RECREATE", "results");
+  std::stringstream tmpTreeBinID;
+  if(iGen >= 0) {
+    tmpTreeBinID << "Fit_" << iGen << "_";
+  }
+  tmpTreeBinID << TreeBinID;
 
+  if(RealData) sprintf(filename,"%s/results_%s.root",dirstruct,tmpTreeBinID.str().c_str());
+  TFile* resultsFile = new TFile(filename, "RECREATE", "results");
 
   ////////////////////////////////////////////////////////////////////////////
   // calculate acceptance (wrt fiducial cuts) as a function of pT, y, mass

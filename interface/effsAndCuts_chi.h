@@ -186,7 +186,7 @@ void EvaluateEffFileName(int nEff, char EffFileName [200], bool singleLeptonEff)
 
     if(nEff==100001) sprintf(EffFileName,"singleMuonEff_noTracking_L3ptg2_final.root");
     if(nEff==100002) sprintf(EffFileName,"singleMuonEff_noTracking_cowboys_L3ptg2_final.root");
-    if(nEff==100003) sprintf(EffFileName,"singleMuonEff_noTracking_seagulls_L3ptg2_final.root");
+    if(nEff==100003) sprintf(EffFileName,"singleMuonEff_L3ptg2_seagulls_final.root");
   }
 
   if(!singleLeptonEff) {
@@ -271,6 +271,7 @@ double EvaluateRhoFactor( double& costh, double& phi, int nEff, TFile* fInRhoFac
   // returning a ludicrous value here such that it will be noticed, will still being able to suppress the warning
   std::cerr << "ERROR in EvaluateRhoFactor at " << __FILE__ << ":" << __LINE__
             << ": dropped through all if-clauses returning -999" << std::endl;
+  exit(-999);
   return -999.;
 
 }
@@ -525,7 +526,8 @@ double DenominatorAmapEfficiency( double& pT, double& eta, int nDenominatorAmap,
 }
 
 //=============================
-double evalParametrizedEff(double &pT, double &eta, TF1 *func){
+template<typename EffType>
+double evalParametrizedEff(double &pT, double &eta, EffType *func){
 
   if(TMath::Abs(eta) > 1.8) return 0;
   double eff = func->Eval(pT);
