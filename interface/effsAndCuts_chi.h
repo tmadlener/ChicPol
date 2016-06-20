@@ -525,14 +525,32 @@ double DenominatorAmapEfficiency( double& pT, double& eta, int nDenominatorAmap,
   return -999.;
 }
 
+int getBin(const TGraphAsymmErrors* f, double pT)
+{
+  for (int i = 0; i < f->GetN(); ++i) {
+    double x,y; f->GetPoint(i,x,y);
+    if (pT > x + f->GetErrorXlow(i) && pT < f->GetErrorXhigh(i)) return i;
+  }
+  std::cerr << "While trying to find bin of pT = " << pT << " in " << f->GetName() << std::endl;
+  return f->GetN() - 1; // return the last accessible bin
+}
+
 //=============================
 template<typename EffType>
-double evalParametrizedEff(double &pT, double &eta, EffType *func){
+double evalParametrizedEff(double &pT, double &eta, EffType *func, bool statVar=false){
 
   if(TMath::Abs(eta) > 1.8) return 0;
   double eff = func->Eval(pT);
+
+#if USE_TF1_EFFICIENCIES>0 // only posible for TGraphAsymErrors
+  if (statVar) { // take the efficiency as central value and get the error of that bin and draw from a normal distribution
+    int bin = getBin(func, pT);
+    double err = func->GetErrorY(bin); // gets sqrt(1/2 * (s_low^2 + s_high^2)) as sigma for the normal distribution
+    double eff = gRandom->Gaus(eff, err);
+  }
+#endif
+
   if(eff > 1.) eff = 1;
   else if(eff < 0) eff = 0;
   return eff;
-
 }

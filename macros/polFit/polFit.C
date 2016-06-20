@@ -29,6 +29,7 @@
 
 // tmadlener: switching between efficiencies stored as TF1 and as TGraphAsymmErrors via this preprocessor directive
 // set to value greater than 0 for using TF1
+// NOTE: for TF1 no statistical uncertainties on the single muon efficiencies are possible!
 #define USE_TF1_EFFICIENCIES 0
 
 // NOTE: do not comment this part!
@@ -37,7 +38,6 @@ typedef TF1 EffFuncType;
 #else
 typedef TGraphAsymmErrors EffFuncType;
 #endif
-
 
 // number of discarded intial random extractions (burn-in period):
 int n_burnIn = 10000; // do not change this, 2000 is default
@@ -242,6 +242,7 @@ void polFit(int n_sampledPoints=1,
             bool StatVarTotBGfraction=false,
             bool StatVarTotBGmodel=false,
             bool StatVarRho=false,
+            bool StatVarEff=false,
             bool cutDeltaREllDpt=false,
             std::string DataType="DATA",
             int iGen=-1){

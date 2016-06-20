@@ -63,6 +63,7 @@ int main(int argc, char** argv) {
   bool StatVarTotBGfraction=false;
   bool StatVarTotBGmodel=false;
   bool StatVarRho=false;
+  bool StatVarEff=false;
   bool cutDeltaREllDpt=false;
   bool PlotForPaper=false;
 
@@ -117,6 +118,7 @@ int main(int argc, char** argv) {
     if(std::string(argv[i]).find("StatVarTotBGfraction=1") != std::string::npos) {StatVarTotBGfraction=true; cout<<"apply statistical fluctuations on f_background"<<endl;}
     if(std::string(argv[i]).find("StatVarTotBGmodel=1") != std::string::npos) {StatVarTotBGmodel=true; cout<<"apply statistical fluctuations on Bg model"<<endl;}
     if(std::string(argv[i]).find("StatVarRho=1") != std::string::npos) {StatVarRho=true; cout<<"apply statistical fluctuations on rho factor"<<endl;}
+    if(std::string(argv[i]).find("StatVarEff=1") != std::string::npos) {StatVarEff=true; cout<<"apply statistical fluctuations on single muon efficiency"<<endl;}
     if(std::string(argv[i]).find("cutDeltaREllDpt=1") != std::string::npos) {cutDeltaREllDpt=true; cout<<"cut DeltaREllDpt"<<endl;}
 
     if(std::string(argv[i]).find("JobID") != std::string::npos) {char* JobIDchar = argv[i]; char* JobIDchar2 = strtok (JobIDchar, "="); JobID = JobIDchar2; cout<<"JobID = "<<JobID<<endl;}
@@ -423,7 +425,7 @@ int main(int argc, char** argv) {
 
   if(gen)polGen(raplow,raphigh,ptlow,pthigh,mass_signal_peak,mass_signal_sigma,n_sigmas_signal,n_events,f_BG,lambda_theta_sig_,lambda_phi_sig_,lambda_thetaphi_sig_,lambda_theta_bkg_,lambda_phi_bkg_,lambda_thetaphi_bkg_,frameSig,frameBkg,iGen,nState,OutputDirectory);
   if(rec)polRec(raplow,raphigh,ptlow*MassCorrFactor_polrec,pthigh*MassCorrFactor_polrec,mass_signal_peak,mass_signal_sigma,n_sigmas_signal,nRecEff,nRecDileptonEff,nRecRhoFactor,FidCuts,OutputDirectory, false, effDir, MCReceff, MCDileptonReceff, iRap, iPt, useAmapApproach, nAmap, nDenominatorAmap, StatVarTotBGfraction, StatVarRho);
-  if(fit)polFit(nSample,FidCuts, nEff, nDileptonEff, nRhoFactor, OutputDirectory, realdatadir, TreeBinID, TreeBinID_dataFile, RealData, effDir, MCeff, MCDileptoneff, iRap, iPt, NewAccCalc, MPValgo, useAmapApproach, nAmap, nDenominatorAmap, StatVarTotBGfraction, StatVarTotBGmodel, StatVarRho, cutDeltaREllDpt, dataType, iGen);
+  if(fit)polFit(nSample,FidCuts, nEff, nDileptonEff, nRhoFactor, OutputDirectory, realdatadir, TreeBinID, TreeBinID_dataFile, RealData, effDir, MCeff, MCDileptoneff, iRap, iPt, NewAccCalc, MPValgo, useAmapApproach, nAmap, nDenominatorAmap, StatVarTotBGfraction, StatVarTotBGmodel, StatVarRho, StatVarEff, cutDeltaREllDpt, dataType, iGen);
   if(plot)polPlot(OutputDirectory, TreeBinID, RealData, MPValgo, scalePlots, nTotalFits, nState, ptlow, pthigh, raplow, raphigh, PlotForPaper);
 
   //sprintf(dirstruct,"%s/Generation%d",rapptstruct,iGen+nSkipGen);
