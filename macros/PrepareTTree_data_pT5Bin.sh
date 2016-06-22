@@ -41,7 +41,7 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     FixRegionsToInclusiveFit=false
     rapFixTo=1
     ptFixTo=1
-    doFractionUncer=true #chic
+    doFractionUncer=true #chic. false for MCclosure
     useRefittedChic=true # use the refitted mass for chic or use M_chic - M_jpsi + M_jpsi_pdg, NOTE: this will be set to false in bkgHistos_leptonBased.C if onia::KinParticleChi == false
     subtractNP=false #default == false
     cutDimuon10Gev=true # apply a 10 GeV cut in dimuon pt (at event selection stage)
@@ -70,7 +70,8 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     # JobID=chic_11April2016_nonRefit_useRef_${useRefittedChic}_rejCBs # fChi1MassLow = 0.1
     # JobID=jpsi_13May2016_MCclosure_rejCow_${rejectCowboys}_rejSea_${rejectSeagulls}
     # JobID=chic_23May2016_MCclosure_test
-    JobID=chic_15June2016_rejCow_pt10Cut_chic1Binning
+    JobID=chic_21June2016_rejCow_pt10Cut_chic1Binning_corrLib_retry # added for comparison with old library
+    # JobID=chic_21June2016_rejCow_pt10Cut_chic2Binning_corrLib # added for comparison with old library
     # JobID=chic_15June2016_rejCow_pt10Cut_chic2Binning
     # JobID=chic_30March2016_ML30 # fChi1MassLow = 0.3
 
@@ -79,18 +80,18 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
 
     #following flags decide if the step is executed (1) or not (0):
     #IMPORTANT: for MC set execute_runWorkspace, execute_MassFit and execute_runLifetimeFit to 0
-    execute_runChiData=1			           		#independent of rapMin, rapMax, ptMin, ptMax
-    execute_runWorkspace=1	    					#independent of rapMin, rapMax, ptMin, ptMax
-    execute_runMassFit=1				    	    #can be executed for different pt and y bins
-    execute_runLifetimeFit=1    				    #can be executed for different pt and y bins
+    execute_runChiData=0			           		#independent of rapMin, rapMax, ptMin, ptMax
+    execute_runWorkspace=0	    					#independent of rapMin, rapMax, ptMin, ptMax
+    execute_runMassFit=0				    	    #can be executed for different pt and y bins
+    execute_runLifetimeFit=0    				    #can be executed for different pt and y bins
     execute_runPlotJpsiMassLifetime=1    			#can be executed for different pt and y bins
     execute_PlotJpsiFitPar=1              			#can be executed for different pt and y bins
-    execute_runChiMassLifetimeFit=1		  	    	#can be executed for different pt and y bins
-    execute_runDefineRegionsAndFractions=1			#can be executed for different pt and y bins
+    execute_runChiMassLifetimeFit=0		  	    	#can be executed for different pt and y bins
+    execute_runDefineRegionsAndFractions=0			#can be executed for different pt and y bins
     execute_runPlotMassLifetime=1   				#can be executed for different pt and y bins
     execute_PlotFitPar=1              				#can be executed for different pt and y bins
     execute_runPlotDataDistributions=1		 		#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
-    execute_runBkgHistos=1          				#can be executed for different pt and y bins
+    execute_runBkgHistos=0          				#can be executed for different pt and y bins
     execute_PlotCosThetaPhiBG=1 		 			#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
     execute_PlotMassRapPtBG=1 		 			#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
     execute_PlotCosThetaPhiDistribution=1 			#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
