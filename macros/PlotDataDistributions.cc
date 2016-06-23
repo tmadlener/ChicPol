@@ -127,6 +127,40 @@ void PlotDataDistributions(const std::string &infilename, char infilenameData[20
                        xTitle, enlargeYby, setMinYTimesMaxY, LegendPosition,
                        savename, saveSRhistos);
 
+    std::cout << ">>>>Plotting jpsi pt, compare all regions" << std::endl;
+
+    nbins=100; LegendPosition=2;
+    PlotMin=9.; PlotMax=60; // NOTE: tmadlener: this are just some "educated guess" min and max values!
+    NormalizeRegions=false;
+    saveSRhistos=true;
+    enlargeYby=1.2; setMinYTimesMaxY=5e-4;
+    sprintf(savename,"JpsiPt");
+    sprintf(varChar,"jpsi->Pt()");
+    sprintf(xTitle,"p^{#psi}_{T}");
+
+    plotRegionCompDist(ws, tree, rapBin, ptBin, nState,
+                       nbins, PlotMin, PlotMax, varChar, NormalizeRegions,
+                       xTitle, enlargeYby, setMinYTimesMaxY, LegendPosition,
+                       savename, saveSRhistos);
+
+
+    std::cout << ">>>>Plotting jpsi rap, compare all regions" << std::endl;
+
+    nbins=100; LegendPosition=2;
+    PlotMin=-2.; PlotMax=2.;
+    NormalizeRegions=false;
+    saveSRhistos=true;
+    enlargeYby=1.2; setMinYTimesMaxY=5e-4;
+    sprintf(savename,"JpsiRap");
+    sprintf(varChar,"jpsi->Rapidity()");
+    sprintf(xTitle,"#eta^{#psi}");
+
+    plotRegionCompDist(ws, tree, rapBin, ptBin, nState,
+                       nbins, PlotMin, PlotMax, varChar, NormalizeRegions,
+                       xTitle, enlargeYby, setMinYTimesMaxY, LegendPosition,
+                       savename, saveSRhistos);
+
+
     std::cout << ">>>>Plotting ctau errors, compare all regions" << std::endl;
 
     nbins=25; LegendPosition=2;
