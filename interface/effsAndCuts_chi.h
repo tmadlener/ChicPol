@@ -3,6 +3,7 @@
 #include "TRandom3.h"
 #include "TF1.h"
 
+#include <algorithm>
 
 enum { loose, tight };
 
@@ -527,28 +528,93 @@ double DenominatorAmapEfficiency( double& pT, double& eta, int nDenominatorAmap,
 
 int getBin(const TGraphAsymmErrors* f, double pT)
 {
-  for (int i = 0; i < f->GetN(); ++i) {
-    double x,y; f->GetPoint(i,x,y);
-    if (pT > x + f->GetErrorXlow(i) && pT < f->GetErrorXhigh(i)) return i;
+double x,y; f->GetPoint(0, x, y);
+  if (pT < x - f->GetErrorXlow(0)) {
+    std::cerr << "getBin(): pT = " << pT << " is below validity of " << f->GetName() << std::endl;
+    return -1;
   }
-  std::cerr << "While trying to find bin of pT = " << pT << " in " << f->GetName() << std::endl;
-  return f->GetN() - 1; // return the last accessible bin
+
+  for (int i = 0; i < f->GetN(); ++i) {
+    f->GetPoint(i, x, y);
+    if (pT > x - f->GetErrorXlow(i) && pT <= x + f->GetErrorXhigh(i)) {
+      return i;
+    }
+  }
+
+  std::cerr << "getBin(): Reached upper bound for pT = " << pT << " in " << f->GetName() << std::endl;
+  return f->GetN() - 1;
 }
 
-//=============================
-template<typename EffType>
-double evalParametrizedEff(double &pT, double &eta, EffType *func, bool statVar=false){
+/**
+ * linearly interpolate between (x0,y0) and (x1,y1) given x.
+ * /f$ y = y_{0} + (y_{1} - y_{0}) \frac{x - x_{0}}{x_{1} - x_{0}}/f$
+ */
+inline double linInt(double x, double x0, double x1, double y0, double y1)
+{
+  return y0 + (y1 - y0) * (x - x0) / (x1 - x0);
+}
+
+/** calculate the error via a linear interpolation between the two points of TGraphAsymmErrors enclosing pT. */
+double calculateError(TGraphAsymmErrors* f, double pT)
+{
+  int pTbin = getBin(f, pT);
+  int extraBin; // bin needed to get the errors, etc. for interpolation
+
+  // do not extrapolate below the threshold of the TGraph; be conservative use larger error of lowest bin
+  if (pTbin < 0) return std::max(f->GetErrorYhigh(0), f->GetErrorYlow(0));
+
+  double x0, y0; f->GetPoint(pTbin, x0, y0);
+  double x1, y1;
+  if (pT > x0) { // this means that we need the bin to our right for interpolation
+    extraBin = pTbin + 1;
+    f->GetPoint(extraBin, x1, y1);
+  } else { // need bin to left. -> Swap the points (x0,y0) and (x1,y1) because 0 index is for left point!
+    extraBin = pTbin; pTbin--;
+    x1 = x0; y1 = y0;
+    f->GetPoint(pTbin, x0, y0);
+  }
+
+  // if we have no left sample point, we cannot interpolate! (Only happens when point is in the lower half of the lowest bin)
+  if (pTbin < 0) return std::max(f->GetErrorYhigh(0), f->GetErrorYlow(0));
+  // if we have no right sample point, we cannot interpolate! (Only happens when point is in the upper half of the highest bin)
+  if (extraBin >= f->GetN()) return std::max(f->GetErrorYhigh(f->GetN() - 1), f->GetErrorYlow(f->GetN() - 1));
+
+  double eh0 = f->GetErrorYhigh(pTbin);
+  double el0 = f->GetErrorYlow(pTbin);
+  double eh1 = f->GetErrorYhigh(extraBin);
+  double el1 = f->GetErrorYlow(extraBin);
+
+  // calculate the absolute values of the error bands and correct them for the central value
+  double errHigh = linInt(pT, x0, x1, y0 + eh0, y1 + eh1);
+  double errLow = linInt(pT, x0, x1, y0 - el0, y1 - el1);
+  double eff = linInt(pT, x0, x1, y0, y1);
+
+  return std::max(errHigh - eff, eff - errLow); // want absolute values!
+}
+
+/** overload for TGraphAsymmErrors as efficiencies. */
+double evalParametrizedEff(double &pT, double &eta, TGraphAsymmErrors *func, bool statVar=false){
 
   if(TMath::Abs(eta) > 1.8) return 0;
   double eff = func->Eval(pT);
 
-#if USE_TF1_EFFICIENCIES>0 // only posible for TGraphAsymErrors
   if (statVar) { // take the efficiency as central value and get the error of that bin and draw from a normal distribution
-    int bin = getBin(func, pT);
-    double err = func->GetErrorY(bin); // gets sqrt(1/2 * (s_low^2 + s_high^2)) as sigma for the normal distribution
+    // int bin = getBin(func, pT);
+    // double err = func->GetErrorY(bin); // gets sqrt(1/2 * (s_low^2 + s_high^2)) as sigma for the normal distribution
+    double err = calculateError(func, pT); // new version with interpolated errors
     double eff = gRandom->Gaus(eff, err);
   }
-#endif
+
+  if(eff > 1.) eff = 1;
+  else if(eff < 0) eff = 0;
+  return eff;
+}
+
+/** overload for TF1 as efficiencies */
+double evalParametrizedEff(double &pT, double &eta, TF1* func)
+{
+  if(TMath::Abs(eta) > 1.8) return 0;
+  double eff = func->Eval(pT);
 
   if(eff > 1.) eff = 1;
   else if(eff < 0) eff = 0;
