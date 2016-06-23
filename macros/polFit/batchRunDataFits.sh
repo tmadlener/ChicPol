@@ -35,7 +35,7 @@ frameBkg=1
 
 ## efficiency setup (see runDataFits.sh for some more information on the different possibilities)
 nEff=100003
-DataType=MC # MC for MC closure, DATA for data, concerns single muon efficiencies only!
+DataType=DATA # MC for MC closure, DATA for data, concerns single muon efficiencies only!
 UseMCeff=false
 nDileptonEff=1
 UseMCDileptoneff=true
@@ -45,7 +45,7 @@ nRhoFactor=1
 StatVarTotBGfraction=0 # apply statistical fluctuations on f_background
 StatVarTotBGmodel=0    # apply statistical fluctuations on Bg model
 StatVarRho=0           # apply statistical fluctuations on rho factor
-StatVarEff=0           # apply statistical fluctuations on the single muon efficiencies
+StatVarEff=1           # apply statistical fluctuations on the single muon efficiencies
 
 useAmapApproach=false
 nAmap=1
@@ -79,5 +79,12 @@ cp polGenRecFitPlot ${execbl}
 
 ./${execbl} ${iFit}ThisGen ${JobID}=JobID ${storagedir}=storagedir ${basedir}=basedir ${nGenerations}=nGenerations ${polScenSig}polScenSig ${frameSig}frameSig ${polScenBkg}polScenBkg ${frameBkg}frameBkg ${rapBin}_rapBinMin ${rapBin}rapBinMax ${ptBin}ptBinMin ${ptBin}ptBinMax ${nEff}nEff ${nDileptonEff}nDiEff ${FidCuts}FidCuts ${nSample}nSample ${ConstEvents}ConstEvents ${nSkipGen}nSkipGen UseConstEv=${UseConstEv} gen=${gen} rec=${rec} fit=${fit} plot=${plot} ${TreeID}=TreeID ${datadir}=realdatadir UseMCeff=${UseMCeff} UseMCDileptoneff=${UseMCDileptoneff} ${nRhoFactor}nRhoFactor ${MPValgo}MPValgo NewAccCalc=${NewAccCalc} useAmapApproach=${useAmapApproach} nAmap=${nAmap} nDenominatorAmap=${nDenominatorAmap} useBatch=${useBatch} StatVarTotBGfraction=${StatVarTotBGfraction} StatVarTotBGmodel=${StatVarTotBGmodel} StatVarRho=${StatVarRho} StatVarEff=${StatVarEff} ${nState}=nState dataType=${DataType}
 
-rm polGenRecFitPlot${jobFileID} ## do some cleanup
+exitcode=$?
+
+if [ ${exitcode} -eq 0 ]; then
+  rm polGenRecFitPlot${jobFileID} ## do some cleanup
+else
+  exit ${exitcode}
+fi
+
 echo "========================= "$(date)" ========================="

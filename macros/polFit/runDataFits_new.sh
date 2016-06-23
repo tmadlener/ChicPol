@@ -14,7 +14,7 @@ FITTING=1 ## execute this first and when all batch jobs have finished execute me
 MERGING=0 ## although in principle this should check if all jobs are completed, proper working is not guaranteed!
 
 # directory in which all this will take place and where the results will be stored
-storagedir=/afs/hephy.at/work/t/tmadlener/ChiPol/MCclosure
+storagedir=/afs/hephy.at/work/t/tmadlener/ChiPol/results
 # storagedir=/afs/hephy.at/work/t/tmadlener/ChiPol/testSlurmJobs ## testing directory
 # directory from which the data files will be obtained
 ## NOTE: this makes this variable relative to the basedir! (This is important in the setup script!)
@@ -27,17 +27,21 @@ datadir_start=${basedir}/macros/DataFiles
 # JobID=jpsi_19June2016_mcClosure_newEff
 # TreeID=Psi1S
 
-## CHIC DATA
-# nState=6
-# DataID=SetOfCuts11_chic_15June2016_rejCow_pt10Cut_chic$[$nState-5]Binning
-# JobID=chic$[$nState-5]_16June2016_rejCow_cutDiMu10_chic$[$nState-5]Binning
-# TreeID=chic$[$nState-5] # switch to Psi1S for MC closure
+FracLSB=0
 
-## CHIC MC
-nState=6
-DataID=SetOfCuts11_chic_16June2016_MCclosure_rejCow_cutDiMu10_chic1Binning
-JobID=chic_19June2016_MCclosure_rejCow_chic1Binning_batch
-TreeID=chic1
+## CHIC DATA
+nState=7
+# DataID=SetOfCuts11_chic_21June2016_rejCow_pt10Cut_chic$[$nState-5]Binning_corrLib_fLSB_${FracLSB}
+# JobID=chic$[$nState-5]_21June2016_rejCow_cutDiMu10_chic$[$nState-5]Binning_corrLib_fLSB_${FracLSB}
+DataID=SetOfCuts11_chic_21June2016_rejCow_pt10Cut_chic$[$nState-5]Binning_corrLib
+JobID=chic$[$nState-5]_21June2016_rejCow_cutDiMu10_chic$[$nState-5]Binning_corrLib_statVarEff
+TreeID=chic$[$nState-5] # switch to Psi1S for MC closure
+
+## CHIC MC (STILL TODO: RUN)
+# nState=6
+# DataID=SetOfCuts11_chic_21June2016_MCclosure_rejCow_cutDiMu10_chic1Binning_corrLib
+# JobID=chic_21June2016_MCclosure_rejCow_chic1Binning_corrLib
+# TreeID=chic1
 
 datadir=${datadir_start}/${DataID}
 
@@ -52,6 +56,10 @@ rapBinMin=1
 rapBinMax=1
 ptBinMin=1
 ptBinMax=5
+
+if [ ${nState} -eq 7 ]; then
+  ptBinMax=4
+fi
 
 ## number of samples and number of fits setup
 nSample=20000
@@ -130,4 +138,8 @@ if [ ${MERGING} -eq 1 ]; then
     fi
 
   done < ${batchIDFile}
+
+  if [ -s ${batchIDFile} ]; then
+    rm ${batchIDFile}
+  fi
 fi
