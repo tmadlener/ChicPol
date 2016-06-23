@@ -24,7 +24,7 @@ if [ -d ${storagedir}/${JobID} ]; then
     echo "'polGenRecFitPlot' is here and executable."
     EXECMADE=1
   else
-    if [ $(ls -l ${storagedir}/${JobID}/*.cc | wc -l) -eq 3 ] && [ $(ls -l ${storagedir}/${JobID}/*.h | wc-l) -eq 3 ]; then
+    if [ $(ls -l ${storagedir}/${JobID}/*.cc | wc -l) -eq 3 ] && [ $(ls -l ${storagedir}/${JobID}/*.h | wc -l) -eq 3 ]; then
          echo "'polGenRecFitPlot' is not here but the source files are present."
          FILESPRESENT=1
     fi
