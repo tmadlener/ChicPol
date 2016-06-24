@@ -2029,6 +2029,7 @@ void polFit(int n_sampledPoints=1,
     //	cout<<"isEventAccepted: "<<isEventAccepted<<endl;
     //}
 
+    if(!isEventAccepted) continue; // no need to do the following calculations if they are not used anyway
     // efficiency:
     double epsilon = 0;
     if(nEff > 100000){
