@@ -441,11 +441,28 @@ void polFit(int n_sampledPoints=1,
   std::vector<EffFuncType*> func(bins, NULL);
   if (nEff > 100000) {
     for (int ieta = 0; ieta < bins; ieta++) {
-      char graphName[100];
       // sprintf(graphName, "fitTotEff_DATA_pt_etaBin%i", ieta);
       // sprintf(graphName, "fitTotEff_MC_pt_etaBin%i", ieta);
-      sprintf(graphName, "gEffHybrid_%s_PT_AETA%i", DataType.c_str(), ieta);
-      func[ieta] = dynamic_cast<EffFuncType*>(fInEff->Get(graphName));
+      // sprintf(graphName, "gEffHybrid_%s_PT_AETA%i", DataType.c_str(), ieta);
+      std::stringstream graphName;
+      if (nEff == 100003) {
+        graphName << "gEffHybrid_"; // DEFAULT!!!!
+        // graphName << "gEff_MCTRUTH_"; // for MCTRUTH parametrized efficiencies (comment line 454!!!)
+      } else if (nEff == 100001 || nEff == 100002) { // NOTE: not sure if working with 100002
+        graphName << "fitTotEff_";
+      } else if (nEff == 100004) { // MC truth parametrization, stord as TGraph
+        graphName << "gEff_";
+      }
+      graphName << DataType << "_"; // comment out for MCTRUTH eff
+      if (nEff >= 100003) {
+        graphName << "PT_AETA";
+      } else if (nEff == 100001 || nEff == 100002) { // NOTE: again not sure if this works with 100002!
+        graphName << "pt_etaBin";
+      }
+      graphName << ieta;
+
+      std::cout << graphName.str() << std::endl;
+      func[ieta] = dynamic_cast<EffFuncType*>(fInEff->Get(graphName.str().c_str()));
     }
   }
 
