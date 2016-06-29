@@ -676,8 +676,8 @@ double plotMass(RooWorkspace *ws, int rapBin, int ptBin, int nState){
 
 	RooAbsPdf *fullMassPdf = ws->pdf("M_fullModel");
 	assert ( 0 != fullMassPdf );
-	RooAbsPdf *fullPdf = ws->pdf("ML_fullModel");
-	assert ( 0 != fullPdf );
+	// RooAbsPdf *fullPdf = ws->pdf("ML_fullModel");
+	// assert ( 0 != fullPdf );
 
 	int nEntries = data->numEntries();
 
