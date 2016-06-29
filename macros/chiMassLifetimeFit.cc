@@ -63,19 +63,19 @@ void chiMassLifetimeFit(const std::string &infilename, int rapBin, int ptBin, in
   RooFormulaVar PES("PES",Form("(@0-%f)/%f",onia::MpsiPDG, onia::Mchi1PDG-onia::MpsiPDG),RooArgList(*ws->var("CBmass1")));
   ws->import(PES);
 
-  RooFormulaVar CBmass0("CBmass0",Form("@0*%f+%f",onia::Mchi0PDG-onia::MpsiPDG, onia::MpsiPDG),RooArgList(*ws->function("PES")));
-  RooFormulaVar CBsigma0("CBsigma0",Form("@0*%f",(onia::Mchi0PDG-onia::MpsiPDG)/(onia::Mchi1PDG-onia::MpsiPDG)),RooArgList(*ws->var("CBsigma1")));
-  ws->import(CBmass0);
-  ws->import(CBsigma0);
-
   if (ConstrainMassDifferenceWithPES) { // constrain mass parameter of chic2 CB
+    RooFormulaVar CBmass0("CBmass0",Form("@0*%f+%f",onia::Mchi0PDG-onia::MpsiPDG, onia::MpsiPDG),RooArgList(*ws->function("PES")));
+    ws->import(CBmass0);
     RooFormulaVar CBmass2("CBmass2",Form("@0*%f+%f",onia::Mchi2PDG-onia::MpsiPDG, onia::MpsiPDG),RooArgList(*ws->function("PES")));
     ws->import(CBmass2);
   } else {
     ws->factory("CBmass2[3.54,3.49,3.58]");
+    ws->factory("CBmass0[3.42,3.395,3.45]"); // Reasonable values?
   }
 
   if (ConstrainSigmaWithScale) { // taking the n-parameter into the witdth
+    RooFormulaVar CBsigma0("CBsigma0",Form("@0*%f",(onia::Mchi0PDG-onia::MpsiPDG)/(onia::Mchi1PDG-onia::MpsiPDG)),RooArgList(*ws->var("CBsigma1")));
+    ws->import(CBsigma0);
     RooFormulaVar CBsigma2("CBsigma2",Form("@0*%f",(onia::Mchi2PDG-onia::MpsiPDG)/(onia::Mchi1PDG-onia::MpsiPDG)),RooArgList(*ws->var("CBsigma1")));
     ws->import(CBsigma2);
     RooFormulaVar CBn2("CBn2",Form("@0"),RooArgList(*ws->var("CBn")));
@@ -83,6 +83,7 @@ void chiMassLifetimeFit(const std::string &infilename, int rapBin, int ptBin, in
   } else {
     ws->factory("CBsigma2[0.008,0.003,0.02]");
     ws->factory("CBn2[2.5,1.8,3.2]");
+    ws->factory("CBsigma0[0.008,0.003,0.02]");
   }
 
   ws->factory("RooCBShape::M_chic2(chicMass, CBmass2, CBsigma2, CBalpha2[0.6,0.2,1.1],CBn2)");
