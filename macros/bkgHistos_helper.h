@@ -66,7 +66,7 @@ inline double getVarVal(RooWorkspace* ws, const std::string& name)
   var = static_cast<RooRealVar*>(ws->function(name.c_str()));
   if (var) return var->getVal();
   std::cout << "Could not get " << name << " from workspace" << std::endl;
-  return /*nullptr; //*/ NULL;
+  return -99999;
 }
 
 /**
@@ -76,9 +76,14 @@ inline double getVarVal(RooWorkspace* ws, const std::string& name)
 inline double getVarError(RooWorkspace* ws, const std::string& name)
 {
   // for development:
-  std::cout << "### getVarError, " << name << ": " << static_cast<RooRealVar*>(ws->var(name.c_str())) << std::endl;
+  // std::cout << "### getVarError, " << name << ": " << static_cast<RooRealVar*>(ws->var(name.c_str())) << std::endl;
+  RooRealVar* var = static_cast<RooRealVar*>(ws->var(name.c_str()));
+  if (var) return var->getError();
+  var = static_cast<RooRealVar*>(ws->function(name.c_str()));
+  if (var) return var->getError();
+  std::cout << "Could not get " << name << " from workspace" << std::endl;
 
-  return static_cast<RooRealVar*>(ws->var(name.c_str()))->getError();
+  return -99999;
 }
 
 /**
@@ -88,7 +93,7 @@ inline double getVarError(RooWorkspace* ws, const std::string& name)
 inline RooAbsPdf* getPdf(RooWorkspace* ws, const std::string& name)
 {
   // for develpment:
-  std::cout << "### getPdf, " << name << ": " << static_cast<RooAbsPdf*>(ws->pdf(name.c_str())) << std::endl;
+  // std::cout << "### getPdf, " << name << ": " << static_cast<RooAbsPdf*>(ws->pdf(name.c_str())) << std::endl;
 
   return static_cast<RooAbsPdf*>(ws->pdf(name.c_str()));
 }
