@@ -188,6 +188,7 @@ void EvaluateEffFileName(int nEff, char EffFileName [200], bool singleLeptonEff)
     if(nEff==100001) sprintf(EffFileName,"singleMuonEff_noTracking_L3ptg2_final.root");
     if(nEff==100002) sprintf(EffFileName,"singleMuonEff_noTracking_cowboys_L3ptg2_final.root");
     if(nEff==100003) sprintf(EffFileName,"singleMuonEff_L3ptg2_seagulls_final.root");
+    if(nEff==100004) sprintf(EffFileName, "ParametrizedFactDataEff_2016_01_14_Central.root"); // For MC truth parametrization (ALL)
   }
 
   if(!singleLeptonEff) {
@@ -610,8 +611,8 @@ double evalParametrizedEff(double &pT, double &eta, TGraphAsymmErrors *func, boo
   return eff;
 }
 
-/** overload for TF1 as efficiencies */
-double evalParametrizedEff(double &pT, double &eta, TF1* func)
+/** overload for TF1 as efficiencies. Last bool without use here! */
+double evalParametrizedEff(double &pT, double &eta, TF1* func, bool statVar = false)
 {
   if(TMath::Abs(eta) > 1.8) return 0;
   double eff = func->Eval(pT);
