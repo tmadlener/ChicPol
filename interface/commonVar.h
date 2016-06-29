@@ -79,17 +79,29 @@ namespace onia{
   double rapForPTRange[kNbRapForPTBins+1] = {0., 1.2};
   double rapRange[2*kNbRapForPTBins+1] = {-1.2, 0., 1.2};
 
+#ifndef USE_CHIC_BINNING
+#warning "USE_CHIC_BINNING is not defined. Setting it to 1"
+#define USE_CHIC_BINNING 1
+#endif
   //chic
+#if USE_CHIC_BINNING == 1
   const int kNbPTMaxBins = 5;
-  // const int kNbPTMaxBins = 4; // chic2 binning
+#endif
+#if USE_CHIC_BINNING == 2
+  const int kNbPTMaxBins = 4; // chic2 binning
+#endif
   const int kNbPTBins[kNbRapForPTBins+1] = {kNbPTMaxBins, kNbPTMaxBins};//all y, y1
   double pTRange[kNbRapForPTBins+1][kNbPTMaxBins+1] = {
+#if USE_CHIC_BINNING == 1
     // chic1 binning (standard)
     {10., 15., 20., 25., 30., 50.},//all rapidities
     {10., 15., 20., 25., 30., 50.}};//forward rapidity
+#endif
+#if USE_CHIC_2_BINNING == 2
     // chic2 binning (last two pt bins merged)
-    // {10., 15., 20., 25., 50.}, // all rapidities
-    // {10., 15., 20., 25., 50.}}; // forward rapidity
+    {10., 15., 20., 25., 50.}, // all rapidities
+    {10., 15., 20., 25., 50.}}; // forward rapidity
+#endif
   //chic1
   //{10., 14., 18., 22., 30., 50.},//all rapidities
   //{10., 14., 18., 22., 30., 50.}};

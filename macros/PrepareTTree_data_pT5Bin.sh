@@ -65,16 +65,21 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     DataID=Psi$[nState-3]S_ctauScen0_FracLSB-1_16Mar2013
     polDataPath=${basedir}/Psi/Data/${DataID}
 
+    export CHIC_BINNING=1 # use chi_c1 or chi_c2 binning? ## exporting this, such that make can read it
 
     #Define JobID
     # JobID=chic_11April2016_nonRefit_useRef_${useRefittedChic}_rejCBs # fChi1MassLow = 0.1
     # JobID=jpsi_13May2016_MCclosure_rejCow_${rejectCowboys}_rejSea_${rejectSeagulls}
     # JobID=chic_23May2016_MCclosure_test
-    JobID=chic_21June2016_rejCow_pt10Cut_chic1Binning_corrLib_retry # added for comparison with old library
+    JobID=chic_21June2016_rejCow_pt10Cut_chic${CHIC_BINNING}Binning_corrLib_fChic1Low_03 # added for comparison with old library
     # JobID=chic_21June2016_rejCow_pt10Cut_chic2Binning_corrLib # added for comparison with old library
     # JobID=chic_15June2016_rejCow_pt10Cut_chic2Binning
     # JobID=chic_30March2016_ML30 # fChi1MassLow = 0.3
 
+    ## SAFETY MEASURE
+    if [ ${FracLSB} -ge 0 ]; then
+      JobID=${JobID}_fLSB_${FracLSB}
+    fi
 
     ################ EXECUTABLES #################
 
@@ -84,17 +89,17 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     execute_runWorkspace=0	    					#independent of rapMin, rapMax, ptMin, ptMax
     execute_runMassFit=0				    	    #can be executed for different pt and y bins
     execute_runLifetimeFit=0    				    #can be executed for different pt and y bins
-    execute_runPlotJpsiMassLifetime=1    			#can be executed for different pt and y bins
-    execute_PlotJpsiFitPar=1              			#can be executed for different pt and y bins
+    execute_runPlotJpsiMassLifetime=0    			#can be executed for different pt and y bins
+    execute_PlotJpsiFitPar=0              			#can be executed for different pt and y bins
     execute_runChiMassLifetimeFit=0		  	    	#can be executed for different pt and y bins
-    execute_runDefineRegionsAndFractions=0			#can be executed for different pt and y bins
+    execute_runDefineRegionsAndFractions=1			#can be executed for different pt and y bins
     execute_runPlotMassLifetime=1   				#can be executed for different pt and y bins
-    execute_PlotFitPar=1              				#can be executed for different pt and y bins
-    execute_runPlotDataDistributions=1		 		#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
-    execute_runBkgHistos=0          				#can be executed for different pt and y bins
-    execute_PlotCosThetaPhiBG=1 		 			#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
-    execute_PlotMassRapPtBG=1 		 			#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
-    execute_PlotCosThetaPhiDistribution=1 			#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
+    execute_PlotFitPar=0              				#can be executed for different pt and y bins
+    execute_runPlotDataDistributions=0		 		#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
+    execute_runBkgHistos=1          				#can be executed for different pt and y bins
+    execute_PlotCosThetaPhiBG=0 		 			#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
+    execute_PlotMassRapPtBG=0 		 			#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
+    execute_PlotCosThetaPhiDistribution=0 			#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
 
     #################################
     #PsiRelics:::

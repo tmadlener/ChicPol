@@ -15,14 +15,14 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
   for FidCuts in 11;do #defines the set of cuts to be used, see macros/polFit/effsAndCuts.h
     cd $Cdir
 
-    COPY_AND_COMPILE=1
+    COPY_AND_COMPILE=0
 
     rapMin=1     #takes bins, not actual values
     rapMax=1     #if you only want to process 1 y bin, rapMax = rapMin
     ptMin=1      #takes bins, not acutal values
     ptMax=5      #if you only want to process 1 pt bin, ptMax = ptMin
 
-    Plotting=1   #plotting macro: 1 = plot all, 2 = plot mass, 3 = plot lifetime
+    Plotting=2   #plotting macro: 1 = plot all, 2 = plot mass, 3 = plot lifetime
     #plotting macro: 4 = plot lifetimeSR1, 5 = plot lifetimeSR2, 6 = plot lifetimeLSB, 7 = plot lifetimeRSB, 8 = plot lifetimeFullRegion
 
     PlottingJpsi=2   #plotting macro: 1 = plot all, 2 = plot mass, 3 = plot lifetimeSBs, 4= lifetimeSR, 5= PlotMassRap, 6= plot lifetime, 7=pedagogical
@@ -31,7 +31,7 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
 
     runChiMassFitOnly=true
     correctCtau=false   #correct pseudo-proper lifetime
-    rejectCowboys=false
+    rejectCowboys=true
     rejectSeagulls=false # not checked if cowboys are rejected! (Only implemented for MC at the moment!)
     RequestTrigger=true
     MC=false
@@ -64,26 +64,28 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     DataID=Psi$[nState-3]S_ctauScen0_FracLSB-1_16Mar2013
     polDataPath=${basedir}/Psi/Data/${DataID}
 
+    export CHIC_BINNING=1 # use chi_c1 or chi_c2 binning? ## exporting this, such that make can read it
 
     #Define JobID
     # JobID=chic_11April2016_nonRefit_useRef_${useRefittedChic}_rejCBs # fChi1MassLow = 0.1
     # JobID=jpsi_13May2016_MCclosure_rejCow_${rejectCowboys}_rejSea_${rejectSeagulls}
-    JobID=chic_16June2016_MCclosure_rejCow_cutDiMu10_chic1Binning
+    # JobID=chic_21June2016_MCclosure_rejCow_pt10Cut_chic2Binning_corrLib
     # JobID=chic_30March2016_ML30 # fChi1MassLow = 0.3
+    JobID=chic1TestFit
 
 
     ################ EXECUTABLES #################
 
     #following flags decide if the step is executed (1) or not (0):
     #IMPORTANT: for MC set execute_runWorkspace, execute_MassFit and execute_runLifetimeFit to 0
-    execute_runChiData=1			           		#independent of rapMin, rapMax, ptMin, ptMax
-    execute_runWorkspace=1	    					#independent of rapMin, rapMax, ptMin, ptMax
-    execute_runMassFit=1				    	    #can be executed for different pt and y bins
+    execute_runChiData=0			           		#independent of rapMin, rapMax, ptMin, ptMax
+    execute_runWorkspace=0	    					#independent of rapMin, rapMax, ptMin, ptMax
+    execute_runMassFit=0				    	    #can be executed for different pt and y bins
     execute_runLifetimeFit=0    				    #can be executed for different pt and y bins
     execute_runPlotJpsiMassLifetime=0    			#can be executed for different pt and y bins
     execute_PlotJpsiFitPar=0              			#can be executed for different pt and y bins
-    execute_runChiMassLifetimeFit=1		  	    	#can be executed for different pt and y bins
-    execute_runDefineRegionsAndFractions=1			#can be executed for different pt and y bins
+    execute_runChiMassLifetimeFit=0		  	    	#can be executed for different pt and y bins
+    execute_runDefineRegionsAndFractions=0			#can be executed for different pt and y bins
     execute_runPlotMassLifetime=0    				#can be executed for different pt and y bins
     execute_PlotFitPar=0              				#can be executed for different pt and y bins
     execute_runPlotDataDistributions=0		 		#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
