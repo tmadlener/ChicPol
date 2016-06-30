@@ -97,7 +97,7 @@ namespace onia{
     {10., 15., 20., 25., 30., 50.},//all rapidities
     {10., 15., 20., 25., 30., 50.}};//forward rapidity
 #endif
-#if USE_CHIC_2_BINNING == 2
+#if USE_CHIC_BINNING == 2
     // chic2 binning (last two pt bins merged)
     {10., 15., 20., 25., 50.}, // all rapidities
     {10., 15., 20., 25., 50.}}; // forward rapidity
