@@ -4,6 +4,15 @@
 # source /afs/cern.ch/sw/lcg/external/gcc/4.3.2/x86_64-slc5/setup.sh
 # source /afs/cern.ch/sw/lcg/app/releases/ROOT/5.34.05/x86_64-slc5-gcc43-opt/root/bin/thisroot.sh
 
+## conditionally append to the JobID global variable
+append_jobID () {
+  if [ $(echo "${1} >= 0" | bc -l) -eq 1 ]; then
+    JobID=${JobID}_${2}_${1}
+  fi
+}
+
+export CHIC_BINNING=2 # use chi_c1 or chi_c2 binning? ## exporting this, such that make can read it
+
 Cdir=$PWD
 
 cd ..
@@ -12,16 +21,18 @@ cd macros
 
 # input arguments
 for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chic2
-  for FidCuts in 11;do #defines the set of cuts to be used, see macros/polFit/effsAndCuts.h
+  for FidCuts in 11; do #defines the set of cuts to be used, see macros/polFit/effsAndCuts.h
     cd $Cdir
 
-    COPY_AND_COMPILE=0
+    COPY_AND_COMPILE=1
 
     rapMin=1     #takes bins, not actual values
     rapMax=1     #if you only want to process 1 y bin, rapMax = rapMin
     ptMin=1      #takes bins, not acutal values
-    # ptMax=4      #if you only want to process 1 pt bin, ptMax = ptMin
     ptMax=5      # chic1 pt binning
+    if [ ${CHIC_BINNING} -eq 2 ]; then
+      ptMax=4
+    fi
 
     Plotting=1   #plotting macro: 1 = plot all, 2 = plot mass, 3 = plot lifetime
     #plotting macro: 4 = plot lifetimeSR1, 5 = plot lifetimeSR2, 6 = plot lifetimeLSB, 7 = plot lifetimeRSB, 8 = plot lifetimeFullRegion
@@ -62,38 +73,46 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     fitMassPR=false
     fitMassNP=false
 
+    ## signal region definitions (default is -1 -> see commonVar.h to check used values, between 0 and 1 for adjusted ranges)
+    chic1MassLow=-1
+    chic1MassHigh=-1
+    chic2MassLow=-1
+    chic2MassHigh=-1
+    nSigPR=-1
+    nSigNP=-1
+
     DataID=Psi$[nState-3]S_ctauScen0_FracLSB-1_16Mar2013
     polDataPath=${basedir}/Psi/Data/${DataID}
-
-    export CHIC_BINNING=1 # use chi_c1 or chi_c2 binning? ## exporting this, such that make can read it
 
     #Define JobID
     # JobID=chic_11April2016_nonRefit_useRef_${useRefittedChic}_rejCBs # fChi1MassLow = 0.1
     # JobID=jpsi_13May2016_MCclosure_rejCow_${rejectCowboys}_rejSea_${rejectSeagulls}
     # JobID=chic_23May2016_MCclosure_test
-    JobID=chic_21June2016_rejCow_pt10Cut_chic${CHIC_BINNING}Binning_corrLib_fChic1Low_03 # added for comparison with old library
+    JobID=chic_29June2016_rejCow_pt10Cut_chic${CHIC_BINNING}Binning
     # JobID=chic_21June2016_rejCow_pt10Cut_chic2Binning_corrLib # added for comparison with old library
     # JobID=chic_15June2016_rejCow_pt10Cut_chic2Binning
     # JobID=chic_30March2016_ML30 # fChi1MassLow = 0.3
 
-    ## SAFETY MEASURE
-    if [ ${FracLSB} -ge 0 ]; then
-      JobID=${JobID}_fLSB_${FracLSB}
-    fi
+    ## safety feature to have unique job ids for different settings of these
+    append_jobID ${FracLSB} fLSB
+    append_jobID ${chic1MassLow} c1massL
+    append_jobID ${chic2MassLow} c2massL
+    append_jobID ${chic1MassHigh} c1massH
+    append_jobID ${chic2MassHigh} c2massH
 
     ################ EXECUTABLES #################
 
     #following flags decide if the step is executed (1) or not (0):
     #IMPORTANT: for MC set execute_runWorkspace, execute_MassFit and execute_runLifetimeFit to 0
-    execute_runChiData=0			           		#independent of rapMin, rapMax, ptMin, ptMax
-    execute_runWorkspace=0	    					#independent of rapMin, rapMax, ptMin, ptMax
-    execute_runMassFit=0				    	    #can be executed for different pt and y bins
-    execute_runLifetimeFit=0    				    #can be executed for different pt and y bins
+    execute_runChiData=1			           		#independent of rapMin, rapMax, ptMin, ptMax
+    execute_runWorkspace=1	    					#independent of rapMin, rapMax, ptMin, ptMax
+    execute_runMassFit=1				    	    #can be executed for different pt and y bins
+    execute_runLifetimeFit=1    				    #can be executed for different pt and y bins
     execute_runPlotJpsiMassLifetime=0    			#can be executed for different pt and y bins
     execute_PlotJpsiFitPar=0              			#can be executed for different pt and y bins
-    execute_runChiMassLifetimeFit=0		  	    	#can be executed for different pt and y bins
+    execute_runChiMassLifetimeFit=1		  	    	#can be executed for different pt and y bins
     execute_runDefineRegionsAndFractions=1			#can be executed for different pt and y bins
-    execute_runPlotMassLifetime=1   				#can be executed for different pt and y bins
+    execute_runPlotMassLifetime=0   				#can be executed for different pt and y bins
     execute_PlotFitPar=0              				#can be executed for different pt and y bins
     execute_runPlotDataDistributions=0		 		#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
     execute_runBkgHistos=1          				#can be executed for different pt and y bins
@@ -309,7 +328,7 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
       rootfile=fit_Chi_rap${rapMin}_pt${ptMin}.root
       #cp tmpFiles/backupWorkSpace/ws_MassLifetimeFit_Chi_rap${rapMin}_pt${ptMin}.root tmpFiles/backupWorkSpace/ws_DefineRegionsAndFractions_Chi_rap${rapMin}_pt${ptMin}.root
       cp runDefineRegionsAndFractions runDefineRegionsAndFractions_rap${rapMin}_pt${ptMin}
-      ./runDefineRegionsAndFractions_rap${rapMin}_pt${ptMin} runChiMassFitOnly=${runChiMassFitOnly} doFractionUncer=${doFractionUncer} rapMin=${rapMin} rapMax=${rapMax} ptMin=${ptMin} ptMax=${ptMax} nState=${nState} FixRegionsToInclusiveFit=${FixRegionsToInclusiveFit} rapFixTo=${rapFixTo} ptFixTo=${ptFixTo}
+      ./runDefineRegionsAndFractions_rap${rapMin}_pt${ptMin} runChiMassFitOnly=${runChiMassFitOnly} doFractionUncer=${doFractionUncer} rapMin=${rapMin} rapMax=${rapMax} ptMin=${ptMin} ptMax=${ptMax} nState=${nState} FixRegionsToInclusiveFit=${FixRegionsToInclusiveFit} rapFixTo=${rapFixTo} ptFixTo=${ptFixTo} chic1MassLow=${chic1MassLow} chic1MassHigh=${chic1MassHigh} chic2MassLow=${chic2MassLow} chic2MassHigh=${chic2MassHigh} nSigPR=${nSigPR} nSigNP=${nSigNP}
       rm runDefineRegionsAndFractions_rap${rapMin}_pt${ptMin}
     fi
 

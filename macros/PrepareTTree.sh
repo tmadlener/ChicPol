@@ -4,6 +4,15 @@
 # source /afs/cern.ch/sw/lcg/external/gcc/4.3.2/x86_64-slc5/setup.sh
 # source /afs/cern.ch/sw/lcg/app/releases/ROOT/5.34.05/x86_64-slc5-gcc43-opt/root/bin/thisroot.sh
 
+## conditionally append to the JobID global variable
+append_jobID () {
+  if [ $(echo "${1} >= 0" | bc -l) -eq 1 ]; then
+    JobID=${JobID}_${2}_${1}
+  fi
+}
+
+export CHIC_BINNING=2 # use chi_c1 or chi_c2 binning? ## exporting this, such that make can read it
+
 Cdir=$PWD
 
 cd ..
@@ -61,10 +70,16 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     fitMassPR=false
     fitMassNP=false
 
+    ## signal region definitions (default is -1 -> see commonVar.h to check used values, between 0 and 1 for adjusted ranges)
+    chic1MassLow=-1
+    chic1MassHigh=-1
+    chic2MassLow=-1
+    chic2MassHigh=-1
+    nSigPR=-1
+    nSigNP=-1
+
     DataID=Psi$[nState-3]S_ctauScen0_FracLSB-1_16Mar2013
     polDataPath=${basedir}/Psi/Data/${DataID}
-
-    export CHIC_BINNING=1 # use chi_c1 or chi_c2 binning? ## exporting this, such that make can read it
 
     #Define JobID
     # JobID=chic_11April2016_nonRefit_useRef_${useRefittedChic}_rejCBs # fChi1MassLow = 0.1
@@ -300,7 +315,7 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     if [ ${execute_runDefineRegionsAndFractions} -eq 1 ]
     then
       rootfile=fit_Chi_rap${rapMin}_pt${ptMin}.root
-      #cp tmpFiles/backupWorkSpace/ws_MassLifetimeFit_Chi_rap${rapMin}_pt${ptMin}.root tmpFiles/backupWorkSpace/ws_DefineRegionsAndFractions_Chi_rap${rapMin}_pt${ptMin}.root
+      #cp tmpFiles/backupWorkSpace/ws_MassLifetimeFit_Chi_rap${rapMin}_pt${ptMin}.root tmpFiles/backupWorkSpace/ws_DefineRegionsAndFractions_Chi_rap${rapMin}_pt${ptMin}.root chic1MassLow=${chic1MassLow} chic1MassHigh=${chic1MassHigh} chic2MassLow=${chic2MassLow} chic2MassHigh=${chic2MassHigh} nSigPR=${nSigPR} nSigNP=${nSigNP}
       cp runDefineRegionsAndFractions runDefineRegionsAndFractions_rap${rapMin}_pt${ptMin}
       ./runDefineRegionsAndFractions_rap${rapMin}_pt${ptMin} runChiMassFitOnly=${runChiMassFitOnly} doFractionUncer=${doFractionUncer} rapMin=${rapMin} rapMax=${rapMax} ptMin=${ptMin} ptMax=${ptMax} nState=${nState} FixRegionsToInclusiveFit=${FixRegionsToInclusiveFit} rapFixTo=${rapFixTo} ptFixTo=${ptFixTo}
       rm runDefineRegionsAndFractions_rap${rapMin}_pt${ptMin}

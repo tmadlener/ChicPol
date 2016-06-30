@@ -18,7 +18,14 @@
 
 using namespace RooFit;
 
-void DefineRegionsAndFractions(const std::string &infilename, int rapBin, int ptBin, int nState, bool runChiMassFitOnly, bool FixRegionsToInclusiveFit, int rapFixTo, int ptFixTo, bool doFractionUncer){
+/** chic{1,2}{Low,High} default to -1 when the corresponding values defined in commonVar.h are used.
+ * If they are between 0 and 1 (WARNING no check for this), they are used to define the mass signal regions for the chics.
+ * nSig{PR,NP} define the regions for prompt and non-prompt in units of sigmas of the lifetime fit
+ */
+void DefineRegionsAndFractions(const std::string &infilename, int rapBin, int ptBin, int nState, bool runChiMassFitOnly,
+                               bool FixRegionsToInclusiveFit, int rapFixTo, int ptFixTo, bool doFractionUncer,
+                               double chic1Low = -1, double chic1High = -1, double chic2Low = -1, double chic2High = -1,
+                               double nSigPR= -1, double nSigNP = -1){
 
   TFile *infile = new TFile(infilename.c_str(), "UPDATE");
   if(!infile){
@@ -105,6 +112,8 @@ void DefineRegionsAndFractions(const std::string &infilename, int rapBin, int pt
 
     // // end tmadlener: 31.03.2016 temp. implementation
 
+    double chic1MassLowBound = chic1Low >= 0. ? chic1Low : onia::fChi1MassLow;
+
     int nM=1e5;
     deltamass=1e-5;
 
@@ -114,7 +123,7 @@ void DefineRegionsAndFractions(const std::string &infilename, int rapBin, int pt
       mass->setRange("testregion", onia::massChiSBMin, testmass);
       real_fChic_region = ws->pdf("M_chic1")->createIntegral(RooArgSet(*mass), NormSet(RooArgSet(*mass)), Range("testregion"));
       buffintegral=real_fChic_region->getVal();
-      if(buffintegral<onia::fChi1MassLow) {
+      if (buffintegral < chic1MassLowBound) {
         sig1MinMass=testmass+deltamass/2.;
         cout<<"Found sig1MinMass = "<<sig1MinMass<<" after "<<iM<<" evaluations, fChic1 below is "<<buffintegral<<endl;
         break;
@@ -134,19 +143,21 @@ void DefineRegionsAndFractions(const std::string &infilename, int rapBin, int pt
       }
     }
 
+    double chic1MassHighBound = chic1High >= 0. ? chic1High : onia::fChi1MassHigh;
     startmass=mean1;
     for(int iM=0;iM<nM;iM++){
       testmass=startmass+iM*deltamass;
       mass->setRange("testregion", testmass, onia::massChiSBMax);
       real_fChic_region = ws->pdf("M_chic1")->createIntegral(RooArgSet(*mass), NormSet(RooArgSet(*mass)), Range("testregion"));
       buffintegral=real_fChic_region->getVal();
-      if(buffintegral<onia::fChi1MassHigh) {
+      if (buffintegral < chic1MassHighBound) {
         sig1MaxMass=testmass-deltamass/2.;
         cout<<"Found sig1MaxMass = "<<sig1MaxMass<<" after "<<iM<<" evaluations, fChic1 below is "<<buffintegral<<endl;
         break;
       }
     }
 
+    double chic2MassLowBound = chic2Low >= 0. ? chic2Low : onia::fChi2MassLow;
     startmass=mean2;
     for(int iM=0;iM<nM;iM++){
       testmass=startmass-iM*deltamass;
@@ -158,20 +169,21 @@ void DefineRegionsAndFractions(const std::string &infilename, int rapBin, int pt
         cout<<"MaxSR1 reached -> adjusting MinSR2: Found sig2MinMass = "<<sig2MinMass<<" after "<<iM<<" evaluations, fChic2 below is "<<buffintegral<<endl;
         break;
       }
-      if(buffintegral<onia::fChi2MassLow) {
+      if (buffintegral < chic2MassLowBound) {
         sig2MinMass=testmass+deltamass/2.;
         cout<<"Found sig2MinMass = "<<sig2MinMass<<" after "<<iM<<" evaluations, fChic2 below is "<<buffintegral<<endl;
         break;
       }
     }
 
+    double chic2MassHighBound = chic2High >= 0. ? chic2High : onia::fChi2MassHigh;
     startmass=mean2;
     for(int iM=0;iM<nM;iM++){
       testmass=startmass+iM*deltamass;
       mass->setRange("testregion", testmass, onia::massChiSBMax);
       real_fChic_region = ws->pdf("M_chic2")->createIntegral(RooArgSet(*mass), NormSet(RooArgSet(*mass)), Range("testregion"));
       buffintegral=real_fChic_region->getVal();
-      if(buffintegral<onia::fChi2MassHigh) {
+      if (buffintegral < chic2MassHighBound) {
         sig2MaxMass=testmass-deltamass/2.;
         cout<<"Found sig2MaxMass = "<<sig2MaxMass<<" after "<<iM<<" evaluations, fChic2 below is "<<buffintegral<<endl;
         break;
@@ -350,9 +362,9 @@ void DefineRegionsAndFractions(const std::string &infilename, int rapBin, int pt
 
     cout<<"   ->  "<<ctres/l_sigma<<" with respect to 2011 definition"<<endl;
 
-    PRMin=-onia::nSigLifetimePR*ctres;
-    PRMax=onia::nSigLifetimePR*ctres;
-    NPMin=onia::nSigLifetimeNP*ctres;
+    PRMin= -(nSigPR > 0 ? nSigPR : onia::nSigLifetimePR) * ctres;
+    PRMax= (nSigPR > 0 ? nSigPR : onia::nSigLifetimePR) * ctres;
+    NPMin=(nSigNP > 0 ? nSigNP : onia::nSigLifetimeNP) * ctres;
     NPMax=onia::ctVarMax;
   }
 

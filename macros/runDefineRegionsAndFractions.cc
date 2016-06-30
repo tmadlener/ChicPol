@@ -33,7 +33,13 @@ int main(int argc, char* argv[]){
   bool runChiMassFitOnly = false;
   bool FixRegionsToInclusiveFit = false;
   bool doFractionUncer=false;
-
+  double chic1MassLow = -1;
+  double chic2MassLow = -1;
+  double chic1MassHigh = -1;
+  double chic2MassHigh = -1;
+  double nSigPR = -1;
+  double nSigNP = -1;
+  
   // Loop over argument list
   for (int i=1; i < argc; i++)
     {
@@ -48,6 +54,12 @@ int main(int argc, char* argv[]){
       fromSplit("nState", arg, nState);
       fromSplit("rapFixTo", arg, rapFixTo);
       fromSplit("ptFixTo", arg, ptFixTo);
+      fromSplit("chic1MassLow", arg, chic1MassLow);
+      fromSplit("chic2MassLow", arg, chic2MassLow);
+      fromSplit("chic1MassHigh", arg, chic1MassHigh);
+      fromSplit("chic2MassHigh", arg, chic2MassHigh);
+      fromSplit("nSigPR", arg, nSigPR);
+      fromSplit("nSigNP", arg, nSigNP);
     }
 
   std::cout << "-----------------------\n"
@@ -70,7 +82,7 @@ int main(int argc, char* argv[]){
       gSystem->CopyFile(infilenameFrom.c_str(),infilenameTo.c_str(),kTRUE);
 
       if(FixRegionsToInclusiveFit&&iRap==rapFixTo&&iPT==ptFixTo) FixRegionsToInclusiveFit=false;
-      DefineRegionsAndFractions(infilenameTo.c_str(), iRap, iPT, nState, runChiMassFitOnly, FixRegionsToInclusiveFit, rapFixTo, ptFixTo, doFractionUncer);
+      DefineRegionsAndFractions(infilenameTo.c_str(), iRap, iPT, nState, runChiMassFitOnly, FixRegionsToInclusiveFit, rapFixTo, ptFixTo, doFractionUncer, chic1MassLow, chic1MassHigh, chic2MassLow, chic2MassHigh, nSigPR, nSigNP);
 
     }
   }
