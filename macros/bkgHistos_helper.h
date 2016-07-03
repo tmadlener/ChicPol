@@ -11,6 +11,7 @@
 #include <sstream>
 #include <vector>
 #include <algorithm> // for std::min
+#include <iostream> // for std::getline
 
 /** find the power of 2 which is larger then the passed number. */
 int findEvenNum(double number)
@@ -26,6 +27,48 @@ int findEvenNum(double number)
     }
   }
   return (1 << (maxPosBits - 1)); // max. power of two storable in an int
+}
+
+/** check if string starts with another string. */
+inline bool startsWith(const std::string& input, const std::string& prefix)
+{
+  return input.substr(0, prefix.length()) == prefix;
+}
+
+/** remove all that is made up of leading characters defined as arguments (default to space and tab). */
+std::string removeLeading(const std::string& str, const std::string& leading = " \t")
+{
+  const size_t pos = str.find_first_not_of(leading);
+  if (pos == std::string::npos) return std::string(""); // only leading characters in input
+  return str.substr(pos);
+}
+
+/** remove trailing characters (passed as arguments) */
+std::string removeTrailing(const std::string& str, const std::string& trailing = " \t")
+{
+  const size_t pos = str.find_last_not_of(trailing);
+  return str.substr(0, pos + 1);
+}
+
+/** trim string by removing all leading and trainling characters defined by argument chars. */
+std::string trim(const std::string& str, const std::string& chars = " \t")
+{
+  return removeTrailing(removeLeading(str));
+}
+
+/** split string at delimiter delim and return vector of all substrings. If a token is empty it will be ignored. */
+std::vector<std::string> splitString(const std::string& in, const char delim)
+{
+  std::vector<std::string> tokens;
+  std::stringstream sstr(in);
+  std::string tok;
+  while(std::getline(sstr,tok,delim)) {
+    if(!tok.empty()) {
+      tokens.push_back(tok);
+    }
+  }
+
+  return tokens;
 }
 
 /** (re)create all TH2Ds in the passed vector with the same nameBase, a (frame) label and a given suffix with a

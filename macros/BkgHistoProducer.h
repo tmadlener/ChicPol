@@ -14,13 +14,21 @@
 #include <iostream>
 #include <vector>
 #include <cmath>
+#include <fstream>
+#include <algorithm>
+
+/** return the pointer to the last element of a c-style array. */
+template<typename T, size_t N>
+T * end(T (&ra)[N]) {
+    return ra + N;
+}
 
 /** Interface class for the templatized version of the actual class, to have a common interface. */
 class IBkgHistoProducer {
 public:
   /** initialize everything that is necessary. Call for every pt and rapidity bin separately.*/
   virtual void initialize(const std::string& infileName, const int rapBin, const int ptBin, bool MC,
-                          const int FracLSB, bool useRefittedChic) = 0;
+                          const int FracLSB, bool useRefittedChic, const std::string& altFile = "") = 0;
   /** do the actual work and fill the histograms. Call for every pt and rapidity bin separately.*/
   virtual void fillHistos(const int rapBin, const int ptBin, bool useRefittedChic, bool MC, bool PolLSB,
                           bool PolRSB, bool PolNP, bool folding) = 0;
@@ -85,7 +93,7 @@ public:
    * pt and rapidity bin separately.
    */
   virtual void initialize(const std::string& infileName, const int rapBin, const int ptBin, bool MC,
-                          const int FracLSB, bool useRefittedChic) /*override*/;
+                          const int FracLSB, bool useRefittedChic, const std::string& altFile = "") /*override*/;
   /** fill all needed histograms and write them to file. Call for every pt and rapitdity bin separately. */
   virtual void fillHistos(const int rapBin, const int ptBin, bool useRefittedChic, bool MC, bool PolLSB,
                           bool PolRSB, bool PolNP, bool folding) /*override*/;
@@ -110,6 +118,7 @@ private:
   NamedVarStore<double> m_fitVars; /**< storage for the different double values, like the fit variables. */
   /** storage for the different distributions from which random numbers are drawn. */
   NamedVarStore<TF1*> m_randDists;
+  bool m_validFitFile; /**< Do we have a valid fit-file? */
 
   /** Initialization that is common to every state, like setup of the workspace, etc... */
   void initCommon(const std::string& infilename);
@@ -151,10 +160,28 @@ private:
                            const int massBins, const double minMass, const double maxMass);
 
   /**
-   * Initialize the Fit Variables store by retrieving all necessary values from the RooWorkspace or setting them
-   * to the appropriate values for MC closure. Also defines som other variables that would else be "global";
+   * Initialize the Fit Variables store by retrieving all necessary values from the RooWorkspace. or setting them
+   * to the appropriate values for MC closure. Also defines some other variables that would else be "global";
    */
-  void setupFitVariables(const int rapBin, const int ptBin, bool MC, const int FracLSB);
+  void retrieveFitVariables(const int rapBin, const int ptBin, bool MC, const int FracLSB);
+
+  /**
+   * Finish setting upt the fit variables by calculting dependent values and storing them into the store.
+   * Also defines some other variables that would else be "global". At the moment only used for Chic.
+   * (For jpsi everything is handled in retrieval already)
+   */
+  void setupFitVariables(const int rapBin, const int ptBin);
+
+  /**
+   * Read fit variables from an alternative file (text file). The file has to comply to a certain naming
+   * scheme (Mainly that the names stated in the file are the same as internally used) and will return a string
+   * that indicates on what the error is.
+   * lines starting with # are treated as comments. The format is name = val (and possibly a comment after that)
+   */
+  const std::string parseAlternativeFile(const std::string& filename);
+
+  /** check if the provided vars define all the variables that are needed. */
+  const std::string getMissingVarNames(const std::vector<std::string>& vars);
 
   /** Setup the TF1s that are needed for filling the mass histograms */
   void setupRandomDists(const int rapBin, const int ptBin);
@@ -210,7 +237,7 @@ private:
 //                               IMPLEMENTATION
 // ================================================================================
 template<StateT State>
-BkgHistoProducer<State>::BkgHistoProducer() : m_particle(NULL)
+BkgHistoProducer<State>::BkgHistoProducer() : m_particle(NULL), m_validFitFile(true)
 {
   std::cout << "---------- CONSTRUCTOR, STATE == " << State << std::endl;
 
@@ -312,7 +339,7 @@ void BkgHistoProducer<State>::setupCosThPhiHists(const int nBCT, const int nBP)
 // ================================================================================
 // this definetely needs spezialization
 template<>
-void BkgHistoProducer<Chic>::setupFitVariables(const int rapBin, const int ptBin, bool MC, const int FracLSB)
+void BkgHistoProducer<Chic>::retrieveFitVariables(const int rapBin, const int ptBin, bool MC, const int FracLSB)
 {
   // NOTE: This is not yet done and no MC closure initialization is done at the moment. This is just a mere
   // "translation" from 'bkgHistos_leptonBased.C'. There is probably some unecessary storage done here
@@ -340,10 +367,6 @@ void BkgHistoProducer<Chic>::setupFitVariables(const int rapBin, const int ptBin
   m_fitVars.setFromWS(m_ws, "var_fracBackgroundInNPSR2", "fBGinNP2"); // comb. background in NPSR2
   m_fitVars.setFromWS(m_ws, "var_fracNPChic1InPRSR1", "fNPB1"); // non prompt background in PRSR1
   m_fitVars.setFromWS(m_ws, "var_fracNPChic2InPRSR2", "fNPB2"); // non prompt background in PRSR2
-  m_fitVars.set("fTBGsig1", m_fitVars["fBGsig1"]); // total background fraction
-  m_fitVars.set("fTBGsig2", m_fitVars["fBGsig2"]); // total background fraction
-  m_fitVars.set("fP1", 1. - m_fitVars["fBGsig1"] - m_fitVars["fNPB1"]);
-  m_fitVars.set("fP2", 1. - m_fitVars["fBGsig2"] - m_fitVars["fNPB2"]);
 
   m_fitVars.setFromWS(m_ws, "var_fracPRChic1InPRLSB", "fSRinPLSB"); // prompt chic1 contamination in LSB
   m_fitVars.setFromWS(m_ws, "var_fracPRChic2InPRRSB", "fSRinPRSB"); // prompt chic2 contamination in RSB
@@ -358,10 +381,6 @@ void BkgHistoProducer<Chic>::setupFitVariables(const int rapBin, const int ptBin
   m_fitVars.set("fNPerr2", getVarError(m_ws, "var_fracBackgroundInNPSR2"));
   m_fitVars.set("fBGinNPerr1", getVarError(m_ws, "var_fracNPChic1InPRSR1"));
   m_fitVars.set("fBGinNPerr2", getVarError(m_ws, "var_fracNPChic1InPRSR2"));
-  m_fitVars.set("fTBGerr1", m_fitVars["fBGerr1"]);
-  m_fitVars.set("fTBGerr2", m_fitVars["fBGerr2"]);
-  m_fitVars.set("fPerr1", TMath::Sqrt(TMath::Power(m_fitVars["fNPerr1"], 2) + TMath::Power(m_fitVars["fBGerr1"], 2)));
-  m_fitVars.set("fPerr2", TMath::Sqrt(TMath::Power(m_fitVars["fNPerr2"], 2) + TMath::Power(m_fitVars["fBGerr2"], 2)));
 
   std::cout << "-------------------------------------------------------------\n"
             << "fraction of left sideband: " << m_fitVars["fracLSBpsi"] << " (Jpsi), " << m_fitVars["fracLSB1"]
@@ -372,8 +391,6 @@ void BkgHistoProducer<Chic>::setupFitVariables(const int rapBin, const int ptBin
             << m_fitVars["fTBGsig2"] << " (chic2)" << std::endl;
 
   // TODO: chic kinematic dependent pt/rap min/max values
-  m_fitVars.set("jpsiMassMin", onia::massMin);
-  m_fitVars.set("jpsiMassMax", onia::massMax);
   m_fitVars.setFromWS(m_ws, "JpsiMass", "jpsiMassPeak");
   m_fitVars.setFromWS(m_ws, "CBsigma_p0_jpsi", "p0");
   m_fitVars.setFromWS(m_ws, "CBsigma_p1_jpsi", "p1");
@@ -391,13 +408,6 @@ void BkgHistoProducer<Chic>::setupFitVariables(const int rapBin, const int ptBin
             << m_fitVars["jpsiMassSigMax"] << " GeV" << std::endl;
 
 
-  m_fitVars.set("minPt", onia::pTRange[rapBin][ptBin-1]);
-  m_fitVars.set("maxPt", onia::pTRange[rapBin][ptBin]);
-  m_fitVars.set("minRap", onia::rapForPTRange[rapBin-1]);
-  m_fitVars.set("maxRap", onia::rapForPTRange[rapBin]);
-
-  m_fitVars.set("massMinL", onia::massChiSBMin);
-  m_fitVars.set("massMaxR", onia::massChiSBMax);
   m_fitVars.setFromWS(m_ws, "var_lsbMaxMass", "massMaxL");
   m_fitVars.setFromWS(m_ws, "var_rsbMinMass", "massMinR");
   m_fitVars.setFromWS(m_ws, "var_sig1MinMass", "massMinSR1");
@@ -423,14 +433,12 @@ void BkgHistoProducer<Chic>::setupFitVariables(const int rapBin, const int ptBin
 
 // all other states (i.e. not chic) currently handled by the same function
 template<StateT State>
-void BkgHistoProducer<State>::setupFitVariables(const int rapBin, const int ptBin, bool MC, const int FracLSB)
+void BkgHistoProducer<State>::retrieveFitVariables(const int rapBin, const int ptBin, bool MC, const int FracLSB)
 {
   // NOTE: this contains only the variables for MC closure at the moment. (I.e. only the ones from the massfit
   // are present). The variables should also be present for data! Only others will not be here!
   // TODO: implement others (see bkgHistos.C)
   // COULDDO: store some repeatedly used variables in local variables to avoid a possibly costly look-up everytime
-  m_fitVars.set("jpsiMassMin", onia::massMin);
-  m_fitVars.set("jpsiMassMax", onia::massMax);
   m_fitVars.setFromWS(m_ws, "JpsiMass", "jpsiMassPeak");
   m_fitVars.setFromWS(m_ws, "CBsigma_p0_jpsi", "p0");
   m_fitVars.setFromWS(m_ws, "CBsigma_p1_jpsi", "p1");
@@ -442,11 +450,6 @@ void BkgHistoProducer<State>::setupFitVariables(const int rapBin, const int ptBi
   m_fitVars.set("jpsiMassSigMin", m_fitVars["CBmass_p0"] - onia::nSigMass * m_fitVars["jpsiMassSigma"]);
   m_fitVars.set("jpsiMassSigMax", m_fitVars["CBmass_p0"] + onia::nSigMass * m_fitVars["jpsiMassSigma"]);
   m_fitVars.set("jpsiMassBkgMinR", m_fitVars["CBmass_p0"] + onia::nSigBkgHigh * m_fitVars["jpsiMassSigma"]);
-
-  m_fitVars.set("minPt", onia::pTRange[rapBin][ptBin-1]);
-  m_fitVars.set("maxPt", onia::pTRange[rapBin][ptBin]);
-  m_fitVars.set("minRap", onia::rapForPTRange[rapBin-1]);
-  m_fitVars.set("maxRap", onia::rapForPTRange[rapBin]);
 
   m_fitVars.setFromWS(m_ws, "var_fLSBpsi", "fracLSB");
   m_fitVars.setFromWS(m_ws, "fracBkg_jpsi", "fBGsig");
@@ -466,6 +469,46 @@ void BkgHistoProducer<State>::setupFitVariables(const int rapBin, const int ptBi
   std::cout << "------------------------------------------------------------" << std::endl
             << "signal region Jpsi: mass window " << m_fitVars["jpsiMassSigMin"] << " < M < "
             << m_fitVars["jpsiMassSigMax"] << " GeV" << std::endl;
+}
+
+// ================================================================================
+//                               SETUP FIT VARIABLES
+// ================================================================================
+template<StateT State>
+void BkgHistoProducer<State>::setupFitVariables(const int rapBin, const int ptBin)
+{
+  m_fitVars.set("jpsiMassMin", onia::massMin);
+  m_fitVars.set("jpsiMassMax", onia::massMax);
+
+  m_fitVars.set("minPt", onia::pTRange[rapBin][ptBin-1]);
+  m_fitVars.set("maxPt", onia::pTRange[rapBin][ptBin]);
+  m_fitVars.set("minRap", onia::rapForPTRange[rapBin-1]);
+  m_fitVars.set("maxRap", onia::rapForPTRange[rapBin]);
+}
+
+template<>
+void BkgHistoProducer<Chic>::setupFitVariables(const int rapBin, const int ptBin)
+{
+  m_fitVars.set("jpsiMassMin", onia::massMin);
+  m_fitVars.set("jpsiMassMax", onia::massMax);
+
+  m_fitVars.set("minPt", onia::pTRange[rapBin][ptBin-1]);
+  m_fitVars.set("maxPt", onia::pTRange[rapBin][ptBin]);
+  m_fitVars.set("minRap", onia::rapForPTRange[rapBin-1]);
+  m_fitVars.set("maxRap", onia::rapForPTRange[rapBin]);
+
+  m_fitVars.set("massMinL", onia::massChiSBMin);
+  m_fitVars.set("massMaxR", onia::massChiSBMax);
+
+  m_fitVars.set("fTBGsig1", m_fitVars["fBGsig1"]); // total background fraction
+  m_fitVars.set("fTBGsig2", m_fitVars["fBGsig2"]); // total background fraction
+  m_fitVars.set("fP1", 1. - m_fitVars["fBGsig1"] - m_fitVars["fNPB1"]);
+  m_fitVars.set("fP2", 1. - m_fitVars["fBGsig2"] - m_fitVars["fNPB2"]);
+
+  m_fitVars.set("fTBGerr1", m_fitVars["fBGerr1"]);
+  m_fitVars.set("fTBGerr2", m_fitVars["fBGerr2"]);
+  m_fitVars.set("fPerr1", TMath::Sqrt(TMath::Power(m_fitVars["fNPerr1"], 2) + TMath::Power(m_fitVars["fBGerr1"], 2)));
+  m_fitVars.set("fPerr2", TMath::Sqrt(TMath::Power(m_fitVars["fNPerr2"], 2) + TMath::Power(m_fitVars["fBGerr2"], 2)));
 }
 
 // ================================================================================
@@ -655,7 +698,7 @@ void BkgHistoProducer<State>::findRapPtBordersDiMuonKin(const int, const int) { 
 // ================================================================================
 template<>
 void BkgHistoProducer<Jpsi>::initialize(const std::string& infileName, const int rapBin, const int ptBin, bool MC,
-                                        const int FracLSB, bool)
+                                        const int FracLSB, bool, const std::string& altFile)
 {
   std::cout << "---------- INITIALIZE FOR JPSI" << std::endl;
 
@@ -670,7 +713,8 @@ void BkgHistoProducer<Jpsi>::initialize(const std::string& infileName, const int
   m_inputVars.jpsi = m_particle;
 
   // get the fit variables
-  setupFitVariables(rapBin, ptBin, MC, FracLSB);
+  retrieveFitVariables(rapBin, ptBin, MC, FracLSB);
+  setupFitVariables(rapBin, ptBin);
   std::cout << "m_fitVars after setup: " << m_fitVars << std::endl;
 
   store1DFactors(MC);
@@ -688,7 +732,7 @@ void BkgHistoProducer<Jpsi>::initialize(const std::string& infileName, const int
 
 template<>
 void BkgHistoProducer<Psi2S>::initialize(const std::string& infileName, const int rapBin, const int ptBin, bool MC,
-                                         const int FracLSB, bool)
+                                         const int FracLSB, bool, const std::string& altFile)
 {
   std::cout << "---------- INITIALIZE FOR PSI2S" << std::endl;
 
@@ -700,7 +744,8 @@ void BkgHistoProducer<Psi2S>::initialize(const std::string& infileName, const in
   storePtRapBorders(rapBin, ptBin);
 
   // get the fit variables
-  setupFitVariables(rapBin, ptBin, MC, FracLSB);
+  retrieveFitVariables(rapBin, ptBin, MC, FracLSB);
+  setupFitVariables(rapBin, ptBin);
   std::cout << "m_fitVars after setup: " << m_fitVars << std::endl;
 
   store1DFactors(MC);
@@ -718,7 +763,7 @@ void BkgHistoProducer<Psi2S>::initialize(const std::string& infileName, const in
 
 template<>
 void BkgHistoProducer<Chic>::initialize(const std::string& infileName, const int rapBin, const int ptBin, bool MC,
-                                        const int FracLSB, bool useRefittedChic)
+                                        const int FracLSB, bool useRefittedChic, const std::string& altFile)
 {
   std::cout << "---------- INITIALIZE FOR CHIC" << std::endl;
 
@@ -751,7 +796,16 @@ void BkgHistoProducer<Chic>::initialize(const std::string& infileName, const int
   storePtRapBorders(rapBin, ptBin);
 
   // get the fit variables
-  setupFitVariables(rapBin, ptBin, MC, FracLSB);
+  if (m_validFitFile) {
+    retrieveFitVariables(rapBin, ptBin, MC, FracLSB);
+  } else { // if no valid fit-file has been passed. Parse a passed textfile that contains the definitions needed
+    const std::string error = parseAlternativeFile(altFile);
+    if (!error.empty()) {
+      std::cerr << "ERROR while parsing alternative file: " << error << std::endl;
+      exit(-2);
+    }
+  }
+  setupFitVariables(rapBin, ptBin); // finish setup
   std::cout << "m_fitVars after setup: " << m_fitVars << std::endl;
 
   store1DFactors(MC);
@@ -779,7 +833,8 @@ void BkgHistoProducer<Chic>::initialize(const std::string& infileName, const int
 
 // This case should never happen, since it should get caught at the factory creating this object already.
 template<StateT State>
-void BkgHistoProducer<State>::initialize(const std::string&, const int, const int, bool, const int, bool)
+void BkgHistoProducer<State>::initialize(const std::string&, const int, const int, bool, const int, bool,
+                                         const std::string&)
 {
   std::cerr << "Calling BkgHistoProducer::initialize() with StateT (" << State << ")" << " which is not defined." << std::endl;
   return;
@@ -1620,13 +1675,15 @@ void BkgHistoProducer<State>::initCommon(const std::string& infileName)
   m_fitFile = TFile::Open(infileName.c_str());
   if (!m_fitFile) {
     std::cerr << "Fitfile: \'" << infileName << "\' cannot be opened in BkgHistoProducer()" << std::endl;
+    m_validFitFile = false;
   } else {
     std::cout << "Opened file: \'" << infileName << "\'." << std::endl;
-  }
-  const std::string wsname = "ws_masslifetime";
-  m_ws = static_cast<RooWorkspace*>(m_fitFile->Get(wsname.c_str()));
-  if (!m_ws) {
-    std::cerr << "workspace \'" << wsname << "\' not found in Fitfile: \'" << infileName << "\'" << std::endl;
+    const std::string wsname = "ws_masslifetime";
+    m_ws = static_cast<RooWorkspace*>(m_fitFile->Get(wsname.c_str()));
+    if (!m_ws) {
+      std::cerr << "workspace \'" << wsname << "\' not found in Fitfile: \'" << infileName << "\'" << std::endl;
+      m_validFitFile = false;
+    }
   }
 
   // set the branch adresses for the branches that are common in all rootfiles
@@ -1738,6 +1795,60 @@ void BkgHistoProducer<State>::closeOutputAndFitFiles()
   // have to clear the vector as ROOT leaves the contents in a state that is non-null but not "deleteable"
   // clearing the vector results in the creation of a new container for the next bin which is NULL initialized
   m_cosThetaPhi.clear();
+}
+
+template<StateT State>
+const std::string BkgHistoProducer<State>::parseAlternativeFile(const std::string& filename)
+{
+  std::ifstream ifs(filename.c_str()); // apparently ifstream wants a char*, who knew?
+  std::string line;
+  size_t linectr = 0;
+  std::vector<std::string> providedVars;
+
+  while (std::getline(ifs, line)) {
+    linectr++;
+    line = removeLeading(line, " \t"); // removes the leading whitespaces (needed for the next check)
+    if (line.empty() || startsWith(line, "#")) continue;
+    std::vector<std::string> stripComments = splitString(line, '#'); // remove any trailing comments
+    stripComments = splitString(*stripComments.begin(), '=');
+    if (stripComments.size() != 2) {
+      std::cerr << "error while processing line: " << linectr << " of input file \'" << filename << "\'"
+                << ". Will skip this line" << std::endl;
+      continue;
+    }
+    std::stringstream value(trim(stripComments[1]));
+    double val;
+    value >> val;
+
+    std::string varName = trim(stripComments[0]);
+    m_fitVars.set(varName, val);
+    providedVars.push_back(varName);
+  }
+
+  return getMissingVarNames(providedVars);
+}
+
+template<StateT State>
+const std::string BkgHistoProducer<State>::getMissingVarNames(const std::vector<std::string>& vars)
+{
+  std::string missingVars;
+
+  // This is really ugly without c++11 but if it looks stupid but works ...
+  const char* nVars[] = {"massMinSR1", "massMaxSR1", "massMinSR2", "massMaxSR2", "PRmin", "PRmax", "NPmin",
+                         "NPmax", "fBGsig1", "fBGsig2", "fBGerr1", "fBGerr2",
+                         "fNPB1", "fNPB2", "fNPerr1", "fNPerr2", "fracLSB1",
+                         "fracLSB2"};
+  std::vector<std::string> neededVars(nVars, end(nVars));
+
+  typedef std::vector<std::string>::const_iterator strVecIt;
+  for (strVecIt it = neededVars.begin(); it != neededVars.end(); ++it) {
+    if (std::find(vars.begin(), vars.end(), *it) == vars.end()) {
+      missingVars += " ";
+      missingVars += *it;
+    }
+  }
+  if (missingVars.empty()) return missingVars;
+  return "The following variables are necessary but not defined:" + missingVars;
 }
 
 #endif
