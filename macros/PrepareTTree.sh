@@ -11,7 +11,7 @@ append_jobID () {
   fi
 }
 
-export CHIC_BINNING=2 # use chi_c1 or chi_c2 binning? ## exporting this, such that make can read it
+export CHIC_BINNING=1 # use chi_c1 or chi_c2 binning? ## exporting this, such that make can read it
 
 Cdir=$PWD
 
@@ -30,6 +30,9 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     rapMax=1     #if you only want to process 1 y bin, rapMax = rapMin
     ptMin=1      #takes bins, not acutal values
     ptMax=5      #if you only want to process 1 pt bin, ptMax = ptMin
+    if [ ${CHIC_BINNING} -eq 2 ]; then
+      ptMax=4
+    fi
 
     Plotting=2   #plotting macro: 1 = plot all, 2 = plot mass, 3 = plot lifetime
     #plotting macro: 4 = plot lifetimeSR1, 5 = plot lifetimeSR2, 6 = plot lifetimeLSB, 7 = plot lifetimeRSB, 8 = plot lifetimeFullRegion
@@ -43,7 +46,7 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     rejectCowboys=true
     rejectSeagulls=false # not checked if cowboys are rejected! (Only implemented for MC at the moment!)
     RequestTrigger=true
-    MC=false
+    MC=true    # particle gun MC
     MCclosure=true # run MCclosure, CAUTION with setting what (and what not) to execute (not everything works!)
     drawRapPt2D=false  #draw Rap-Pt 2D map of Psi
     FixRegionsToInclusiveFit=false
@@ -78,6 +81,9 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     nSigPR=-1
     nSigNP=-1
 
+    # file in which fractions to be used in runBkgHistos_new when no fit values are present
+    altFileName=defineFitVars.in
+
     DataID=Psi$[nState-3]S_ctauScen0_FracLSB-1_16Mar2013
     polDataPath=${basedir}/Psi/Data/${DataID}
 
@@ -86,7 +92,7 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     # JobID=jpsi_13May2016_MCclosure_rejCow_${rejectCowboys}_rejSea_${rejectSeagulls}
     # JobID=chic_21June2016_MCclosure_rejCow_pt10Cut_chic2Binning_corrLib
     # JobID=chic_30March2016_ML30 # fChi1MassLow = 0.3
-    JobID=chic1TestFit
+    JobID=testNewMC
 
 
     ################ EXECUTABLES #################
@@ -143,11 +149,12 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
       inputTree1=/scratch/knuenz/Polarization/RootInput/ChicPol/chic_rootuple_subFeb2014.root
       if [ ${MC} = 'true' ]
       then
-        inputTree1=/scratch/knuenz/Polarization/RootInput/ChicPol/chic_rootuple_MC_15M_sel.root
+        # inputTree1=/scratch/knuenz/Polarization/RootInput/ChicPol/chic_rootuple_MC_15M_sel.root
+        inputTree1=/afs/cern.ch/user/a/asanchez/public/tuple-pgun-chic-rec-0.root
       fi
-      if [ ${MCclosure} = 'true' ]; then
-        inputTree1=/afs/hephy.at/data/ikraetschmer01/ikraetschmer/Polarization/2012/InputFiles/ChiC/tuple-mc-chic-rec.root
-      fi
+      # if [ ${MCclosure} = 'true' ]; then
+      #   inputTree1=/afs/hephy.at/data/ikraetschmer01/ikraetschmer/Polarization/2012/InputFiles/ChiC/tuple-mc-chic-rec.root
+      # fi
     fi
 
 
@@ -256,6 +263,7 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
 
     fi
 
+    cp ${basedir}/macros/${altFileName} ${WorkDir}
     cd ${WorkDir}
 
     inputTrees="inputTree=${inputTree1} inputTree=${inputTree2} inputTree=${inputTree3} inputTree=${inputTree4}"
@@ -317,7 +325,7 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
       rootfile=fit_Chi_rap${rapMin}_pt${ptMin}.root
       #cp tmpFiles/backupWorkSpace/ws_MassLifetimeFit_Chi_rap${rapMin}_pt${ptMin}.root tmpFiles/backupWorkSpace/ws_DefineRegionsAndFractions_Chi_rap${rapMin}_pt${ptMin}.root chic1MassLow=${chic1MassLow} chic1MassHigh=${chic1MassHigh} chic2MassLow=${chic2MassLow} chic2MassHigh=${chic2MassHigh} nSigPR=${nSigPR} nSigNP=${nSigNP}
       cp runDefineRegionsAndFractions runDefineRegionsAndFractions_rap${rapMin}_pt${ptMin}
-      ./runDefineRegionsAndFractions_rap${rapMin}_pt${ptMin} runChiMassFitOnly=${runChiMassFitOnly} doFractionUncer=${doFractionUncer} rapMin=${rapMin} rapMax=${rapMax} ptMin=${ptMin} ptMax=${ptMax} nState=${nState} FixRegionsToInclusiveFit=${FixRegionsToInclusiveFit} rapFixTo=${rapFixTo} ptFixTo=${ptFixTo}
+      ./runDefineRegionsAndFractions_rap${rapMin}_pt${ptMin} runChiMassFitOnly=${runChiMassFitOnly} doFractionUncer=${doFractionUncer} rapMin=${rapMin} rapMax=${rapMax} ptMin=${ptMin} ptMax=${ptMax} nState=${nState} FixRegionsToInclusiveFit=${FixRegionsToInclusiveFit} rapFixTo=${rapFixTo} ptFixTo=${ptFixTo} chic1MassLow=${chic1MassLow} chic1MassHigh=${chic1MassHigh} chic2MassLow=${chic2MassLow} chic2MassHigh=${chic2MassHigh} nSigPR=${nSigPR} nSigNP=${nSigNP}
       rm runDefineRegionsAndFractions_rap${rapMin}_pt${ptMin}
     fi
 
@@ -358,7 +366,7 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
       else
         cp runBkgHistos runBkgHistos_$[nState-3]S_rap${rapMin}_pt${ptMin}
       fi
-      ./runBkgHistos_$[nState-3]S_rap${rapMin}_pt${ptMin} rapMin=${rapMin} rapMax=${rapMax} ptMin=${ptMin} ptMax=${ptMax} nState=${nState} MC=${MC} doCtauUncer=${doCtauUncer} PolLSB=${PolLSB} PolRSB=${PolRSB} PolNP=${PolNP} ctauScen=${ctauScen} FracLSB=${FracLSB} forceBinning=${forceBinning} folding=${folding} normApproach=${normApproach} scaleFracBg=${scaleFracBg} polDataPath=${polDataPath} subtractNP=${subtractNP} useRefittedChic=${useRefittedChic} mcClosure=${MCclosure}
+      ./runBkgHistos_$[nState-3]S_rap${rapMin}_pt${ptMin} rapMin=${rapMin} rapMax=${rapMax} ptMin=${ptMin} ptMax=${ptMax} nState=${nState} MC=${MC} doCtauUncer=${doCtauUncer} PolLSB=${PolLSB} PolRSB=${PolRSB} PolNP=${PolNP} ctauScen=${ctauScen} FracLSB=${FracLSB} forceBinning=${forceBinning} folding=${folding} normApproach=${normApproach} scaleFracBg=${scaleFracBg} polDataPath=${polDataPath} subtractNP=${subtractNP} useRefittedChic=${useRefittedChic} mcClosure=${MCclosure} alternativeFile=${altFileName}
       rm runBkgHistos_$[nState-3]S_rap${rapMin}_pt${ptMin}
     fi
 

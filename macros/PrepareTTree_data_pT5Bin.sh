@@ -11,7 +11,8 @@ append_jobID () {
   fi
 }
 
-export CHIC_BINNING=2 # use chi_c1 or chi_c2 binning? ## exporting this, such that make can read it
+## either do this before or here! building the executables won't work else-wise!
+# export CHIC_BINNING=1 # use chi_c1 or chi_c2 binning? ## exporting this, such that make can read it
 
 Cdir=$PWD
 
@@ -24,7 +25,7 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
   for FidCuts in 11; do #defines the set of cuts to be used, see macros/polFit/effsAndCuts.h
     cd $Cdir
 
-    COPY_AND_COMPILE=1
+    COPY_AND_COMPILE=0
 
     rapMin=1     #takes bins, not actual values
     rapMax=1     #if you only want to process 1 y bin, rapMax = rapMin
@@ -63,7 +64,7 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     doCtauUncer=true   #redundant for chic
     PolLSB=false       #measure polarization of the left sideband
     PolRSB=false       #measure polarization of the right sideband
-    PolNP=false        #measure polarization of the non prompt events
+    PolNP=true      #measure polarization of the non prompt events
     forceBinning=true  #set binning of Psi1S consistently to non prompt binning and Psi2S consistently to background binning #redundtant for chic
     folding=true       #folding is applied to all background histograms
     normApproach=false #normalization #used before binning algorithm #redundtant
@@ -74,12 +75,15 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     fitMassNP=false
 
     ## signal region definitions (default is -1 -> see commonVar.h to check used values, between 0 and 1 for adjusted ranges)
-    chic1MassLow=-1
+    chic1MassLow=0.05
     chic1MassHigh=-1
     chic2MassLow=-1
     chic2MassHigh=-1
     nSigPR=-1
     nSigNP=-1
+
+    # file in which fractions to be used in runBkgHistos_new when no fit values are present
+    altFileName=defineFitVars.in
 
     DataID=Psi$[nState-3]S_ctauScen0_FracLSB-1_16Mar2013
     polDataPath=${basedir}/Psi/Data/${DataID}
@@ -88,7 +92,7 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     # JobID=chic_11April2016_nonRefit_useRef_${useRefittedChic}_rejCBs # fChi1MassLow = 0.1
     # JobID=jpsi_13May2016_MCclosure_rejCow_${rejectCowboys}_rejSea_${rejectSeagulls}
     # JobID=chic_23May2016_MCclosure_test
-    JobID=chic_29June2016_rejCow_pt10Cut_chic${CHIC_BINNING}Binning
+    JobID=chic_30June2016_rejCow_pt10Cut_chic${CHIC_BINNING}Binning_polNP
     # JobID=chic_21June2016_rejCow_pt10Cut_chic2Binning_corrLib # added for comparison with old library
     # JobID=chic_15June2016_rejCow_pt10Cut_chic2Binning
     # JobID=chic_30March2016_ML30 # fChi1MassLow = 0.3
@@ -99,18 +103,20 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     append_jobID ${chic2MassLow} c2massL
     append_jobID ${chic1MassHigh} c1massH
     append_jobID ${chic2MassHigh} c2massH
+    append_jobID ${nSigPR} nSigPR
+    append_jobID ${nSigNP} nSigNP
 
     ################ EXECUTABLES #################
 
     #following flags decide if the step is executed (1) or not (0):
     #IMPORTANT: for MC set execute_runWorkspace, execute_MassFit and execute_runLifetimeFit to 0
-    execute_runChiData=1			           		#independent of rapMin, rapMax, ptMin, ptMax
-    execute_runWorkspace=1	    					#independent of rapMin, rapMax, ptMin, ptMax
-    execute_runMassFit=1				    	    #can be executed for different pt and y bins
-    execute_runLifetimeFit=1    				    #can be executed for different pt and y bins
+    execute_runChiData=0			           		#independent of rapMin, rapMax, ptMin, ptMax
+    execute_runWorkspace=0	    					#independent of rapMin, rapMax, ptMin, ptMax
+    execute_runMassFit=0				    	    #can be executed for different pt and y bins
+    execute_runLifetimeFit=0   				    #can be executed for different pt and y bins
     execute_runPlotJpsiMassLifetime=0    			#can be executed for different pt and y bins
     execute_PlotJpsiFitPar=0              			#can be executed for different pt and y bins
-    execute_runChiMassLifetimeFit=1		  	    	#can be executed for different pt and y bins
+    execute_runChiMassLifetimeFit=0		  	    	#can be executed for different pt and y bins
     execute_runDefineRegionsAndFractions=1			#can be executed for different pt and y bins
     execute_runPlotMassLifetime=0   				#can be executed for different pt and y bins
     execute_PlotFitPar=0              				#can be executed for different pt and y bins
@@ -267,6 +273,7 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
 
     fi
 
+    cp ${basedir}/macros/${altFileName} ${WorkDir}
     cd ${WorkDir}
 
     inputTrees="inputTree=${inputTree1} inputTree=${inputTree2} inputTree=${inputTree3} inputTree=${inputTree4}"
@@ -369,7 +376,7 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
       else
         cp runBkgHistos runBkgHistos_$[nState-3]S_rap${rapMin}_pt${ptMin}
       fi
-      ./runBkgHistos_$[nState-3]S_rap${rapMin}_pt${ptMin} rapMin=${rapMin} rapMax=${rapMax} ptMin=${ptMin} ptMax=${ptMax} nState=${nState} MC=${MC} doCtauUncer=${doCtauUncer} PolLSB=${PolLSB} PolRSB=${PolRSB} PolNP=${PolNP} ctauScen=${ctauScen} FracLSB=${FracLSB} forceBinning=${forceBinning} folding=${folding} normApproach=${normApproach} scaleFracBg=${scaleFracBg} polDataPath=${polDataPath} subtractNP=${subtractNP} useRefittedChic=${useRefittedChic} mcClosure=${MCclosure}
+      ./runBkgHistos_$[nState-3]S_rap${rapMin}_pt${ptMin} rapMin=${rapMin} rapMax=${rapMax} ptMin=${ptMin} ptMax=${ptMax} nState=${nState} MC=${MC} doCtauUncer=${doCtauUncer} PolLSB=${PolLSB} PolRSB=${PolRSB} PolNP=${PolNP} ctauScen=${ctauScen} FracLSB=${FracLSB} forceBinning=${forceBinning} folding=${folding} normApproach=${normApproach} scaleFracBg=${scaleFracBg} polDataPath=${polDataPath} subtractNP=${subtractNP} useRefittedChic=${useRefittedChic} mcClosure=${MCclosure} alternativeFile=${altFileName}
       rm runBkgHistos_$[nState-3]S_rap${rapMin}_pt${ptMin}
     fi
 
