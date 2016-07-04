@@ -82,6 +82,11 @@ std::ostream& operator<<(std::ostream& os, const StateT& state)
  * BkgHistoProducer class that does all the work, including filehandling, etc...
  * Only initialize and fillHistos are publicly available and will be specialized for every state, to acommodate
  * for the differences.
+ *
+ * NOTE: Not all functionalities from bkgHistos_leptonBased.C are implemented.
+ * TODO: Separate declaration and definition into a .h and .cc file
+ * COULDDO: Spezialization actually does not make that much sense. Could move common functionality to the base
+ * class and others here.
  */
 template<StateT State>
 class BkgHistoProducer : public IBkgHistoProducer {
@@ -118,7 +123,12 @@ private:
   NamedVarStore<double> m_fitVars; /**< storage for the different double values, like the fit variables. */
   /** storage for the different distributions from which random numbers are drawn. */
   NamedVarStore<TF1*> m_randDists;
-  bool m_validFitFile; /**< Do we have a valid fit-file? */
+  /**< Do we have a valid fit-file? If not, try to read in from an alternative text file providing necessary
+   * values.
+   * WARNING: This flag in combination with the mcClosure (or MC) argument of some functions is used to trigger
+   * behaviour that is desired for particle gun MC closure tests!
+   */
+  bool m_validFitFile;
 
   /** Initialization that is common to every state, like setup of the workspace, etc... */
   void initCommon(const std::string& infilename);
@@ -200,6 +210,11 @@ private:
   void fill1DHists(bool RSB, bool LSB, bool NP, bool MC, const double pt, const double y, const double mass,
                    const BkgHistoRangeReport& eventRegion);
 
+  /** randomly draw a mass between min and max. If MC is true, draw from uniform dist, else, draw from passed
+   * TF1 via TF1::getRandom
+   */
+  double getRandomMass(bool MC, double min, double max, TF1* f = NULL);
+
   /**
    * Fill the PtRapMass TH3Ds.
    * NOTE: mass can probably be dropped! (All the needed information is already in the eventRegion)
@@ -239,7 +254,7 @@ private:
 template<StateT State>
 BkgHistoProducer<State>::BkgHistoProducer() : m_particle(NULL), m_validFitFile(true)
 {
-  std::cout << "---------- CONSTRUCTOR, STATE == " << State << std::endl;
+  // std::cout << "---------- CONSTRUCTOR, STATE == " << State << std::endl;
 
   const std::string dataFileName = "tmpFiles/selEvents_data.root";
   m_dataFile = TFile::Open(dataFileName.c_str());
@@ -255,13 +270,13 @@ BkgHistoProducer<State>::BkgHistoProducer() : m_particle(NULL), m_validFitFile(t
   gROOT->SetStyle("Plain");
   gStyle->SetTitleBorderSize(0);
 
-  std::cout << "********** CONSTRUCTOR, STATE == " << State << std::endl;
+  // std::cout << "********** CONSTRUCTOR, STATE == " << State << std::endl;
 }
 
 template<StateT State>
 BkgHistoProducer<State>::~BkgHistoProducer()
 {
-  std::cout << "---------- DESTRUCTOR, STATE == " << State << std::endl;
+  // std::cout << "---------- DESTRUCTOR, STATE == " << State << std::endl;
   // close the input files (the way I understand root is, that this also destroys these objects)
   if (m_dataFile) { m_dataFile->Close(); }
 
@@ -270,7 +285,7 @@ BkgHistoProducer<State>::~BkgHistoProducer()
   std::cout << "fitVars usage: " << m_fitVars.printUsages() << std::endl;
   std::cout << "randDists usage: " << m_randDists.printUsages() << std::endl;
 
-  std::cout << "********** DESTRUCTOR, STATE == " << State << std::endl;
+  // std::cout << "********** DESTRUCTOR, STATE == " << State << std::endl;
 }
 
 // ================================================================================
@@ -280,7 +295,7 @@ BkgHistoProducer<State>::~BkgHistoProducer()
 template<>
 void BkgHistoProducer<Chic>::setupCosThPhiHists(const int nBCT, const int nBP)
 {
-  std::cout << "---------- IN BkgHistoProducer<Chic>::setupCosThPhiHists" << std::endl;
+  // std::cout << "---------- IN BkgHistoProducer<Chic>::setupCosThPhiHists" << std::endl;
 
   // chic needs two sets of cosThetaPhi histos (create only in first call)
   if (m_cosThetaPhi.empty()) {
@@ -303,14 +318,14 @@ void BkgHistoProducer<Chic>::setupCosThPhiHists(const int nBCT, const int nBP)
     createHists(m_cosThetaPhi[iS].hSR, "hSR_cosThetaPhi_", frameLbls, "", nBCT, nBP, ctMin, ctMax, pMin, pMax);
   }
 
-  std::cout << "********** IN BkgHistoProducer<Chic>::setupCosThPhiHists" << std::endl;
+  // std::cout << "********** IN BkgHistoProducer<Chic>::setupCosThPhiHists" << std::endl;
 }
 
 // all others can be dealt with in the same way
 template<StateT State>
 void BkgHistoProducer<State>::setupCosThPhiHists(const int nBCT, const int nBP)
 {
-  std::cout << "---------- IN BkgHistoProducer<" << State << ">::setupCosThPhiHists" << std::endl;
+  // std::cout << "---------- IN BkgHistoProducer<" << State << ">::setupCosThPhiHists" << std::endl;
 
   // create all needed histos (only in first call)
   if (m_cosThetaPhi.empty()) {
@@ -331,7 +346,7 @@ void BkgHistoProducer<State>::setupCosThPhiHists(const int nBCT, const int nBP)
   createHists(m_cosThetaPhi[0].hBGinNP_R, "hBGinNP_cosThetaPhi_", frameLbls, "_R", nBCT, nBP, ctMin, ctMax, pMin, pMax);
   createHists(m_cosThetaPhi[0].hSR, "hSR_cosThetaPhi_", frameLbls, "", nBCT, nBP, ctMin, ctMax, pMin, pMax);
 
-  std::cout << "********** IN BkgHistoProducer<" << State << ">::setupCosThPhiHists" << std::endl;
+  // std::cout << "********** IN BkgHistoProducer<" << State << ">::setupCosThPhiHists" << std::endl;
 }
 
 // ================================================================================
@@ -419,16 +434,6 @@ void BkgHistoProducer<Chic>::retrieveFitVariables(const int rapBin, const int pt
   m_fitVars.setFromWS(m_ws, "var_NPMin", "NPmin");
   m_fitVars.setFromWS(m_ws, "var_NPMax", "NPmax");
 
-  std::cout << "-------------------------------------------------------------\n" <<
-    "left  sideband: mass window " << m_fitVars["massMinL"]  << " < M < " << m_fitVars["massMaxL"]  << " GeV\n" <<
-    "right sideband: mass window " << m_fitVars["massMinR"]  << " < M < " << m_fitVars["massMaxR"]  << " GeV\n" <<
-    "signal region chic1: mass window " << m_fitVars["massMinSR1"]  << " < M < " << m_fitVars["massMaxSR1"]   << " GeV\n" <<
-    "signal region chic2: mass window " << m_fitVars["massMinSR2"]  << " < M < " << m_fitVars["massMaxSR2"]   << " GeV\n" <<
-    "prompt region: " << m_fitVars["PRmin"] << " < ctau < " << m_fitVars["PRmax"] << "\n"
-    "nonprompt region: " << m_fitVars["NPmin"] << " < ctau < " << m_fitVars["NPmax"] << "\n"
-    "-------------------------------------------------------------\n" << std::endl;
-
-
 }
 
 // all other states (i.e. not chic) currently handled by the same function
@@ -509,6 +514,28 @@ void BkgHistoProducer<Chic>::setupFitVariables(const int rapBin, const int ptBin
   m_fitVars.set("fTBGerr2", m_fitVars["fBGerr2"]);
   m_fitVars.set("fPerr1", TMath::Sqrt(TMath::Power(m_fitVars["fNPerr1"], 2) + TMath::Power(m_fitVars["fBGerr1"], 2)));
   m_fitVars.set("fPerr2", TMath::Sqrt(TMath::Power(m_fitVars["fNPerr2"], 2) + TMath::Power(m_fitVars["fBGerr2"], 2)));
+
+  if (!m_validFitFile) { // define some necessary variables here
+    m_fitVars.set("CBmass_p0", onia::MpsiPDG);
+    // typical fit values are in the range [0.2 - 0.24]. Taking upper bound of that in combination with a 15 (!)
+    // sigma region for mcClosure == true should result in no rejections!
+    m_fitVars.set("p0", 0.24);
+    m_fitVars.set("p1", 0.); // rapidity independent width
+    m_fitVars.set("p2", 0.);
+
+    m_fitVars.set("jpsiMassSigMin", onia::MpsiPDG - onia::nSigMass * 0.3); // set large enough window
+    m_fitVars.set("jpsiMassSigMax", onia::MpsiPDG + onia::nSigMass * 0.3);
+  }
+
+  std::cout << "-------------------------------------------------------------\n" <<
+    "left  sideband: mass window " << m_fitVars["massMinL"]  << " < M < " << m_fitVars["massMaxL"]  << " GeV\n" <<
+    "right sideband: mass window " << m_fitVars["massMinR"]  << " < M < " << m_fitVars["massMaxR"]  << " GeV\n" <<
+    "signal region chic1: mass window " << m_fitVars["massMinSR1"]  << " < M < " << m_fitVars["massMaxSR1"]   << " GeV\n" <<
+    "signal region chic2: mass window " << m_fitVars["massMinSR2"]  << " < M < " << m_fitVars["massMaxSR2"]   << " GeV\n" <<
+    "prompt region: " << m_fitVars["PRmin"] << " < ctau < " << m_fitVars["PRmax"] << "\n"
+    "nonprompt region: " << m_fitVars["NPmin"] << " < ctau < " << m_fitVars["NPmax"] << "\n"
+    "-------------------------------------------------------------\n" << std::endl;
+
 }
 
 // ================================================================================
@@ -583,7 +610,7 @@ void BkgHistoProducer<State>::setupRandomDists(const int rapBin, const int ptBin
 template<>
 void BkgHistoProducer<Chic>::store1DFactors(bool MC)
 {
-  std::cout << "---------- IN BkgHistoProducer<Chic>::store1DFactors()" << std::endl;
+  // std::cout << "---------- IN BkgHistoProducer<Chic>::store1DFactors()" << std::endl;
 
   // for looping over chic1 and chic2 (less duplicate code). Replace with std::array once available
   const std::string cr[] = {"1", "2"};
@@ -628,7 +655,7 @@ void BkgHistoProducer<Chic>::store1DFactors(bool MC)
     }
   }
 
-  std::cout << "********** IN BkgHistoProducer<Chic>::store1DFactors()" << std::endl;
+  // std::cout << "********** IN BkgHistoProducer<Chic>::store1DFactors()" << std::endl;
 }
 
 template<StateT State>
@@ -700,7 +727,7 @@ template<>
 void BkgHistoProducer<Jpsi>::initialize(const std::string& infileName, const int rapBin, const int ptBin, bool MC,
                                         const int FracLSB, bool, const std::string& altFile)
 {
-  std::cout << "---------- INITIALIZE FOR JPSI" << std::endl;
+  // std::cout << "---------- INITIALIZE FOR JPSI" << std::endl;
 
   initCommon(infileName);
   std::stringstream outfilename;
@@ -727,14 +754,14 @@ void BkgHistoProducer<Jpsi>::initialize(const std::string& infileName, const int
   setupPtRapMassHists(1, 7, m_fitVars["minPt"], m_fitVars["maxPt"], 2, m_fitVars["minRap"], m_fitVars["maxRap"],
                       7, m_fitVars["jpsiMassSigMin"], m_fitVars["jpsiMassSigMax"]);
 
-  std::cout << "********** INITIALIZE FOR JPSI" << std::endl;
+  // std::cout << "********** INITIALIZE FOR JPSI" << std::endl;
 }
 
 template<>
 void BkgHistoProducer<Psi2S>::initialize(const std::string& infileName, const int rapBin, const int ptBin, bool MC,
                                          const int FracLSB, bool, const std::string& altFile)
 {
-  std::cout << "---------- INITIALIZE FOR PSI2S" << std::endl;
+  // std::cout << "---------- INITIALIZE FOR PSI2S" << std::endl;
 
   initCommon(infileName);
 
@@ -758,14 +785,14 @@ void BkgHistoProducer<Psi2S>::initialize(const std::string& infileName, const in
   setupPtRapMassHists(1, 7, m_fitVars["minPt"], m_fitVars["maxPt"], 2, m_fitVars["minRap"], m_fitVars["maxRap"],
                       7, m_fitVars["jpsiMassSigMin"], m_fitVars["jpsiMassSigMax"]);
 
-  std::cout << "********** INITIALIZE FOR PSI2S" << std::endl;
+  // std::cout << "********** INITIALIZE FOR PSI2S" << std::endl;
 }
 
 template<>
 void BkgHistoProducer<Chic>::initialize(const std::string& infileName, const int rapBin, const int ptBin, bool MC,
                                         const int FracLSB, bool useRefittedChic, const std::string& altFile)
 {
-  std::cout << "---------- INITIALIZE FOR CHIC" << std::endl;
+  // std::cout << "---------- INITIALIZE FOR CHIC" << std::endl;
 
   initCommon(infileName);
   // set Branch Addresses that are only present for chic
@@ -810,8 +837,10 @@ void BkgHistoProducer<Chic>::initialize(const std::string& infileName, const int
 
   store1DFactors(MC);
 
-  setupRandomDists(rapBin, ptBin);
-  std::cout << m_randDists << std::endl;
+  if (m_validFitFile) {
+    setupRandomDists(rapBin, ptBin);
+    std::cout << m_randDists << std::endl;
+  }
 
   if (onia::KinParticleChi) {
     findRapPtBordersDiMuonKin(rapBin, ptBin);
@@ -828,7 +857,7 @@ void BkgHistoProducer<Chic>::initialize(const std::string& infileName, const int
                       7, m_fitVars["jpsiMassSigMin"], m_fitVars["jpsiMassSigMax"]);
 
 
-  std::cout << "********** INITIALIZE FOR CHIC" << std::endl;
+  // std::cout << "********** INITIALIZE FOR CHIC" << std::endl;
 }
 
 // This case should never happen, since it should get caught at the factory creating this object already.
@@ -968,39 +997,73 @@ void BkgHistoProducer<State>::fill1DHists(bool, bool, bool, bool MC, const doubl
 }
 
 // ================================================================================
+//                               GET RANDOM MASS
+// ================================================================================
+template<StateT State>
+double BkgHistoProducer<State>::getRandomMass(bool MC, double min, double max, TF1* f)
+{
+  if (!MC) { return f->GetRandom(min, max); }
+  return gRandom->Uniform(min, max);
+}
+
+// ================================================================================
 //                      FILL 3D HISTS
 // ================================================================================
 template<>
 void BkgHistoProducer<Chic>::fill3DHists(bool RSB, bool LSB, bool NP, bool MC, const double pt, const double absY,
                                          const double mass, const BkgHistoRangeReport& eventRegion)
 {
-  /*const*/ TF1* funcBGJpsi = m_randDists["funcBGJpsi"]; // avoid too many lookups
+  /*const*/ TF1* funcBGJpsi = m_validFitFile ? m_randDists["funcBGJpsi"] : NULL; // avoid too many lookups
+
   const double jpsiMassSigMin = m_fitVars["jpsiMassSigMin"];
   const double jpsiMassSigMax = m_fitVars["jpsiMassSigMax"];
 
   // TODO: MC
-  if (eventRegion.isLSB() && eventRegion.isPR()) { // prompt left sideband
-    m_ptRapMass[0].hBG_L->Fill(pt, absY, funcBGJpsi->GetRandom(jpsiMassSigMin, jpsiMassSigMax));
-    m_ptRapMass[1].hBG_L->Fill(pt, absY, funcBGJpsi->GetRandom(jpsiMassSigMin, jpsiMassSigMax));
-  } else if (eventRegion.isLSB() && eventRegion.isNP()) { // non prompt LSB
-    m_ptRapMass[0].h_highct_L->Fill(pt, absY, funcBGJpsi->GetRandom(jpsiMassSigMin, jpsiMassSigMax));
-    m_ptRapMass[1].h_highct_L->Fill(pt, absY, funcBGJpsi->GetRandom(jpsiMassSigMin, jpsiMassSigMax));
-  } else if (eventRegion.isSR1() && eventRegion.isPR()) { // prompt SR1
-    m_ptRapMass[0].hSR->Fill(pt, absY, funcBGJpsi->GetRandom(jpsiMassSigMin, jpsiMassSigMax));
-  } else if (eventRegion.isSR1() && eventRegion.isNP()) { // non prompt SR1
-    m_ptRapMass[0].hNP->Fill(pt, absY, funcBGJpsi->GetRandom(jpsiMassSigMin, jpsiMassSigMax));
-  } else if (eventRegion.isSR2() && eventRegion.isPR()) { // prompt SR2
-    m_ptRapMass[1].hSR->Fill(pt, absY, funcBGJpsi->GetRandom(jpsiMassSigMin, jpsiMassSigMax));
-  } else if (eventRegion.isSR2() && eventRegion.isNP()) { // non prompt SR2
-    m_ptRapMass[1].hNP->Fill(pt, absY, funcBGJpsi->GetRandom(jpsiMassSigMin, jpsiMassSigMax));
-  } else if (eventRegion.isRSB() && eventRegion.isPR()) { // prompt right sideband
-    m_ptRapMass[0].hBG_R->Fill(pt, absY, funcBGJpsi->GetRandom(jpsiMassSigMin, jpsiMassSigMax));
-    m_ptRapMass[1].hBG_R->Fill(pt, absY, funcBGJpsi->GetRandom(jpsiMassSigMin, jpsiMassSigMax));
-  } else if (eventRegion.isRSB() && eventRegion.isNP()) { // non prompt RSB
-    m_ptRapMass[0].h_highct_R->Fill(pt, absY, funcBGJpsi->GetRandom(jpsiMassSigMin, jpsiMassSigMax));
-    m_ptRapMass[1].h_highct_R->Fill(pt, absY, funcBGJpsi->GetRandom(jpsiMassSigMin, jpsiMassSigMax));
+  if (m_validFitFile) { // the events fall into one (exclusive) region only with a valid fit (no pGun MC)
+    if (eventRegion.isLSB() && eventRegion.isPR()) { // prompt left sideband
+      m_ptRapMass[0].hBG_L->Fill(pt, absY, getRandomMass(MC, jpsiMassSigMin, jpsiMassSigMax, funcBGJpsi));
+      m_ptRapMass[1].hBG_L->Fill(pt, absY, getRandomMass(MC, jpsiMassSigMin, jpsiMassSigMax, funcBGJpsi));
+    } else if (eventRegion.isLSB() && eventRegion.isNP()) { // non prompt LSB
+      m_ptRapMass[0].h_highct_L->Fill(pt, absY, getRandomMass(MC, jpsiMassSigMin, jpsiMassSigMax, funcBGJpsi));
+      m_ptRapMass[1].h_highct_L->Fill(pt, absY, getRandomMass(MC, jpsiMassSigMin, jpsiMassSigMax, funcBGJpsi));
+    } else if (eventRegion.isSR1() && eventRegion.isPR()) { // prompt SR1
+      m_ptRapMass[0].hSR->Fill(pt, absY, getRandomMass(MC, jpsiMassSigMin, jpsiMassSigMax, funcBGJpsi));
+    } else if (eventRegion.isSR1() && eventRegion.isNP()) { // non prompt SR1
+      m_ptRapMass[0].hNP->Fill(pt, absY, getRandomMass(MC, jpsiMassSigMin, jpsiMassSigMax, funcBGJpsi));
+    } else if (eventRegion.isSR2() && eventRegion.isPR()) { // prompt SR2
+    m_ptRapMass[1].hSR->Fill(pt, absY, getRandomMass(MC, jpsiMassSigMin, jpsiMassSigMax, funcBGJpsi));
+    } else if (eventRegion.isSR2() && eventRegion.isNP()) { // non prompt SR2
+      m_ptRapMass[1].hNP->Fill(pt, absY, getRandomMass(MC, jpsiMassSigMin, jpsiMassSigMax, funcBGJpsi));
+    } else if (eventRegion.isRSB() && eventRegion.isPR()) { // prompt right sideband
+      m_ptRapMass[0].hBG_R->Fill(pt, absY, getRandomMass(MC, jpsiMassSigMin, jpsiMassSigMax, funcBGJpsi));
+      m_ptRapMass[1].hBG_R->Fill(pt, absY, getRandomMass(MC, jpsiMassSigMin, jpsiMassSigMax, funcBGJpsi));
+    } else if (eventRegion.isRSB() && eventRegion.isNP()) { // non prompt RSB
+      m_ptRapMass[0].h_highct_R->Fill(pt, absY, getRandomMass(MC, jpsiMassSigMin, jpsiMassSigMax, funcBGJpsi));
+      m_ptRapMass[1].h_highct_R->Fill(pt, absY, getRandomMass(MC, jpsiMassSigMin, jpsiMassSigMax, funcBGJpsi));
+    } else {
+      std::cerr << "Not in any of the regions (Fill3DHists)" << std::endl; // should be caught earlier
+    }
   } else {
-    std::cerr << "Not in any of the regions (Fill3DHists)" << std::endl; // should be caught earlier
+    if (eventRegion.isLSB()) { // prompt left sideband
+      m_ptRapMass[0].hBG_L->Fill(pt, absY, getRandomMass(MC, jpsiMassSigMin, jpsiMassSigMax, funcBGJpsi));
+      m_ptRapMass[1].hBG_L->Fill(pt, absY, getRandomMass(MC, jpsiMassSigMin, jpsiMassSigMax, funcBGJpsi));
+      m_ptRapMass[0].h_highct_L->Fill(pt, absY, getRandomMass(MC, jpsiMassSigMin, jpsiMassSigMax, funcBGJpsi));
+      m_ptRapMass[1].h_highct_L->Fill(pt, absY, getRandomMass(MC, jpsiMassSigMin, jpsiMassSigMax, funcBGJpsi));
+    }
+    if (eventRegion.isSR1()) { // prompt SR1
+      m_ptRapMass[0].hSR->Fill(pt, absY, getRandomMass(MC, jpsiMassSigMin, jpsiMassSigMax, funcBGJpsi));
+      m_ptRapMass[0].hNP->Fill(pt, absY, getRandomMass(MC, jpsiMassSigMin, jpsiMassSigMax, funcBGJpsi));
+    }
+    if (eventRegion.isSR2()) { // prompt SR2
+      m_ptRapMass[1].hSR->Fill(pt, absY, getRandomMass(MC, jpsiMassSigMin, jpsiMassSigMax, funcBGJpsi));
+      m_ptRapMass[1].hNP->Fill(pt, absY, getRandomMass(MC, jpsiMassSigMin, jpsiMassSigMax, funcBGJpsi));
+    }
+    if (eventRegion.isRSB()) { // prompt right sideband
+      m_ptRapMass[0].hBG_R->Fill(pt, absY, getRandomMass(MC, jpsiMassSigMin, jpsiMassSigMax, funcBGJpsi));
+      m_ptRapMass[1].hBG_R->Fill(pt, absY, getRandomMass(MC, jpsiMassSigMin, jpsiMassSigMax, funcBGJpsi));
+      m_ptRapMass[0].h_highct_R->Fill(pt, absY, getRandomMass(MC, jpsiMassSigMin, jpsiMassSigMax, funcBGJpsi));
+      m_ptRapMass[1].h_highct_R->Fill(pt, absY, getRandomMass(MC, jpsiMassSigMin, jpsiMassSigMax, funcBGJpsi));
+    }
   }
 }
 
@@ -1038,29 +1101,54 @@ template<>
 void BkgHistoProducer<Chic>::fill2DHists(const std::vector<std::vector<double> >& cosThPVals,
                                          const BkgHistoRangeReport& eventRegion)
 {
-  for (int iFrame = 0; iFrame < onia::kNbFrames; ++iFrame) {
-    if (eventRegion.isLSB() && eventRegion.isPR()) { // prompt left sideband
-      m_cosThetaPhi[0].hBG_L[iFrame]->Fill(cosThPVals[iFrame][0], cosThPVals[iFrame][1]);
-      m_cosThetaPhi[1].hBG_L[iFrame]->Fill(cosThPVals[iFrame][0], cosThPVals[iFrame][1]);
-    } else if (eventRegion.isLSB() && eventRegion.isNP()) { // non prompt left sideband
-      m_cosThetaPhi[0].hBGinNP_L[iFrame]->Fill(cosThPVals[iFrame][0], cosThPVals[iFrame][1]);
-      m_cosThetaPhi[1].hBGinNP_L[iFrame]->Fill(cosThPVals[iFrame][0], cosThPVals[iFrame][1]);
-    } else if (eventRegion.isSR1() && eventRegion.isPR()) { // prompt SR1
-      m_cosThetaPhi[0].hSR[iFrame]->Fill(cosThPVals[iFrame][0], cosThPVals[iFrame][1]);
-    } else if (eventRegion.isSR1() && eventRegion.isNP()) { // non prompt SR1
-      m_cosThetaPhi[0].hNPBG[iFrame]->Fill(cosThPVals[iFrame][0], cosThPVals[iFrame][1]);
-    } else if (eventRegion.isSR2() && eventRegion.isPR()) { // prompt SR2
-      m_cosThetaPhi[1].hSR[iFrame]->Fill(cosThPVals[iFrame][0], cosThPVals[iFrame][1]);
-    } else if (eventRegion.isSR2() && eventRegion.isNP()) { // non prompt SR2
-      m_cosThetaPhi[1].hNPBG[iFrame]->Fill(cosThPVals[iFrame][0], cosThPVals[iFrame][1]);
-    } else if (eventRegion.isRSB() && eventRegion.isPR()) { // prompt RSB
-      m_cosThetaPhi[0].hBG_R[iFrame]->Fill(cosThPVals[iFrame][0], cosThPVals[iFrame][1]);
-      m_cosThetaPhi[1].hBG_R[iFrame]->Fill(cosThPVals[iFrame][0], cosThPVals[iFrame][1]);
-    } else if (eventRegion.isRSB() && eventRegion.isNP()) { // non prompt RSB
-      m_cosThetaPhi[0].hBGinNP_R[iFrame]->Fill(cosThPVals[iFrame][0], cosThPVals[iFrame][1]);
-      m_cosThetaPhi[1].hBGinNP_R[iFrame]->Fill(cosThPVals[iFrame][0], cosThPVals[iFrame][1]);
-    } else {
-      std::cerr << "Not in any region (fill2DHists)" << std::endl;
+  if (m_validFitFile) { // we can only assume that the event falls into exactly one region if we have a valid fit
+    for (int iFrame = 0; iFrame < onia::kNbFrames; ++iFrame) {
+      if (eventRegion.isLSB() && eventRegion.isPR()) { // prompt left sideband
+        m_cosThetaPhi[0].hBG_L[iFrame]->Fill(cosThPVals[iFrame][0], cosThPVals[iFrame][1]);
+        m_cosThetaPhi[1].hBG_L[iFrame]->Fill(cosThPVals[iFrame][0], cosThPVals[iFrame][1]);
+      } else if (eventRegion.isLSB() && eventRegion.isNP()) { // non prompt left sideband
+        m_cosThetaPhi[0].hBGinNP_L[iFrame]->Fill(cosThPVals[iFrame][0], cosThPVals[iFrame][1]);
+        m_cosThetaPhi[1].hBGinNP_L[iFrame]->Fill(cosThPVals[iFrame][0], cosThPVals[iFrame][1]);
+      } else if (eventRegion.isSR1() && eventRegion.isPR()) { // prompt SR1
+        m_cosThetaPhi[0].hSR[iFrame]->Fill(cosThPVals[iFrame][0], cosThPVals[iFrame][1]);
+      } else if (eventRegion.isSR1() && eventRegion.isNP()) { // non prompt SR1
+        m_cosThetaPhi[0].hNPBG[iFrame]->Fill(cosThPVals[iFrame][0], cosThPVals[iFrame][1]);
+      } else if (eventRegion.isSR2() && eventRegion.isPR()) { // prompt SR2
+        m_cosThetaPhi[1].hSR[iFrame]->Fill(cosThPVals[iFrame][0], cosThPVals[iFrame][1]);
+      } else if (eventRegion.isSR2() && eventRegion.isNP()) { // non prompt SR2
+        m_cosThetaPhi[1].hNPBG[iFrame]->Fill(cosThPVals[iFrame][0], cosThPVals[iFrame][1]);
+      } else if (eventRegion.isRSB() && eventRegion.isPR()) { // prompt RSB
+        m_cosThetaPhi[0].hBG_R[iFrame]->Fill(cosThPVals[iFrame][0], cosThPVals[iFrame][1]);
+        m_cosThetaPhi[1].hBG_R[iFrame]->Fill(cosThPVals[iFrame][0], cosThPVals[iFrame][1]);
+      } else if (eventRegion.isRSB() && eventRegion.isNP()) { // non prompt RSB
+        m_cosThetaPhi[0].hBGinNP_R[iFrame]->Fill(cosThPVals[iFrame][0], cosThPVals[iFrame][1]);
+        m_cosThetaPhi[1].hBGinNP_R[iFrame]->Fill(cosThPVals[iFrame][0], cosThPVals[iFrame][1]);
+      } else {
+        std::cerr << "Not in any region (fill2DHists)" << std::endl;
+      }
+    }
+  } else { // without valid fit (i.e. particle gun MC, one event can fall into severall regions)
+    for (int iFrame = 0; iFrame < onia::kNbFrames; ++iFrame) {
+      if (eventRegion.isLSB()) { //  left sideband
+        m_cosThetaPhi[0].hBG_L[iFrame]->Fill(cosThPVals[iFrame][0], cosThPVals[iFrame][1]);
+        m_cosThetaPhi[1].hBG_L[iFrame]->Fill(cosThPVals[iFrame][0], cosThPVals[iFrame][1]);
+        m_cosThetaPhi[0].hBGinNP_L[iFrame]->Fill(cosThPVals[iFrame][0], cosThPVals[iFrame][1]);
+        m_cosThetaPhi[1].hBGinNP_L[iFrame]->Fill(cosThPVals[iFrame][0], cosThPVals[iFrame][1]);
+      }
+      if (eventRegion.isSR1() && eventRegion.isPR()) { // SR1
+        m_cosThetaPhi[0].hSR[iFrame]->Fill(cosThPVals[iFrame][0], cosThPVals[iFrame][1]);
+        m_cosThetaPhi[0].hNPBG[iFrame]->Fill(cosThPVals[iFrame][0], cosThPVals[iFrame][1]);
+      }
+      if (eventRegion.isSR2() && eventRegion.isPR()) { // SR2
+        m_cosThetaPhi[1].hSR[iFrame]->Fill(cosThPVals[iFrame][0], cosThPVals[iFrame][1]);
+        m_cosThetaPhi[1].hNPBG[iFrame]->Fill(cosThPVals[iFrame][0], cosThPVals[iFrame][1]);
+      }
+      if (eventRegion.isRSB() && eventRegion.isPR()) { //RSB
+        m_cosThetaPhi[0].hBG_R[iFrame]->Fill(cosThPVals[iFrame][0], cosThPVals[iFrame][1]);
+        m_cosThetaPhi[1].hBG_R[iFrame]->Fill(cosThPVals[iFrame][0], cosThPVals[iFrame][1]);
+        m_cosThetaPhi[0].hBGinNP_R[iFrame]->Fill(cosThPVals[iFrame][0], cosThPVals[iFrame][1]);
+        m_cosThetaPhi[1].hBGinNP_R[iFrame]->Fill(cosThPVals[iFrame][0], cosThPVals[iFrame][1]);
+      }
     }
   }
 }
@@ -1096,7 +1184,7 @@ template<StateT State>
 void BkgHistoProducer<State>::fillHistos(const int rapBin, const int ptBin, bool useRefittedChic, bool MC,
                                         bool PolLSB, bool PolRSB, bool PolNP, bool folding)
 {
-  std::cout << "---------- FILLHISTOS FOR JPSI" << std::endl;
+  // std::cout << "---------- FILLHISTOS FOR JPSI" << std::endl;
   const int nEntries = m_inTree->GetEntries();
   unsigned int nAll = 0;
   unsigned int nSR = 0;
@@ -1192,14 +1280,14 @@ void BkgHistoProducer<State>::fillHistos(const int rapBin, const int ptBin, bool
     }
   }
 
-  std::cout << "********** FILLHISTOS FOR JPSI" << std::endl;
+  // std::cout << "********** FILLHISTOS FOR JPSI" << std::endl;
 }
 
 template<>
 void BkgHistoProducer<Chic>::fillHistos(const int rapBin, const int ptBin, bool useRefittedChic, bool MC,
                                         bool PolLSB, bool PolRSB, bool PolNP, bool folding)
 {
-  std::cout << "---------- FILLHISTOS FOR CHIC" << std::endl;
+  // std::cout << "---------- FILLHISTOS FOR CHIC" << std::endl;
 
   const int nEntries = m_inTree->GetEntries(); //  100;
   unsigned int nAll = 0;
@@ -1239,9 +1327,20 @@ void BkgHistoProducer<Chic>::fillHistos(const int rapBin, const int ptBin, bool 
         // std::cout << "----------------------------------------" << std::endl;
         // classify the event only once and pass the results down to the filling functions
         // COULDDO: check already here if the event is in any of the desired regions
-        BkgHistoRangeReport eventReg(sr1Range.accept(usedChicMass), sr2Range.accept(usedChicMass),
-                                     npRange.accept(m_inputVars.jpsict), prRange.accept(m_inputVars.jpsict),
-                                     lsbRange.accept(usedChicMass), rsbRange.accept(usedChicMass));
+        BkgHistoRangeReport eventReg;
+
+        // if we have a valid fit file (classify the event according to the fitted values). If we do not have
+        // one, assume that this is a particle gun MC sample and classify it accordingly
+        if (m_validFitFile) {
+          eventReg.setChic(sr1Range.accept(usedChicMass), sr2Range.accept(usedChicMass),
+                           npRange.accept(m_inputVars.jpsict), prRange.accept(m_inputVars.jpsict),
+                           lsbRange.accept(usedChicMass), rsbRange.accept(usedChicMass));
+        } else {
+          // for particle gun MC, fill prompt and non-promt with the same events (as was done in
+          // bkgHistos_leptonBased.C). Fill LSB with every 3rd event and RSB with every 5th.
+          eventReg.setChic(sr1Range.accept(usedChicMass), sr2Range.accept(usedChicMass),
+                           true, true, !(i % 3), !(i % 5));
+        }
 
         if (!eventReg.isValidChicEvent()) {
           // std::cerr << "Event is not in any valid range!" << std::endl;
@@ -1297,9 +1396,16 @@ void BkgHistoProducer<Chic>::fillHistos(const int rapBin, const int ptBin, bool 
         absY >= onia::rapForPTRange[rapBin-1] && absY < onia::rapForPTRange[rapBin] &&
         TMath::Abs(m_inputVars.jpsi->M() - CBmass_p0) < nSigMass * rapSigma(p0,p1,p2,m_inputVars.jpsi->Eta())) {
 
-      BkgHistoRangeReport eventReg(sr1Range.accept(usedChicMass), sr2Range.accept(usedChicMass),
-                                   npRange.accept(m_inputVars.jpsict), prRange.accept(m_inputVars.jpsict),
-                                   lsbRange.accept(usedChicMass), rsbRange.accept(usedChicMass));
+      // same game as above.
+      BkgHistoRangeReport eventReg;
+      if (m_validFitFile) {
+        eventReg.setChic(sr1Range.accept(usedChicMass), sr2Range.accept(usedChicMass),
+                         npRange.accept(m_inputVars.jpsict), prRange.accept(m_inputVars.jpsict),
+                         lsbRange.accept(usedChicMass), rsbRange.accept(usedChicMass));
+      } else {
+        eventReg.setChic(sr1Range.accept(usedChicMass), sr2Range.accept(usedChicMass),
+                         true, true, !(i % 3), !(i % 5));
+      }
 
       if (eventReg.isValidChicEvent()) {
         cosTPT cosThPhiVals = calcCosThetaPhiValues(*m_inputVars.lepP, *m_inputVars.lepN, folding);
@@ -1308,7 +1414,7 @@ void BkgHistoProducer<Chic>::fillHistos(const int rapBin, const int ptBin, bool 
     }
   }
 
-  std::cout << "********** FILLHISTOS FOR CHIC" << std::endl;
+  // std::cout << "********** FILLHISTOS FOR CHIC" << std::endl;
 }
 
 // ================================================================================
@@ -1317,7 +1423,7 @@ void BkgHistoProducer<Chic>::fillHistos(const int rapBin, const int ptBin, bool 
 template<>
 void BkgHistoProducer<Chic>::store3DHists(bool PolLSB, bool PolRSB, bool PolNP, bool subtractNP)
 {
-  std::cout << "---------- IN BkgHistoProducer<Chic>::store3DHists" << std::endl;
+  // std::cout << "---------- IN BkgHistoProducer<Chic>::store3DHists" << std::endl;
   double fracLSB[] = { m_fitVars["fracLSB1"], m_fitVars["fracLSB2"] }; // std::array when available!
   double fBGinNP[] = { m_fitVars["fBGinNP1"], m_fitVars["fBGinNP2"] }; // std::array when available!
   double fNPB[] = { m_fitVars["fNPB1"], m_fitVars["fNPB2"] }; // std::array when available
@@ -1359,13 +1465,13 @@ void BkgHistoProducer<Chic>::store3DHists(bool PolLSB, bool PolRSB, bool PolNP, 
     hBG_pTRapMass->Write();
   }
 
-  std::cout << "********** IN BkgHistoProducer<Chic>::store3DHists" << std::endl;
+  // std::cout << "********** IN BkgHistoProducer<Chic>::store3DHists" << std::endl;
 }
 
 template<StateT State>
 void BkgHistoProducer<State>::store3DHists(bool PolLSB, bool PolRSB, bool PolNP, bool subtractNP)
 {
-  std::cout << "---------- IN BkgHistoProducer<" << State << ">::store3DHists" << std::endl;
+  // std::cout << "---------- IN BkgHistoProducer<" << State << ">::store3DHists" << std::endl;
 
   const double fracLSB = m_fitVars["fracLSB"];
   const double fBGinNP = m_fitVars["fBGinNP"];
@@ -1402,7 +1508,7 @@ void BkgHistoProducer<State>::store3DHists(bool PolLSB, bool PolRSB, bool PolNP,
   m_outFiles[0]->cd();
   hBG_pTRapMass->Write();
 
-  std::cout << "********** IN BkgHistoProducer<" << State << ">::store3DHists" << std::endl;
+  // std::cout << "********** IN BkgHistoProducer<" << State << ">::store3DHists" << std::endl;
 }
 
 // ================================================================================
@@ -1412,8 +1518,8 @@ template<>
 void BkgHistoProducer<Chic>::store1DHists(bool PolLSB, bool PolRSB, bool PolNP, bool subtractNP)
 {
   // COULDDO: use the values directly
-  const double fSRinPLSB = m_fitVars["fSRinPLSB"];
-  const double fSRinPRSB = m_fitVars["fSRinPRSB"];
+  // const double fSRinPLSB = m_fitVars["fSRinPLSB"];
+  // const double fSRinPRSB = m_fitVars["fSRinPRSB"];
   const double fracLSB[] = { m_fitVars["fracLSB1"], m_fitVars["fracLSB1"] }; // std::array when available
   const double fBGinNP[] = { m_fitVars["fBGinNP1"], m_fitVars["fBGinNP1"] }; // std::array when available
   const double fBGsig[] = { m_fitVars["fBGsig1"], m_fitVars["fBGsig2"] };
@@ -1424,14 +1530,14 @@ void BkgHistoProducer<Chic>::store1DHists(bool PolLSB, bool PolRSB, bool PolNP, 
   double meanPT[] = { -1., -1. }; // std::array when available
   double meanY[] = { -1., -1. }; // std::array when available
   if (PolLSB) { // prompt chic1 contamination in LSB for polarization of LSB
-    double tmp = subtractScaledMean(m_ptHists.h_PSR[0], m_ptHists.h_L, fSRinPLSB);
+    double tmp = subtractScaledMean(m_ptHists.h_PSR[0], m_ptHists.h_L, m_fitVars["fSRinPLSB"]);
     meanPT[0] = tmp; meanPT[1] = tmp;
-    tmp = subtractScaledMean(m_rapHists.h_PSR[0], m_rapHists.h_L, fSRinPLSB);
+    tmp = subtractScaledMean(m_rapHists.h_PSR[0], m_rapHists.h_L, m_fitVars["fSRinPLSB"]);
     meanY[0] = tmp; meanY[1] = tmp;
   } else if (PolRSB) { // prompt chic2 contamination in RSB for polarization of RSB
-    double tmp = subtractScaledMean(m_ptHists.h_PSR[1], m_ptHists.h_R, fSRinPRSB);
+    double tmp = subtractScaledMean(m_ptHists.h_PSR[1], m_ptHists.h_R, m_fitVars["fSRinPRSB"]);
     meanPT[0] = tmp; meanPT[1] = tmp;
-    tmp = subtractScaledMean(m_rapHists.h_PSR[1], m_ptHists.h_R, fSRinPRSB);
+    tmp = subtractScaledMean(m_rapHists.h_PSR[1], m_ptHists.h_R, m_fitVars["fSRinPRSB"]);
     meanY[0] = tmp; meanY[1] = tmp;
   } else {
     // continuum background using different fLSB for the two signal regions
@@ -1550,7 +1656,7 @@ void BkgHistoProducer<State>::store1DHists(bool PolLSB, bool PolRSB, bool PolNP,
 template<StateT State>
 void BkgHistoProducer<State>::store2DHists(bool PolLSB, bool PolRSB, bool PolNP, bool subtractNP, bool folding)
 {
-  std::cout << "---------- IN BkgHistoProducer<Chic>::store2DHists()" << std::endl;
+  // std::cout << "---------- IN BkgHistoProducer<Chic>::store2DHists()" << std::endl;
 
   const std::vector<std::string> labels = charArrayToStrVec(onia::frameLabel, onia::kNbFrames);
 
@@ -1635,7 +1741,7 @@ void BkgHistoProducer<State>::store2DHists(bool PolLSB, bool PolRSB, bool PolNP,
     }
   }
 
-  std::cout << "********** IN BkgHistoProducer<Chic>::store2DHists()" << std::endl;
+  // std::cout << "********** IN BkgHistoProducer<Chic>::store2DHists()" << std::endl;
 }
 
 // ================================================================================
@@ -1644,7 +1750,7 @@ void BkgHistoProducer<State>::store2DHists(bool PolLSB, bool PolRSB, bool PolNP,
 template<StateT State>
 void BkgHistoProducer<State>::storeHistos(bool PolLSB, bool PolRSB, bool PolNP, bool subtractNP, bool folding)
 {
-  std::cout << "---------- IN BkgHistoProducer<" << State << ">::storeHistos()" << std::endl;
+  // std::cout << "---------- IN BkgHistoProducer<" << State << ">::storeHistos()" << std::endl;
 
   std::cout << "---------------------------------\n"
             << "Build background histograms\n"
@@ -1663,7 +1769,7 @@ void BkgHistoProducer<State>::storeHistos(bool PolLSB, bool PolRSB, bool PolNP, 
 
   closeOutputAndFitFiles();
 
-  std::cout << "********** IN BkgHistoProducer<" << State << ">::storeHistos()" << std::endl;
+  // std::cout << "********** IN BkgHistoProducer<" << State << ">::storeHistos()" << std::endl;
 }
 
 // ================================================================================
@@ -1734,7 +1840,7 @@ void BkgHistoProducer<State>::setupPtRapMassHists(const size_t nHists,
                                                   const int rapBins, const double minRap, const double maxRap,
                                                   const int massBins, const double minMass, const double maxMass)
 {
-  std::cout << "---------- IN BkgHistoProducer<" << State << ">::setupPtRapMassHists" << std::endl;
+  // std::cout << "---------- IN BkgHistoProducer<" << State << ">::setupPtRapMassHists" << std::endl;
   for (size_t iH = 0; iH < nHists; ++iH) {
     m_ptRapMass.push_back(BkgHistoPtRapMassHists());
     m_ptRapMass[iH].hBG_L = new TH3D("hBG_pTRapMass_L", ";p_{T} [Gev/c]; |y|; M[GeV]",
@@ -1766,7 +1872,7 @@ void BkgHistoProducer<State>::setupPtRapMassHists(const size_t nHists,
     m_ptRapMass[iH].hSR->Sumw2();
   }
 
-  std::cout << "********** IN BkgHistoProducer<" << State << ">::setupPtRapMassHists" << std::endl;
+  // std::cout << "********** IN BkgHistoProducer<" << State << ">::setupPtRapMassHists" << std::endl;
 }
 
 template<StateT State>
@@ -1837,7 +1943,7 @@ const std::string BkgHistoProducer<State>::getMissingVarNames(const std::vector<
   const char* nVars[] = {"massMinSR1", "massMaxSR1", "massMinSR2", "massMaxSR2", "PRmin", "PRmax", "NPmin",
                          "NPmax", "fBGsig1", "fBGsig2", "fBGerr1", "fBGerr2",
                          "fNPB1", "fNPB2", "fNPerr1", "fNPerr2", "fracLSB1",
-                         "fracLSB2"};
+                         "fracLSB2", "massMaxL", "massMinR", "fBGinNP1", "fBGinNP2"};
   std::vector<std::string> neededVars(nVars, end(nVars));
 
   typedef std::vector<std::string>::const_iterator strVecIt;

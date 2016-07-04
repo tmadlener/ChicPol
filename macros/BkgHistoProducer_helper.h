@@ -163,6 +163,9 @@ std::ostream& operator<<(std::ostream& os, const BkgHistoRange& range)
  */
 class BkgHistoRangeReport {
 public:
+  /** default constructor. */
+  BkgHistoRangeReport() : m_NP(false), m_PR(false), m_LSB(false), m_RSB(false) { ; }
+
   /** ctor for chic case. */
   BkgHistoRangeReport(bool SR1, bool SR2, bool NP, bool PR, bool LSB, bool RSB) :
     m_NP(NP), m_PR(PR), m_LSB(LSB), m_RSB(RSB)
@@ -171,6 +174,13 @@ public:
   BkgHistoRangeReport(bool SR, bool NP, bool PR, bool LSB, bool RSB) :
     m_NP(NP), m_PR(PR), m_LSB(LSB), m_RSB(RSB) { m_SRs.push_back(SR); }
 
+  /** set the ranges for a chic event. NOTE: at the moment only putting SR{1,2} into the vector, assuming it
+   * is empty before.
+   */
+  void setChic(bool SR1, bool SR2, bool NP, bool PR, bool LSB, bool RSB) {
+    m_NP = NP; m_PR = PR; m_LSB = LSB; m_RSB = RSB; m_SRs.push_back(SR1); m_SRs.push_back(SR2);
+  }
+
   bool isNP() const { return m_NP; } /**< is in non-prompt region. */
   bool isPR() const { return m_PR; } /**< is in prompt region. */
   bool isLSB() const { return m_LSB; } /**< is in LSB. */
@@ -178,14 +188,20 @@ public:
   bool isSR1() const { return m_SRs[0]; } /**< is in SR1. */
   bool isSR2() const { return m_SRs[1]; } /**< is in SR2. */
   bool isSR() const { return m_SRs[0]; } /**< is in SR. (same as in isSR1) */
+
   /** check if the event can be categorized into the predefined regions.
    * NOTE: this checks if the event can be classified into AT LEAST one event!
    */
   bool isValidChicEvent() const { return ((m_NP || m_PR) && (m_LSB || m_RSB || m_SRs[0] || m_SRs[1])); }
+
   /** check if the event can be categorized into the predefined regions.
    * NOTE: this checks if the event can be classified into AT LEAST one event!
    */
   bool isValidJpsiEvent() const { return ((m_NP || m_PR) && (m_SRs[0] || m_LSB || m_RSB)); }
+
+  /** ostream operator */
+  friend std::ostream& operator<<(std::ostream& os, const BkgHistoRangeReport& rep);
+
 private:
   std::vector<bool> m_SRs;
   bool m_NP;
@@ -194,18 +210,27 @@ private:
   bool m_RSB;
 };
 
+std::ostream& operator<<(std::ostream& os, const BkgHistoRangeReport& rep)
+{
+  os << "LSB: " << rep.m_LSB << ", RSB: " << rep.m_RSB << ", PR: " << rep.m_PR << ", NP: " << rep.m_NP << ", SRs: ";
+  for (size_t i = 0; i < rep.m_SRs.size(); ++i) os << rep.m_SRs[i] << ", ";
+  os << "valid: " << rep.isValidChicEvent();
+
+  return os;
+}
+
 // ================================================================================
 //                 IMPLEMENTATION BKG HISTO ROOTVARS
 // ================================================================================
 BkgHistoRootVars::~BkgHistoRootVars()
 {
-  std::cout << "---------- DESTRUCTOR OF BkgHistoRootVars" << std::endl;
+  // std::cout << "---------- DESTRUCTOR OF BkgHistoRootVars" << std::endl;
   delete lepP;
   delete lepN;
   delete jpsi;
   delete chic;
   delete chic_rf;
-  std::cout << "********** DESTRUCTOR OF BkgHistoRootVars" << std::endl;
+  // std::cout << "********** DESTRUCTOR OF BkgHistoRootVars" << std::endl;
 }
 
 // ================================================================================
@@ -213,7 +238,7 @@ BkgHistoRootVars::~BkgHistoRootVars()
 // ================================================================================
 BkgHistoCosThetaHists::BkgHistoCosThetaHists(const int nHists)
 {
-  std::cout << "---------- CONSTRUCTOR OF BkgHistoCosThetaHists" << std::endl;
+  // std::cout << "---------- CONSTRUCTOR OF BkgHistoCosThetaHists" << std::endl;
   // TODO: replace NULL with nullptr after migragtion to c++11
   for (int iH = 0; iH < nHists; ++iH) {
     hBG_L.push_back(NULL);
@@ -229,12 +254,12 @@ BkgHistoCosThetaHists::BkgHistoCosThetaHists(const int nHists)
     hSR_R.push_back(NULL);
     hSR.push_back(NULL);
   }
-  std::cout << "********** CONSTRUCTOR OF BkgHistoCosThetaHists" << std::endl;
+  // std::cout << "********** CONSTRUCTOR OF BkgHistoCosThetaHists" << std::endl;
 }
 
 BkgHistoCosThetaHists::~BkgHistoCosThetaHists()
 {
-  std::cout << "---------- DESTRUCTOR OF BkgHistoCosThetaHists" << std::endl;
+  // std::cout << "---------- DESTRUCTOR OF BkgHistoCosThetaHists" << std::endl;
   // TODO: currently get a seg fault here. This is caused by the call to TFile::Close() prior to this
   // destructor, which apparently means for ROOT to delete TH2D that are "attatched" to the TFile
 
@@ -252,12 +277,12 @@ BkgHistoCosThetaHists::~BkgHistoCosThetaHists()
   //   delete hSR_R[iH];
   //   delete hSR[iH];
   // }
-  std::cout << "********** DESTRUCTOR OF BkgHistoCosThetaHists" << std::endl;
+  // std::cout << "********** DESTRUCTOR OF BkgHistoCosThetaHists" << std::endl;
 }
 
 void BkgHistoCosThetaHists::storeToFile(TFile* file)
 {
-  std::cout << "---------- STORE TO FILE OF BkgHistoCosThetaHists" << std::endl;
+  // std::cout << "---------- STORE TO FILE OF BkgHistoCosThetaHists" << std::endl;
   file->cd();
   for (size_t iH = 0; iH < hBG_L.size(); ++iH) { // every vector should contain the same number of TH2Ds
     if (hBG_L[iH]) hBG_L[iH]->Write();
@@ -273,7 +298,7 @@ void BkgHistoCosThetaHists::storeToFile(TFile* file)
     if (hSR_R[iH]) hSR_R[iH]->Write();
     if (hSR[iH]) hSR[iH]->Write();
   }
-  std::cout << "********** STORE TO FILE OF BkgHistoCosThetaHists" << std::endl;
+  // std::cout << "********** STORE TO FILE OF BkgHistoCosThetaHists" << std::endl;
 }
 
 // ================================================================================
@@ -281,19 +306,19 @@ void BkgHistoCosThetaHists::storeToFile(TFile* file)
 // ================================================================================
 BkgHisto1DHists::BkgHisto1DHists()
 {
-  std::cout <<"---------- CONSTRUCTOR OF BkgHisto1DHists" << std::endl;
+  // std::cout <<"---------- CONSTRUCTOR OF BkgHisto1DHists" << std::endl;
   // TODO: replace NULL with nullptr with c++11 availability
   h_L = NULL;
   h_R = NULL;
   h_highct_L = NULL;
   h_highct_R = NULL;
 
-  std::cout <<"********** CONSTRUCTOR OF BkgHisto1DHists" << std::endl;
+  // std::cout <<"********** CONSTRUCTOR OF BkgHisto1DHists" << std::endl;
 }
 
 BkgHisto1DHists::~BkgHisto1DHists()
 {
-  std::cout <<"---------- DESTRUCTOR OF BkgHisto1DHists" << std::endl;
+  // std::cout <<"---------- DESTRUCTOR OF BkgHisto1DHists" << std::endl;
 
   // TODO: currently get a seg fault here. This is caused by the call to TFile::Close() prior to this
   // destructor, which apparently means for ROOT to delete TH1D that are "attatched" to the TFile
@@ -305,13 +330,13 @@ BkgHisto1DHists::~BkgHisto1DHists()
   // for (size_t i = 0; i < h_NP.size(); ++i) delete h_NP[i];
   // for (size_t i = 0; i < h_PSR.size(); ++i) delete h_PSR[i];
 
-  std::cout <<"********** DESTRUCTOR OF BkgHisto1DHists" << std::endl;
+  // std::cout <<"********** DESTRUCTOR OF BkgHisto1DHists" << std::endl;
 }
 
 void BkgHisto1DHists::createHists(const std::string& prefix, const size_t nHists,
                                   const int nBins, const double min, const double max)
 {
-  std::cout <<"---------- CREATE HISTS OF BkgHisto1DHists" << std::endl;
+  // std::cout <<"---------- CREATE HISTS OF BkgHisto1DHists" << std::endl;
 
   std::string temp = prefix + "LSB";
   h_L = new TH1D(temp.c_str(), temp.c_str(), nBins, min, max);
@@ -333,12 +358,12 @@ void BkgHisto1DHists::createHists(const std::string& prefix, const size_t nHists
     h_PSR.push_back(new TH1D(temp.c_str(), temp.c_str(), nBins, min, max));
   }
 
-  std::cout <<"********** CREATE HISTS OF BkgHisto1DHists" << std::endl;
+  // std::cout <<"********** CREATE HISTS OF BkgHisto1DHists" << std::endl;
 }
 
 void BkgHisto1DHists::storeToFiles(const std::vector<TFile*>& files)
 {
-  std::cout << "---------- STORE TO FILES OF BkgHisto1DHists" << std::endl;
+  // std::cout << "---------- STORE TO FILES OF BkgHisto1DHists" << std::endl;
 
   for (size_t iFile = 0; iFile < files.size(); ++iFile) {
     TFile* file = files[iFile];
@@ -352,7 +377,7 @@ void BkgHisto1DHists::storeToFiles(const std::vector<TFile*>& files)
     h_PSR[iFile]->Write();
   }
 
-  std::cout << "********** STORE TO FILES OF BkgHisto1DHists" << std::endl;
+  // std::cout << "********** STORE TO FILES OF BkgHisto1DHists" << std::endl;
 }
 
 // ================================================================================
@@ -360,7 +385,7 @@ void BkgHisto1DHists::storeToFiles(const std::vector<TFile*>& files)
 // ================================================================================
 BkgHistoPtRapMassHists::BkgHistoPtRapMassHists()
 {
-  std::cout << "---------- CONSTRUCTOR OF BkgHistoPtRapMassHists" << std::endl;
+  // std::cout << "---------- CONSTRUCTOR OF BkgHistoPtRapMassHists" << std::endl;
   // TODO: replace NULL w/ nullptr for c++11
   hBG_L = NULL;
   hBG_R = NULL;
@@ -369,12 +394,12 @@ BkgHistoPtRapMassHists::BkgHistoPtRapMassHists()
   hNP = NULL;
   hSR = NULL;
 
-  std::cout << "********** CONSTRUCTOR OF BkgHistoPtRapMassHists" << std::endl;
+  // std::cout << "********** CONSTRUCTOR OF BkgHistoPtRapMassHists" << std::endl;
 }
 
 BkgHistoPtRapMassHists::~BkgHistoPtRapMassHists()
 {
-  std::cout << "---------- DESTRUCTOR OF BkgHistoPtRapMassHists" << std::endl;
+  // std::cout << "---------- DESTRUCTOR OF BkgHistoPtRapMassHists" << std::endl;
   // TODO: currently get a seg fault here. This is caused by the call to TFile::Close() prior to this
   // destructor, which apparently means for ROOT to delete TH3D that are "attatched" to the TFile
   // The question remains, why this works for TH2Ds (e.g.)?
@@ -385,12 +410,12 @@ BkgHistoPtRapMassHists::~BkgHistoPtRapMassHists()
   // delete hNP;
   // delete hSR;
 
-  std::cout << "********** DESTRUCTOR OF BkgHistoPtRapMassHists" << std::endl;
+  // std::cout << "********** DESTRUCTOR OF BkgHistoPtRapMassHists" << std::endl;
 }
 
 void BkgHistoPtRapMassHists::storeToFile(TFile* file)
 {
-  std::cout << "---------- BkgHistoPtRapMassHists::storeToFile()" << std::endl;
+  // std::cout << "---------- BkgHistoPtRapMassHists::storeToFile()" << std::endl;
 
   file->cd();
   hBG_L->Write();
@@ -400,7 +425,7 @@ void BkgHistoPtRapMassHists::storeToFile(TFile* file)
   hNP->Write();
   hSR->Write();
 
-  std::cout << "********** BkgHistoPtRapMassHists::storeToFile()" << std::endl;
+  // std::cout << "********** BkgHistoPtRapMassHists::storeToFile()" << std::endl;
 }
 
 // ================================================================================
