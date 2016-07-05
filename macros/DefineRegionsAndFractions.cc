@@ -15,6 +15,16 @@
 #include "bkgHistos_helper.h"
 
 #include <iomanip>
+#include <algorithm> // std::find_if
+
+/** Unary Predicate functor >= */
+template<typename T>
+struct largerEval {
+  largerEval(T x) : m_x(x) {;}
+  bool operator()(T d) { return d >= m_x; }
+private:
+  T m_x;
+};
 
 using namespace RooFit;
 
@@ -94,115 +104,72 @@ void DefineRegionsAndFractions(const std::string &infilename, int rapBin, int pt
 
   if(!FixRegionsToInclusiveFit){
 
-    RooAbsReal* real_fChic_region;
-    double startmass, deltamass, testmass, buffintegral;
+    double deltamass = 5e-5; // sampling in steps of 50 keV
+    int nM = (int) ((onia::massChiSBMax - onia::massChiSBMin) / deltamass);
 
-    // tmadlener: 31.03.2016 temp. implementation of more output for defining other SR boundaries
-    // size_t nSteps = 1e4;
-    // double deltaStep = (onia::massChiSBMax - onia::massChiSBMin) / (double) nSteps;
+    // calculate all the necessary integrals only once and store the values for easier (and fater retrieval later)
+    std::vector<double> mChic1CDF;
+    mChic1CDF.reserve(nM);
+    std::vector<double> mChic2CDF;
+    mChic2CDF.reserve(nM);
 
-    // // I am pretty sure that there is a better way to do this than what I am doing right now.
-    // // For this temporary 'hack' however it should be sufficient. If efficiency starts to matter this has to be revised!
-    // for(int iStep = 0; iStep < nSteps; ++iStep) {
-    //   double upperBound = onia::massChiSBMin + iStep * deltaStep;
-    //   mass->setRange("testregion", onia::massChiSBMin, upperBound);
-    //   real_fChic_region = ws->pdf("M_chic1")->createIntegral(RooArgSet(*mass), NormSet(RooArgSet(*mass)), Range("testregion"));
-    //   std::cout << "FETCHME: " << std::setprecision(10) << upperBound << " " << real_fChic_region->getVal() << std::endl;
-    // }
+    std::cout << "Calculating CDFs of the mass distributions ..." << std::flush;
+    for (int iM = 0; iM < nM; ++iM) {
+      double upperBound = onia::massChiSBMin + iM * deltamass;
+      mass->setRange("testregion", onia::massChiSBMin, upperBound);
+      mChic1CDF.push_back(ws->pdf("M_chic1")->createIntegral(RooArgSet(*mass),
+                                                             NormSet(RooArgSet(*mass)),
+                                                             Range("testregion"))->getVal());
+      mChic2CDF.push_back(ws->pdf("M_chic2")->createIntegral(RooArgSet(*mass),
+                                                             NormSet(RooArgSet(*mass)),
+                                                             Range("testregion"))->getVal());
+      if (mChic2CDF.back() == 1 && mChic1CDF.back() == 1) break; // no need to integrate further!
+    }
+    std::cout << "DONE. Needed " << mChic1CDF.size() << " steps until both CDFs were 1" << std::endl;
 
-    // // end tmadlener: 31.03.2016 temp. implementation
+    typedef largerEval<double> _ge_; // lazyness typedef for a little less typing below
 
     double chic1MassLowBound = chic1Low >= 0. ? chic1Low : onia::fChi1MassLow;
+    size_t pos = std::find_if(mChic1CDF.begin(), mChic1CDF.end(), _ge_(chic1MassLowBound)) - mChic1CDF.begin();
+    sig1MinMass = onia::massChiSBMin + (pos - 0.5) * deltamass; // linear interpolation
+    std::cout << "Found sig1MinMass = " << sig1MinMass << ", fChic1 below is " << mChic1CDF[pos-1] << std::endl;
 
-    int nM=1e5;
-    deltamass=1e-5;
-
-    startmass=mean1;
-    for(int iM=0;iM<nM;iM++){
-      testmass=startmass-iM*deltamass;
-      mass->setRange("testregion", onia::massChiSBMin, testmass);
-      real_fChic_region = ws->pdf("M_chic1")->createIntegral(RooArgSet(*mass), NormSet(RooArgSet(*mass)), Range("testregion"));
-      buffintegral=real_fChic_region->getVal();
-      if (buffintegral < chic1MassLowBound) {
-        sig1MinMass=testmass+deltamass/2.;
-        cout<<"Found sig1MinMass = "<<sig1MinMass<<" after "<<iM<<" evaluations, fChic1 below is "<<buffintegral<<endl;
-        break;
-      }
-    }
-
-    startmass=sig1MinMass;
-    for(int iM=0;iM<nM;iM++){
-      testmass=startmass-iM*deltamass;
-      mass->setRange("testregion", onia::massChiSBMin, testmass);
-      real_fChic_region = ws->pdf("M_chic1")->createIntegral(RooArgSet(*mass), NormSet(RooArgSet(*mass)), Range("testregion"));
-      buffintegral=real_fChic_region->getVal();
-      if(buffintegral<onia::fChiBkgLow) {
-        lsbMaxMass=testmass+deltamass/2.;
-        cout<<"Found lsbMaxMass = "<<lsbMaxMass<<" after "<<iM<<" evaluations, fChic1 below is "<<buffintegral<<endl;
-        break;
-      }
+    pos = std::find_if(mChic1CDF.begin(), mChic1CDF.end(), _ge_(onia::fChiBkgLow)) - mChic1CDF.begin();
+    lsbMaxMass = onia::massChiSBMin + (pos - 0.5) * deltamass;
+    std::cout << "Found lsbMaxMass = " << lsbMaxMass << ", fChic1 below is " << mChic1CDF[pos-1] << std::endl;
+    if (lsbMaxMass > sig1MinMass) {
+      lsbMaxMass = sig1MinMass;
+      std::cout << "MinSR1 is smaller than lsbMax. Adjusting lsbMaxMass to sig1MinMass" << std::endl;
     }
 
     double chic1MassHighBound = chic1High >= 0. ? chic1High : onia::fChi1MassHigh;
-    startmass=mean1;
-    for(int iM=0;iM<nM;iM++){
-      testmass=startmass+iM*deltamass;
-      mass->setRange("testregion", testmass, onia::massChiSBMax);
-      real_fChic_region = ws->pdf("M_chic1")->createIntegral(RooArgSet(*mass), NormSet(RooArgSet(*mass)), Range("testregion"));
-      buffintegral=real_fChic_region->getVal();
-      if (buffintegral < chic1MassHighBound) {
-        sig1MaxMass=testmass-deltamass/2.;
-        cout<<"Found sig1MaxMass = "<<sig1MaxMass<<" after "<<iM<<" evaluations, fChic1 below is "<<buffintegral<<endl;
-        break;
-      }
-    }
+    pos = std::find_if(mChic1CDF.begin(), mChic1CDF.end(), _ge_(1. - chic1MassHighBound)) - mChic1CDF.begin();
+    sig1MaxMass = onia::massChiSBMin + (pos - 0.5) * deltamass;
+    std::cout << "Found sig1MaxMass = " << sig1MaxMass << ", fChic1 above is " << 1. - mChic1CDF[pos-1] << std::endl;
 
     double chic2MassLowBound = chic2Low >= 0. ? chic2Low : onia::fChi2MassLow;
-    startmass=mean2;
-    for(int iM=0;iM<nM;iM++){
-      testmass=startmass-iM*deltamass;
-      mass->setRange("testregion", onia::massChiSBMin, testmass);
-      real_fChic_region = ws->pdf("M_chic2")->createIntegral(RooArgSet(*mass), NormSet(RooArgSet(*mass)), Range("testregion"));
-      buffintegral=real_fChic_region->getVal();
-      if(testmass<sig1MaxMass) {
-        sig2MinMass=sig1MaxMass;
-        cout<<"MaxSR1 reached -> adjusting MinSR2: Found sig2MinMass = "<<sig2MinMass<<" after "<<iM<<" evaluations, fChic2 below is "<<buffintegral<<endl;
-        break;
-      }
-      if (buffintegral < chic2MassLowBound) {
-        sig2MinMass=testmass+deltamass/2.;
-        cout<<"Found sig2MinMass = "<<sig2MinMass<<" after "<<iM<<" evaluations, fChic2 below is "<<buffintegral<<endl;
-        break;
-      }
+    pos = std::find_if(mChic2CDF.begin(), mChic2CDF.end(), _ge_(chic2MassLowBound)) - mChic2CDF.begin();
+    sig2MinMass = onia::massChiSBMin + (pos - 0.5) * deltamass;
+    std::cout << "Found sig2MinMass = " << sig2MinMass << ", fChic2 below is " << mChic2CDF[pos-1] << std::endl;
+    if (sig2MinMass < sig1MaxMass) {
+      sig2MinMass = sig1MaxMass;
+      // calculate the value of the chic2 CDF at the sig1MaxMass
+      int tmppos = (int) ((sig1MaxMass - onia::massChiSBMin) / deltamass);
+      std::cout << "minSR2 is below maxSR1. Adjusting sig2MinMass to sig1MaxMass. fChic2 below is " << mChic2CDF[tmppos] << std::endl;
     }
 
     double chic2MassHighBound = chic2High >= 0. ? chic2High : onia::fChi2MassHigh;
-    startmass=mean2;
-    for(int iM=0;iM<nM;iM++){
-      testmass=startmass+iM*deltamass;
-      mass->setRange("testregion", testmass, onia::massChiSBMax);
-      real_fChic_region = ws->pdf("M_chic2")->createIntegral(RooArgSet(*mass), NormSet(RooArgSet(*mass)), Range("testregion"));
-      buffintegral=real_fChic_region->getVal();
-      if (buffintegral < chic2MassHighBound) {
-        sig2MaxMass=testmass-deltamass/2.;
-        cout<<"Found sig2MaxMass = "<<sig2MaxMass<<" after "<<iM<<" evaluations, fChic2 below is "<<buffintegral<<endl;
-        break;
-      }
-    }
+    pos = std::find_if(mChic2CDF.begin(), mChic2CDF.end(), _ge_(1. - chic2MassHighBound)) - mChic2CDF.begin();
+    sig2MaxMass = onia::massChiSBMin + (pos - 0.5) * deltamass;
+    std::cout << "Found sig2MaxMass = " << sig2MaxMass << ", fChic2 above is " << 1. - mChic2CDF[pos-1] <<  std::endl;
 
-    startmass=sig2MaxMass;
-    for(int iM=0;iM<nM;iM++){
-      testmass=startmass+iM*deltamass;
-      mass->setRange("testregion", testmass, onia::massChiSBMax);
-      real_fChic_region = ws->pdf("M_chic2")->createIntegral(RooArgSet(*mass), NormSet(RooArgSet(*mass)), Range("testregion"));
-      buffintegral=real_fChic_region->getVal();
-      if(buffintegral<onia::fChiBkgHigh) {
-        rsbMinMass=testmass-deltamass/2.;
-        cout<<"Found rsbMinMass = "<<rsbMinMass<<" after "<<iM<<" evaluations, fChic2 below is "<<buffintegral<<endl;
-        break;
-      }
+    pos = std::find_if(mChic2CDF.begin(), mChic2CDF.end(), _ge_(1. - onia::fChiBkgHigh)) - mChic2CDF.begin();
+    rsbMinMass = onia::massChiSBMin + (pos - 0.5) * deltamass;
+    std::cout << "Found rsbMinMass = " << rsbMinMass << ", fChic2 above is " << 1. - mChic2CDF[pos-1] << std::endl;
+    if (rsbMinMass < sig2MaxMass) {
+      rsbMinMass = sig2MaxMass;
+      std::cout << "minRSB is below maxSR2. Adjusting rsbMinMass to sig2MaxMass" << std::endl;
     }
-
   }
   else{
 
