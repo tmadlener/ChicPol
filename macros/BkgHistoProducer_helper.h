@@ -189,15 +189,25 @@ public:
   bool isSR2() const { return m_SRs[1]; } /**< is in SR2. */
   bool isSR() const { return m_SRs[0]; } /**< is in SR. (same as in isSR1) */
 
-  /** check if the event can be categorized into the predefined regions.
-   * NOTE: this checks if the event can be classified into AT LEAST one event!
+  /**
+   * check if the event can be categorized into EXACTLY one of the predefined regions for chic data.
+   * First condition checks if exactly one of the two lifetime regions is true. Second condition exploits the
+   * conversion rules from bool to int of c++ to check if exactly one of the mass regions is chosen.
    */
-  bool isValidChicEvent() const { return ((m_NP || m_PR) && (m_LSB || m_RSB || m_SRs[0] || m_SRs[1])); }
+  bool isValidChicEvent() const  { return ((m_NP != m_PR) && ((m_LSB +  m_RSB + m_SRs[0] + m_SRs[1]) == 1)); }
 
-  /** check if the event can be categorized into the predefined regions.
-   * NOTE: this checks if the event can be classified into AT LEAST one event!
+  /**
+   * check if the event can be categorized according to what is needed for particle gun chic MC events. (Which
+   * is basically: can it be put into ANY of the mass regions and are both lifetime regions true)
    */
-  bool isValidJpsiEvent() const { return ((m_NP || m_PR) && (m_SRs[0] || m_LSB || m_RSB)); }
+  bool isValidChicMCEvent() const { return (m_NP && m_PR && (m_LSB || m_RSB || m_SRs[0] || m_SRs[1])); }
+
+  /**
+   * check if the event can be categorized into EXATCLY one of the predefined regions.
+   * First condition checks if exactly one of the two lifetime regions is true. Second condition exploits the
+   * conversion rules from bool to int of c++ to check if exactly one of the mass regions is chosen.
+   */
+  bool isValidJpsiEvent() const { return ((m_NP != m_PR) && (m_LSB + m_RSB + m_SRs[0]) == 1); }
 
   /** ostream operator */
   friend std::ostream& operator<<(std::ostream& os, const BkgHistoRangeReport& rep);
