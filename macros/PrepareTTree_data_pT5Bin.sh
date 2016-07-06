@@ -84,8 +84,10 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     nSigPR=-1
     nSigNP=-1
 
+    injectParams=true # change the values of fit values to other user-defined ones (defined in the $altFileName file)
     # file in which fractions to be used in runBkgHistos_new when no fit values are present
     altFileName=defineFitVars.in
+    fillBkgRandom=true # fill the bkg histograms (cosThetaPhi and pTRapMass) with randomly drawn events (particle gun MC for non-empty bkg histos)
 
     DataID=Psi$[nState-3]S_ctauScen0_FracLSB-1_16Mar2013
     polDataPath=${basedir}/Psi/Data/${DataID}
@@ -275,7 +277,9 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
 
     fi
 
-    cp ${basedir}/macros/${altFileName} ${WorkDir}
+    if [ ${injectParams} = "true" ]; then
+      cp ${basedir}/macros/${altFileName} ${WorkDir}
+    fi
     cd ${WorkDir}
 
     inputTrees="inputTree=${inputTree1} inputTree=${inputTree2} inputTree=${inputTree3} inputTree=${inputTree4}"
@@ -378,7 +382,7 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
       else
         cp runBkgHistos runBkgHistos_$[nState-3]S_rap${rapMin}_pt${ptMin}
       fi
-      ./runBkgHistos_$[nState-3]S_rap${rapMin}_pt${ptMin} rapMin=${rapMin} rapMax=${rapMax} ptMin=${ptMin} ptMax=${ptMax} nState=${nState} MC=${MC} doCtauUncer=${doCtauUncer} PolLSB=${PolLSB} PolRSB=${PolRSB} PolNP=${PolNP} ctauScen=${ctauScen} FracLSB=${FracLSB} forceBinning=${forceBinning} folding=${folding} normApproach=${normApproach} scaleFracBg=${scaleFracBg} polDataPath=${polDataPath} subtractNP=${subtractNP} useRefittedChic=${useRefittedChic} mcClosure=${MCclosure} alternativeFile=${altFileName}
+      ./runBkgHistos_$[nState-3]S_rap${rapMin}_pt${ptMin} rapMin=${rapMin} rapMax=${rapMax} ptMin=${ptMin} ptMax=${ptMax} nState=${nState} MC=${MC} doCtauUncer=${doCtauUncer} PolLSB=${PolLSB} PolRSB=${PolRSB} PolNP=${PolNP} ctauScen=${ctauScen} FracLSB=${FracLSB} forceBinning=${forceBinning} folding=${folding} normApproach=${normApproach} scaleFracBg=${scaleFracBg} polDataPath=${polDataPath} subtractNP=${subtractNP} useRefittedChic=${useRefittedChic} mcClosure=${MCclosure} injectionFile=${altFileName} randomFill=${fillBkgRandom} injectParams=${injectParams}
       rm runBkgHistos_$[nState-3]S_rap${rapMin}_pt${ptMin}
     fi
 

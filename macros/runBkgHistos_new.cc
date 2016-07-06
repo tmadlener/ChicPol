@@ -24,6 +24,8 @@ int main(int argc, char* argv[])
   bool folding = false;
   bool subtractNP = false;
   std::string altFile = "";
+  bool injectParameters = false;
+  bool randomFill = false;
 
   for (int iArg = 0; iArg < argc; ++iArg) {
     const std::string arg = std::string(argv[iArg]);
@@ -40,7 +42,9 @@ int main(int argc, char* argv[])
     fromSplit("PolNP", arg, PolNP);
     fromSplit("folding", arg, folding);
     fromSplit("subtractNP", arg, subtractNP);
-    fromSplit("alternativeFile", arg, altFile);
+    fromSplit("injectParams", arg, injectParameters);
+    fromSplit("injectionFile", arg, altFile);
+    fromSplit("randomFill", arg, randomFill);
   }
 
   BkgHistoProducerFactory factory;
@@ -60,8 +64,8 @@ int main(int argc, char* argv[])
     for (int iPt = ptMin; iPt <= ptMax; ++iPt) {
       std::stringstream infilename;
       infilename << infileBase << "_rap" << iRap << "_pt" << iPt << ".root";
-      bkgHistoProducer->initialize(infilename.str(), iRap, iPt, MC, FracLSB, refittedChic, altFile);
-      bkgHistoProducer->fillHistos(iRap, iPt, refittedChic, MC, PolLSB, PolRSB, PolNP, folding);
+      bkgHistoProducer->initialize(infilename.str(), iRap, iPt, MC, FracLSB, refittedChic, injectParameters, altFile);
+      bkgHistoProducer->fillHistos(iRap, iPt, refittedChic, MC, PolLSB, PolRSB, PolNP, folding, randomFill);
       bkgHistoProducer->storeHistos(PolLSB, PolRSB, PolNP, subtractNP, folding);
     }
   }

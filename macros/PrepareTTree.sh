@@ -24,12 +24,12 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
   for FidCuts in 11;do #defines the set of cuts to be used, see macros/polFit/effsAndCuts.h
     cd $Cdir
 
-    COPY_AND_COMPILE=0
+    COPY_AND_COMPILE=1
 
     rapMin=1     #takes bins, not actual values
     rapMax=1     #if you only want to process 1 y bin, rapMax = rapMin
-    ptMin=3      #takes bins, not acutal values
-    ptMax=3      #if you only want to process 1 pt bin, ptMax = ptMin
+    ptMin=1      #takes bins, not acutal values
+    ptMax=5      #if you only want to process 1 pt bin, ptMax = ptMin
     if [ ${CHIC_BINNING} -eq 2 ]; then
       ptMax=4
     fi
@@ -83,8 +83,12 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     nSigPR=-1
     nSigNP=-1
 
+
+    injectParams=true # change the values of fit values to other user-defined ones (defined in the $altFileName file)
     # file in which fractions to be used in runBkgHistos_new when no fit values are present
     altFileName=defineFitVars.in
+    fillBkgRandom=true # fill the bkg histograms (cosThetaPhi and pTRapMass) with randomly drawn events (particle gun MC for non-empty bkg histos)
+
 
     DataID=Psi$[nState-3]S_ctauScen0_FracLSB-1_16Mar2013
     polDataPath=${basedir}/Psi/Data/${DataID}
@@ -94,16 +98,16 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     # JobID=jpsi_13May2016_MCclosure_rejCow_${rejectCowboys}_rejSea_${rejectSeagulls}
     # JobID=chic_21June2016_MCclosure_rejCow_pt10Cut_chic2Binning_corrLib
     # JobID=chic_30March2016_ML30 # fChi1MassLow = 0.3
-    JobID=testNewMC
+    JobID=chic_06July2016_pGunMC_chic${CHIC_BINNING}Binning_acceptAll
 
 
     ################ EXECUTABLES #################
 
     #following flags decide if the step is executed (1) or not (0):
     #IMPORTANT: for MC set execute_runWorkspace, execute_MassFit and execute_runLifetimeFit to 0
-    execute_runChiData=0			           		#independent of rapMin, rapMax, ptMin, ptMax
-    execute_runWorkspace=0	    					#independent of rapMin, rapMax, ptMin, ptMax
-    execute_runMassFit=0				    	    #can be executed for different pt and y bins
+    execute_runChiData=1			           		#independent of rapMin, rapMax, ptMin, ptMax
+    execute_runWorkspace=1	    					#independent of rapMin, rapMax, ptMin, ptMax
+    execute_runMassFit=1				    	    #can be executed for different pt and y bins
     execute_runLifetimeFit=0    				    #can be executed for different pt and y bins
     execute_runPlotJpsiMassLifetime=0    			#can be executed for different pt and y bins
     execute_PlotJpsiFitPar=0              			#can be executed for different pt and y bins
@@ -112,7 +116,7 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     execute_runPlotMassLifetime=1    				#can be executed for different pt and y bins
     execute_PlotFitPar=0              				#can be executed for different pt and y bins
     execute_runPlotDataDistributions=0		 		#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
-    execute_runBkgHistos=0          				#can be executed for different pt and y bins
+    execute_runBkgHistos=1          				#can be executed for different pt and y bins
     execute_PlotCosThetaPhiBG=0 		 			#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
     execute_PlotMassRapPtBG=0 		 			#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
     execute_PlotCosThetaPhiDistribution=0 			#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
@@ -265,7 +269,9 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
 
     fi
 
-    cp ${basedir}/macros/${altFileName} ${WorkDir}
+    if [ ${injectParams} = "true" ]; then
+      cp ${basedir}/macros/${altFileName} ${WorkDir}
+    fi
     cd ${WorkDir}
 
     inputTrees="inputTree=${inputTree1} inputTree=${inputTree2} inputTree=${inputTree3} inputTree=${inputTree4}"
@@ -368,7 +374,7 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
       else
         cp runBkgHistos runBkgHistos_$[nState-3]S_rap${rapMin}_pt${ptMin}
       fi
-      ./runBkgHistos_$[nState-3]S_rap${rapMin}_pt${ptMin} rapMin=${rapMin} rapMax=${rapMax} ptMin=${ptMin} ptMax=${ptMax} nState=${nState} MC=${MC} doCtauUncer=${doCtauUncer} PolLSB=${PolLSB} PolRSB=${PolRSB} PolNP=${PolNP} ctauScen=${ctauScen} FracLSB=${FracLSB} forceBinning=${forceBinning} folding=${folding} normApproach=${normApproach} scaleFracBg=${scaleFracBg} polDataPath=${polDataPath} subtractNP=${subtractNP} useRefittedChic=${useRefittedChic} mcClosure=${MCclosure} alternativeFile=${altFileName}
+      ./runBkgHistos_$[nState-3]S_rap${rapMin}_pt${ptMin} rapMin=${rapMin} rapMax=${rapMax} ptMin=${ptMin} ptMax=${ptMax} nState=${nState} MC=${MC} doCtauUncer=${doCtauUncer} PolLSB=${PolLSB} PolRSB=${PolRSB} PolNP=${PolNP} ctauScen=${ctauScen} FracLSB=${FracLSB} forceBinning=${forceBinning} folding=${folding} normApproach=${normApproach} scaleFracBg=${scaleFracBg} polDataPath=${polDataPath} subtractNP=${subtractNP} useRefittedChic=${useRefittedChic} mcClosure=${MCclosure} injectionFile=${altFileName} randomFill=${fillBkgRandom} injectParams=${injectParams}
       rm runBkgHistos_$[nState-3]S_rap${rapMin}_pt${ptMin}
     fi
 
