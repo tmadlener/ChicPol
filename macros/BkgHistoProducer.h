@@ -1355,7 +1355,7 @@ void BkgHistoProducer<Chic>::fillHistos(const int rapBin, const int ptBin, bool 
         //           << rsbRange << ", PR: " << prRange << ", NP: " << npRange << std::endl;
 
         fill1DHists(PolRSB, PolLSB, PolNP, MC, pt, absY, usedChicMass, eventReg);
-        fill3DHists(PolRSB, PolLSB, PolNP, MC, m_inputVars.jpsi->Pt(), absY, usedChicMass, eventReg);
+        fill3DHists(PolRSB, PolLSB, PolNP, MC, m_inputVars.jpsi->Pt(), m_inputVars.jpsi->Rapidity(), m_inputVars.jpsi->M(), eventReg);
 
         cosTPT cosThPhiVals = calcCosThetaPhiValues(*m_inputVars.lepP, *m_inputVars.lepN, folding);
         fill2DHists(cosThPhiVals, eventReg);
