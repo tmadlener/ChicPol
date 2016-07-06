@@ -28,8 +28,8 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
 
     rapMin=1     #takes bins, not actual values
     rapMax=1     #if you only want to process 1 y bin, rapMax = rapMin
-    ptMin=1      #takes bins, not acutal values
-    ptMax=5      #if you only want to process 1 pt bin, ptMax = ptMin
+    ptMin=3      #takes bins, not acutal values
+    ptMax=3      #if you only want to process 1 pt bin, ptMax = ptMin
     if [ ${CHIC_BINNING} -eq 2 ]; then
       ptMax=4
     fi
@@ -43,6 +43,7 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
 
     runChiMassFitOnly=true
     incChic0InMassFit=false # include the Chic0 in the mass(-lifetime) fit of the chic
+    includeBkgInMassFit=false # if false the chic mass model is simply the sum of the chic1 and the chic2 mass
     correctCtau=false   #correct pseudo-proper lifetime
     rejectCowboys=true
     rejectSeagulls=false # not checked if cowboys are rejected! (Only implemented for MC at the moment!)
@@ -106,12 +107,12 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     execute_runLifetimeFit=0    				    #can be executed for different pt and y bins
     execute_runPlotJpsiMassLifetime=0    			#can be executed for different pt and y bins
     execute_PlotJpsiFitPar=0              			#can be executed for different pt and y bins
-    execute_runChiMassLifetimeFit=0		  	    	#can be executed for different pt and y bins
-    execute_runDefineRegionsAndFractions=0			#can be executed for different pt and y bins
-    execute_runPlotMassLifetime=0    				#can be executed for different pt and y bins
+    execute_runChiMassLifetimeFit=1		  	    	#can be executed for different pt and y bins
+    execute_runDefineRegionsAndFractions=1			#can be executed for different pt and y bins
+    execute_runPlotMassLifetime=1    				#can be executed for different pt and y bins
     execute_PlotFitPar=0              				#can be executed for different pt and y bins
     execute_runPlotDataDistributions=0		 		#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
-    execute_runBkgHistos=1          				#can be executed for different pt and y bins
+    execute_runBkgHistos=0          				#can be executed for different pt and y bins
     execute_PlotCosThetaPhiBG=0 		 			#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
     execute_PlotMassRapPtBG=0 		 			#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
     execute_PlotCosThetaPhiDistribution=0 			#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
@@ -317,7 +318,7 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     if [ ${execute_runChiMassLifetimeFit} -eq 1 ]
     then
       cp runChiMassLifetimeFit runChiMassLifetimeFit_rap${rapMin}_pt${ptMin}
-      ./runChiMassLifetimeFit_rap${rapMin}_pt${ptMin} runChiMassFitOnly=${runChiMassFitOnly} rapMin=${rapMin} rapMax=${rapMax} ptMin=${ptMin} ptMax=${ptMax} nState=${nState} MC=${MC} MCclosure=${MCclosure} useChic0=${incChic0InMassFit}
+      ./runChiMassLifetimeFit_rap${rapMin}_pt${ptMin} runChiMassFitOnly=${runChiMassFitOnly} rapMin=${rapMin} rapMax=${rapMax} ptMin=${ptMin} ptMax=${ptMax} nState=${nState} MC=${MC} MCclosure=${MCclosure} useChic0=${incChic0InMassFit} useBkgMassFit=${includeBkgInMassFit}
       rm runChiMassLifetimeFit_rap${rapMin}_pt${ptMin}
     fi
 

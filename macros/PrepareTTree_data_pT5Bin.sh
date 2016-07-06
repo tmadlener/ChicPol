@@ -43,7 +43,8 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     PlottingDataDists=1 #0...all, 1...1D plots, 2...2D plots
 
     runChiMassFitOnly=false
-    incChic0InMassFit=false # include the Chic0 in the mass(-lifetime) fit of the chic
+    incChic0InMassFit=true # include the Chic0 in the mass(-lifetime) fit of the chic
+    includeBkgInMassFit=true # if false the chic mass model is simply the sum of the chic1 and the chic2 mass
     correctCtau=false   #correct pseudo-proper lifetime
     rejectCowboys=true
     rejectSeagulls=false # not checked if cowboys are rejected! (Only implemented for MC at the moment!)
@@ -327,7 +328,7 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     if [ ${execute_runChiMassLifetimeFit} -eq 1 ]
     then
       cp runChiMassLifetimeFit runChiMassLifetimeFit_rap${rapMin}_pt${ptMin}
-      ./runChiMassLifetimeFit_rap${rapMin}_pt${ptMin} runChiMassFitOnly=${runChiMassFitOnly} rapMin=${rapMin} rapMax=${rapMax} ptMin=${ptMin} ptMax=${ptMax} nState=${nState} MC=${MC} MCclosure=${MCclosure} useChic0=${incChic0InMassFit}
+      ./runChiMassLifetimeFit_rap${rapMin}_pt${ptMin} runChiMassFitOnly=${runChiMassFitOnly} rapMin=${rapMin} rapMax=${rapMax} ptMin=${ptMin} ptMax=${ptMax} nState=${nState} MC=${MC} MCclosure=${MCclosure} useChic0=${incChic0InMassFit} useBkgMassFit=${includeBkgInMassFit}
       rm runChiMassLifetimeFit_rap${rapMin}_pt${ptMin}
     fi
 

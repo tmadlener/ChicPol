@@ -20,7 +20,9 @@
 
 using namespace RooFit;
 
-void chiMassLifetimeFit(const std::string &infilename, int rapBin, int ptBin, int nState, bool runChiMassFitOnly, bool MC, bool MCclosure=false, bool includeChic0InMassFit = true){
+void chiMassLifetimeFit(const std::string &infilename, int rapBin, int ptBin, int nState, bool runChiMassFitOnly,
+                        bool MC, bool MCclosure=false, bool includeChic0InMassFit = true,
+                        bool includeBkgInMassFit = true){
   cout<<"chiMassLifetimeFit"<<endl;
 
   TFile *infile = TFile::Open(infilename.c_str(), "UPDATE");
@@ -203,7 +205,13 @@ void chiMassLifetimeFit(const std::string &infilename, int rapBin, int ptBin, in
   } else {
     ws->factory("SUM::M_signal(fracSignal_chic1*M_chic1, M_chic2)");
   }
-  ws->factory("SUM::M_fullModel(fracBackground*M_background, jpsi_fBkg*M_background, M_signal)");
+  if (includeBkgInMassFit) {
+    ws->factory("SUM::M_fullModel(fracBackground*M_background, jpsi_fBkg*M_background, M_signal)");
+  } else {
+    // ws->factory("SUM::M_fullModel(jpsi_fBkg*M_background, M_signal)");
+    ws->factory("SUM::M_fullModel(fracSignal_chic1*M_chic1, M_chic2)"); // NO background at all
+  }
+
   //ws->factory("ExtendPdf::M_fullModel(M_fullModelNonE, NumEvE)");
 
   RooRealVar NumEvE("NumEvE","NumEvE",0.);
