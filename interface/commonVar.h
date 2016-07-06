@@ -53,7 +53,7 @@ namespace onia{
   //const double nSigChiBkgLow = 10.0;
   //const double nSigChiBkgHigh = 3.5;
 
-  const double fChi1MassLow = 0.1;
+  const double fChi1MassLow = 0.05; // decided beginning of July, 16. (See Signal Region Definition study Mails)
   const double fChi1MassHigh = 0.01;
   const double fChi2MassLow = 0.1;
   const double fChi2MassHigh = 0.01;
