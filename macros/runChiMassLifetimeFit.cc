@@ -32,6 +32,7 @@ int main(int argc, char* argv[]){
   bool runChiMassFitOnly = false;
   bool MC = false;
   bool MCclosure = false;
+  bool useChic0 = true; // include the chic0 in the mass fit?
 
   // Loop over argument list
   for (int i=1; i < argc; i++)
@@ -45,6 +46,7 @@ int main(int argc, char* argv[]){
       fromSplit("nState", arg, nState);
       // fromSplit("MC", arg, MC); // have a bug here at the moment! Not needed at the moment but has to be fixed!!
       fromSplit("MCclosure", arg, MCclosure);
+      fromSplit("useChic0", arg, useChic0);
     }
 
   std::cout << "-----------------------\n"
@@ -73,7 +75,7 @@ int main(int argc, char* argv[]){
       std::cout << "CopyFile: " << gSystem->CopyFile(infilenameFrom.c_str(),infilenameTo.c_str(),kTRUE) << std::endl;
       cout<<"copy file finished"<<endl;
 
-      chiMassLifetimeFit(infilenameTo.c_str(), iRap, iPT, nState, runChiMassFitOnly, MC, MCclosure);
+      chiMassLifetimeFit(infilenameTo.c_str(), iRap, iPT, nState, runChiMassFitOnly, MC, MCclosure, useChic0);
 
     }
   }

@@ -43,6 +43,7 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     PlottingDataDists=1 #0...all, 1...1D plots, 2...2D plots
 
     runChiMassFitOnly=false
+    incChic0InMassFit=false # include the Chic0 in the mass(-lifetime) fit of the chic
     correctCtau=false   #correct pseudo-proper lifetime
     rejectCowboys=true
     rejectSeagulls=false # not checked if cowboys are rejected! (Only implemented for MC at the moment!)
@@ -64,7 +65,7 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     doCtauUncer=true   #redundant for chic
     PolLSB=false       #measure polarization of the left sideband
     PolRSB=false       #measure polarization of the right sideband
-    PolNP=true      #measure polarization of the non prompt events
+    PolNP=false      #measure polarization of the non prompt events
     forceBinning=true  #set binning of Psi1S consistently to non prompt binning and Psi2S consistently to background binning #redundtant for chic
     folding=true       #folding is applied to all background histograms
     normApproach=false #normalization #used before binning algorithm #redundtant
@@ -75,9 +76,9 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     fitMassNP=false
 
     ## signal region definitions (default is -1 -> see commonVar.h to check used values, between 0 and 1 for adjusted ranges)
-    chic1MassLow=0.05
-    chic1MassHigh=-1
-    chic2MassLow=-1
+    chic1MassLow=0.009
+    chic1MassHigh=0.99
+    chic2MassLow=0.05
     chic2MassHigh=-1
     nSigPR=-1
     nSigNP=-1
@@ -92,7 +93,7 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     # JobID=chic_11April2016_nonRefit_useRef_${useRefittedChic}_rejCBs # fChi1MassLow = 0.1
     # JobID=jpsi_13May2016_MCclosure_rejCow_${rejectCowboys}_rejSea_${rejectSeagulls}
     # JobID=chic_23May2016_MCclosure_test
-    JobID=chic_30June2016_rejCow_pt10Cut_chic${CHIC_BINNING}Binning_polNP
+    JobID=chic_30June2016_rejCow_pt10Cut_chic${CHIC_BINNING}Binning
     # JobID=chic_21June2016_rejCow_pt10Cut_chic2Binning_corrLib # added for comparison with old library
     # JobID=chic_15June2016_rejCow_pt10Cut_chic2Binning
     # JobID=chic_30March2016_ML30 # fChi1MassLow = 0.3
@@ -118,10 +119,10 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     execute_PlotJpsiFitPar=0              			#can be executed for different pt and y bins
     execute_runChiMassLifetimeFit=0		  	    	#can be executed for different pt and y bins
     execute_runDefineRegionsAndFractions=1			#can be executed for different pt and y bins
-    execute_runPlotMassLifetime=0   				#can be executed for different pt and y bins
+    execute_runPlotMassLifetime=1   				#can be executed for different pt and y bins
     execute_PlotFitPar=0              				#can be executed for different pt and y bins
     execute_runPlotDataDistributions=0		 		#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
-    execute_runBkgHistos=1          				#can be executed for different pt and y bins
+    execute_runBkgHistos=0          				#can be executed for different pt and y bins
     execute_PlotCosThetaPhiBG=0 		 			#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
     execute_PlotMassRapPtBG=0 		 			#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
     execute_PlotCosThetaPhiDistribution=0 			#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
@@ -326,7 +327,7 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     if [ ${execute_runChiMassLifetimeFit} -eq 1 ]
     then
       cp runChiMassLifetimeFit runChiMassLifetimeFit_rap${rapMin}_pt${ptMin}
-      ./runChiMassLifetimeFit_rap${rapMin}_pt${ptMin} runChiMassFitOnly=${runChiMassFitOnly} rapMin=${rapMin} rapMax=${rapMax} ptMin=${ptMin} ptMax=${ptMax} nState=${nState} MC=${MC} MCclosure=${MCclosure}
+      ./runChiMassLifetimeFit_rap${rapMin}_pt${ptMin} runChiMassFitOnly=${runChiMassFitOnly} rapMin=${rapMin} rapMax=${rapMax} ptMin=${ptMin} ptMax=${ptMax} nState=${nState} MC=${MC} MCclosure=${MCclosure} useChic0=${incChic0InMassFit}
       rm runChiMassLifetimeFit_rap${rapMin}_pt${ptMin}
     fi
 

@@ -20,7 +20,7 @@
 
 using namespace RooFit;
 
-void chiMassLifetimeFit(const std::string &infilename, int rapBin, int ptBin, int nState, bool runChiMassFitOnly, bool MC, bool MCclosure=false){
+void chiMassLifetimeFit(const std::string &infilename, int rapBin, int ptBin, int nState, bool runChiMassFitOnly, bool MC, bool MCclosure=false, bool includeChic0InMassFit = true){
   cout<<"chiMassLifetimeFit"<<endl;
 
   TFile *infile = TFile::Open(infilename.c_str(), "UPDATE");
@@ -198,7 +198,11 @@ void chiMassLifetimeFit(const std::string &infilename, int rapBin, int ptBin, in
   }
 
   //full mass shape
-  ws->factory("SUM::M_signal(fracSignal_chic1*M_chic1, fracSignal_chic0*M_chic0, M_chic2)");
+  if (includeChic0InMassFit) {
+    ws->factory("SUM::M_signal(fracSignal_chic1*M_chic1, fracSignal_chic0*M_chic0, M_chic2)");
+  } else {
+    ws->factory("SUM::M_signal(fracSignal_chic1*M_chic1, M_chic2)");
+  }
   ws->factory("SUM::M_fullModel(fracBackground*M_background, jpsi_fBkg*M_background, M_signal)");
   //ws->factory("ExtendPdf::M_fullModel(M_fullModelNonE, NumEvE)");
 
