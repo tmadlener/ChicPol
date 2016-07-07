@@ -19,7 +19,7 @@
 
 const std::string rapBin = "rap1";
 const std::vector<int> markerStyle = {24, 25, 26};
-const std::vector<int> markerColor = {8, 9, 2, 6, 3};
+const std::vector<int> markerColor = {8, 9, 2, 6, 1};
 const int markerSize = 8;
 
 // UGLY: global variables for access across different functions
@@ -102,8 +102,9 @@ void compBoundaries(const std::vector<std::string>& inputfns, const std::string&
   for (size_t iFile = 0; iFile < graphs.size(); ++iFile) {
     for (size_t iGraph = 0; iGraph < graphs[iFile].size(); ++iGraph) {
       TGraphAsymmErrors* graph = graphs[iFile][iGraph];
-      graph->SetMarkerStyle(markerStyle[iGraph]);
       graph->SetMarkerColor(markerColor[iFile]);
+      graph->SetMarkerStyle(markerStyle[iGraph]);
+      graph->SetMarkerSize(1.5);
       graph->SetLineColor(markerColor[iFile]);
 
       graph->Draw("P");
