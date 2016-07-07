@@ -252,7 +252,7 @@ int main(int argc, char** argv) {
       }
 
       cout<<"TGraphs of all parameters loaded for frame "<<frameSig<<endl;
-
+      infile1->Close();
 
 
       double ptCentre;
@@ -380,7 +380,7 @@ int main(int argc, char** argv) {
     cout<<"f_BG: "<<f_BG<<endl;
 
 
-    if(dataFile->Get("isBGdistribution")==NULL || dataFile == NULL){
+    if(dataFile == NULL || dataFile->Get("isBGdistribution")==NULL){
       OutputDirectory=rapptstruct;
       polGen(raplow,raphigh,ptlow,pthigh,mass_signal_peak,mass_signal_sigma,n_sigmas_signal,numEvCheck,f_BG,lambda_theta_sig_,lambda_phi_sig_,lambda_thetaphi_sig_,lambda_theta_bkg_,lambda_phi_bkg_,lambda_thetaphi_bkg_,frameSig,frameBkg,-999,nState,OutputDirectory);
       std::cout << "gen finished" << std::endl;
@@ -389,6 +389,7 @@ int main(int argc, char** argv) {
       sprintf(tmpfilename,"%s/GenResults.root",rapptstruct);		gSystem->Unlink(tmpfilename);
     }
 
+    if (dataFile) dataFile->Close();
     sprintf(tmpfilename,"%s/data.root",rapptstruct);
     dataFile = new TFile(tmpfilename, "READ");
     TH1D* isBG_distribution = (TH1D*)dataFile->Get("isBGdistribution");

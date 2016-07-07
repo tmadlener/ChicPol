@@ -2200,8 +2200,13 @@ void polFit(int n_sampledPoints=1,
   sum_s2thcph_PX  *= n_signalEvents / n_acceptedEvents;
 
 
-  // input data file is no more used and is closed
+  // input data file is no more used and is closed (also close all other TFiles that are no longer needed)
   dataFile->Close();
+  if (fInEff_nDenominatorAmap) fInEff_nDenominatorAmap->Close();
+  if (fInAmap) fInAmap->Close();
+  if (fInRhoFactor) fInRhoFactor->Close();
+  if (fInEff) fInEff->Close();
+  if (fInDileptonEff) fInDileptonEff->Close();
 
   // output ntuples for the CS, HX, PX (perpendicular helicity) frames
   // lth = lambdatheta, lph = lambdaphi, ltp = lambdathetaphi
@@ -2793,5 +2798,5 @@ void polFit(int n_sampledPoints=1,
   test_ltp_PX->Delete();
 
   resultsFile->Write();
-
+  // resultsFile->Close();
 } // end of main
