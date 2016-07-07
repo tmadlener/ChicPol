@@ -17,12 +17,6 @@
 #include <fstream>
 #include <algorithm>
 
-/** return the pointer to the last element of a c-style array. */
-template<typename T, size_t N>
-T * end(T (&ra)[N]) {
-    return ra + N;
-}
-
 /** Interface class for the templatized version of the actual class, to have a common interface. */
 class IBkgHistoProducer {
 public:
@@ -1612,7 +1606,7 @@ void BkgHistoProducer<State>::store2DHists(bool PolLSB, bool PolRSB, bool PolNP,
 {
   // std::cout << "---------- IN BkgHistoProducer<Chic>::store2DHists()" << std::endl;
 
-  const std::vector<std::string> labels = charArrayToStrVec(onia::frameLabel, onia::kNbFrames);
+  const std::vector<std::string> labels(onia::frameLabel, end(onia::frameLabel));
 
   // in order to have a common function for all states, the names of the retrieved fit values is state dependent
   // NOTE: for the Jpsis the same variable is stored twice (but anyway not accessed later)

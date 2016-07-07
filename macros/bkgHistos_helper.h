@@ -294,7 +294,7 @@ std::pair<int, int> determineBinning(const TH2D& hR, const TH2D& hL, const TH2D&
     int nBinsCosthMin = 8;
 
     int iLoop = 0;
-    while (Naverage <= 10. || !minBinningReached(nBinsPhi, nBinsPhiMin, nBinsCosth, nBinsCosthMin)) {
+    while (Naverage <= 10. && !minBinningReached(nBinsPhi, nBinsPhiMin, nBinsCosth, nBinsCosthMin)) {
       iLoop++;
       std::cout << "looping for correct binning in background histogram" << std::endl;
 
@@ -524,16 +524,10 @@ TH1D* addSideBands(TH1D* hL, TH1D* hR, const double f1, const double f2)
   return hL2;
 }
 
-/** convert an array of c-style strings (char*) to a vector of strings. */
-std::vector<std::string> charArrayToStrVec(const char** charArr, const int arrSize)
-{
-  std::vector<std::string> retVec;
-  for (int iL = 0; iL < arrSize; ++iL) {
-    std::stringstream tmp;
-    tmp << charArr[iL];
-    retVec.push_back(tmp.str());
-  }
-  return retVec;
+/** return the pointer to the last element of a c-style array. */
+template<typename T, size_t N>
+T * end(T (&ra)[N]) {
+    return ra + N;
 }
 
 /** unfold the passed TH2D.*/
