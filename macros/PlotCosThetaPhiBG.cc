@@ -195,7 +195,7 @@ int main(int argc, char* argv[]){
         }
       }
     }
-            // chi1 state
+    // chi1 state
     else if(nState==6){
       fprintf(NumFile, "\\begin{tabular}{|c|c|c|c|}\n\\hline\n");
       fprintf(NumFile, "\\multicolumn{4}{|c|}{$\\chi_{c1}$} \\\\\n \\hline \n");
@@ -330,39 +330,39 @@ int main(int argc, char* argv[]){
     fclose(NumFilePt);
     std::cout << "mean pt and y file written" << std::endl;
 
-  // chi2 state
-  if(nState == 6){
-    NumFilePt1 = fopen(numFileNamePt1.str().c_str(),"w");
-    fprintf(NumFilePt1, "\n");
-    fprintf(NumFilePt1,"\\documentclass{article}\n\\usepackage[applemac]{inputenc}\n\\usepackage{amsmath}\n\\usepackage{textcomp}\n\\pagestyle{plain}\n\\usepackage{graphicx}\n\\usepackage{multicol}\n\\usepackage{geometry}\n\\usepackage{subfigure}\n\\usepackage{booktabs}\n\\usepackage{setspace}\n\n\n\n\\begin{document}\n");
-    fprintf(NumFilePt1, "\n\n\n\n");
-    fprintf(NumFilePt1, "\n\n\n\n");
-    fprintf(NumFilePt1, "\\begin{table}[!H]\n\\centering\n \\caption{Estimated mean $p_{T}$ and $|y|$, for each $\\psi(nS)$ kinematic bin} \n");
-    fprintf(NumFilePt1, "\\begin{tabular}{|c|c|c|}\n\\hline\n");
-    fprintf(NumFilePt1, "\\multicolumn{3}{|c|}{$\\chi_{c2}$} \\\\\n \\hline \n");
-    sprintf(framerap,"\\multicolumn{3}{|c|}{$%1.1f < |y| < %1.1f$ }\\\\\n \\hline \n",0.0,1.2);
-    fprintf(NumFilePt1,framerap);
-    fprintf(NumFilePt1, "$p_{T}$ [GeV] & $\\hat{p_{T}}$ [GeV] & $\\hat{|y|}$ \\\\\n \\hline \n \\rule{0pt}{4mm} \n");
-    int pt=0;
-    for(int ptBin = 1; ptBin < onia::kNbPTBins[1]+1; ptBin++) {
-      fprintf(NumFilePt1, "%1.0f--%1.0f & $%1.3f$ & $%1.3f$ \\\\\n",
-              onia::pTRange[1][ptBin-1], onia::pTRange[1][ptBin],
-              meanPt[0][ptBin-1][1], meanRap[0][ptBin-1][1]);
-      pt++;
+    // chi2 state
+    if(nState == 6){
+      NumFilePt1 = fopen(numFileNamePt1.str().c_str(),"w");
+      fprintf(NumFilePt1, "\n");
+      fprintf(NumFilePt1,"\\documentclass{article}\n\\usepackage[applemac]{inputenc}\n\\usepackage{amsmath}\n\\usepackage{textcomp}\n\\pagestyle{plain}\n\\usepackage{graphicx}\n\\usepackage{multicol}\n\\usepackage{geometry}\n\\usepackage{subfigure}\n\\usepackage{booktabs}\n\\usepackage{setspace}\n\n\n\n\\begin{document}\n");
+      fprintf(NumFilePt1, "\n\n\n\n");
+      fprintf(NumFilePt1, "\n\n\n\n");
+      fprintf(NumFilePt1, "\\begin{table}[!H]\n\\centering\n \\caption{Estimated mean $p_{T}$ and $|y|$, for each $\\psi(nS)$ kinematic bin} \n");
+      fprintf(NumFilePt1, "\\begin{tabular}{|c|c|c|}\n\\hline\n");
+      fprintf(NumFilePt1, "\\multicolumn{3}{|c|}{$\\chi_{c2}$} \\\\\n \\hline \n");
+      sprintf(framerap,"\\multicolumn{3}{|c|}{$%1.1f < |y| < %1.1f$ }\\\\\n \\hline \n",0.0,1.2);
+      fprintf(NumFilePt1,framerap);
+      fprintf(NumFilePt1, "$p_{T}$ [GeV] & $\\hat{p_{T}}$ [GeV] & $\\hat{|y|}$ \\\\\n \\hline \n \\rule{0pt}{4mm} \n");
+      int pt=0;
+      for(int ptBin = 1; ptBin < onia::kNbPTBins[1]+1; ptBin++) {
+        fprintf(NumFilePt1, "%1.0f--%1.0f & $%1.3f$ & $%1.3f$ \\\\\n",
+                onia::pTRange[1][ptBin-1], onia::pTRange[1][ptBin],
+                meanPt[0][ptBin-1][1], meanRap[0][ptBin-1][1]);
+        pt++;
+      }
+      fprintf(NumFilePt1, "\\hline\n");
+      fprintf(NumFilePt1, "\\end{tabular}\n");
+      fprintf(NumFilePt1, "\\label{tab:NumEventsFracBG}\n");
+      fprintf(NumFilePt1, "\\end{table}\n");
+      fprintf(NumFilePt1, "\n");
+      fprintf(NumFilePt1, "\\end{document}");
+      fclose(NumFilePt1);
+      std::cout << "second mean pt and y file written" << std::endl;
     }
-    fprintf(NumFilePt1, "\\hline\n");
-    fprintf(NumFilePt1, "\\end{tabular}\n");
-    fprintf(NumFilePt1, "\\label{tab:NumEventsFracBG}\n");
-    fprintf(NumFilePt1, "\\end{table}\n");
-    fprintf(NumFilePt1, "\n");
-    fprintf(NumFilePt1, "\\end{document}");
-    fclose(NumFilePt1);
-    std::cout << "second mean pt and y file written" << std::endl;
+    std::cout << "tex files written" << std::endl;
   }
-  std::cout << "tex files written" << std::endl;
-}
-std::cout << "end of program" << std::endl;
-return 0;
+  std::cout << "end of program" << std::endl;
+  return 0;
 }
 
 //===========================
@@ -469,7 +469,7 @@ void PlotHistos(int iRapBin, int iPTBin, int nState, int iFrame, int iWindow){
   // non prompt background SR1
   hCosThetaPhiNPBG[iRapBin][iPTBin][iFrame][0]->GetYaxis()->SetTitleOffset(yOffset);
   hCosThetaPhiNPBG[iRapBin][iPTBin][iFrame][0]->Draw("colz");
-  if(iRapBin==0) 
+  if(iRapBin==0)
     latex->DrawLatex(left,top,Form("|y| < %.1f, %.1f < p_{T} < %.1f GeV",
                                    onia::rapForPTRange[iRapBin+1],
                                    onia::pTRange[iRapBin+1][iPTBin],onia::pTRange[iRapBin+1][iPTBin+1]));
@@ -507,7 +507,7 @@ void PlotHistos(int iRapBin, int iPTBin, int nState, int iFrame, int iWindow){
   // total background in PRSR1
   hTCosThetaPhi[iRapBin][iPTBin][iFrame][0]->GetYaxis()->SetTitleOffset(yOffset);
   hTCosThetaPhi[iRapBin][iPTBin][iFrame][0]->Draw("colz");
-  if(iRapBin==0) 
+  if(iRapBin==0)
     latex->DrawLatex(left,top,Form("|y| < %.1f, %.1f < p_{T} < %.1f GeV",
                                    onia::rapForPTRange[iRapBin+1],
                                    onia::pTRange[iRapBin+1][iPTBin],onia::pTRange[iRapBin+1][iPTBin+1]));
@@ -626,7 +626,7 @@ void LoadHistos(int iRapBin, int iPTBin, int nState){
     nameBGinNPR1 << "hCosThetaPhi_" << onia::frameLabel[iFrame] << "_rap" << iRapBin+1 << "_pT" << iPTBin+1 << "_highct_R";
     nameNPB1 << "hCosThetaPhiNPBG_" << onia::frameLabel[iFrame] << "_rap" << iRapBin+1 << "_pT" << iPTBin+1;
     nameBG1 << "hTCosThetaPhi" << onia::frameLabel[iFrame] << "_rap" << iRapBin+1 << "_pT" << iPTBin+1;
-    
+
     hCosThetaPhi[iRapBin][iPTBin][iFrame][L][0] = (TH2F *) fIn->Get(nameL.str().c_str());
     hCosThetaPhi[iRapBin][iPTBin][iFrame][L][1] = (TH2F *) fIn1->Get(nameL.str().c_str());
     hCosThetaPhi[iRapBin][iPTBin][iFrame][L][0]->SetName(nameL1.str().c_str());
@@ -635,7 +635,7 @@ void LoadHistos(int iRapBin, int iPTBin, int nState){
     hCosThetaPhi[iRapBin][iPTBin][iFrame][R][1] = (TH2F *) fIn1->Get(nameR.str().c_str());
     hCosThetaPhi[iRapBin][iPTBin][iFrame][R][0]->SetName(nameR1.str().c_str());
     hCosThetaPhi[iRapBin][iPTBin][iFrame][R][1]->SetName(nameR1.str().c_str());
-    
+
     hCosThetaPhiHighct[iRapBin][iPTBin][iFrame][L][0] = (TH2F *) fIn->Get(nameBGinNPL.str().c_str());
     hCosThetaPhiHighct[iRapBin][iPTBin][iFrame][L][1] = (TH2F *) fIn1->Get(nameBGinNPL.str().c_str());
     hCosThetaPhiHighct[iRapBin][iPTBin][iFrame][L][0]->SetName(nameBGinNPL1.str().c_str());
@@ -644,17 +644,17 @@ void LoadHistos(int iRapBin, int iPTBin, int nState){
     hCosThetaPhiHighct[iRapBin][iPTBin][iFrame][R][1] = (TH2F *) fIn1->Get(nameBGinNPR.str().c_str());
     hCosThetaPhiHighct[iRapBin][iPTBin][iFrame][R][0]->SetName(nameBGinNPR1.str().c_str());
     hCosThetaPhiHighct[iRapBin][iPTBin][iFrame][R][1]->SetName(nameBGinNPR1.str().c_str());
-    
+
     hCosThetaPhiNPBG[iRapBin][iPTBin][iFrame][0] = (TH2F *) fIn->Get(nameNPB.str().c_str());
     hCosThetaPhiNPBG[iRapBin][iPTBin][iFrame][1] = (TH2F *) fIn1->Get(nameNPB.str().c_str());
     hCosThetaPhiNPBG[iRapBin][iPTBin][iFrame][0]->SetName(nameNPB1.str().c_str());
     hCosThetaPhiNPBG[iRapBin][iPTBin][iFrame][1]->SetName(nameNPB1.str().c_str());
-    
+
     hTCosThetaPhi[iRapBin][iPTBin][iFrame][0] = (TH2F *) fIn->Get(nameBG.str().c_str());
     hTCosThetaPhi[iRapBin][iPTBin][iFrame][1] = (TH2F *) fIn1->Get(nameBG.str().c_str());
     hTCosThetaPhi[iRapBin][iPTBin][iFrame][0]->SetName(nameBG1.str().c_str());
     hTCosThetaPhi[iRapBin][iPTBin][iFrame][1]->SetName(nameBG1.str().c_str());
-    
+
     if(iFrame==2){
       std::cout << "PrintBin rap " << iRapBin+1 << " pt " << iPTBin+1 << " nBinsCosthTBG: " <<
         hTCosThetaPhi[iRapBin][iPTBin][iFrame][0]->GetNbinsX() << " nBinsPhiTBG:   "<<
