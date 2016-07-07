@@ -5,8 +5,8 @@ INCS=-I../interface
 # conditionally define the preprocessor flag. CHIC_BINNING is not defined a default value
 # is defined in commonVar.h
 PREPFLAGS=
-ifdef ${CHIC_BINNING}
-	PREFLAGS=-D"USE_CHIC_BINNING=${CHIC_BINNING}"
+ifneq ($(strip ${CHIC_BINNING}),)
+	PREPFLAGS=-D"USE_CHIC_BINNING=${CHIC_BINNING}"
 endif
 
 %.o : %.cc
