@@ -5,6 +5,7 @@ using namespace std;
 
 #include "rootIncludes.inc"
 #include "commonVar.h"
+#include "clarg_parsing.h"
 
 #include "TH2F.h"
 
@@ -35,44 +36,6 @@ double meanPt[onia::kNbRapForPTBins][onia::kNbPTMaxBins][2],
 
 void LoadHistos(int iRapBin, int iPTBin, int nState);
 void PlotHistos(int iRapBin, int iPTBin, int nState, int iFrame, int iWindow);
-
-//========================================================
-// code to read input arguments
-template<typename T>
-void fromSplit(const std::string& key, const std::string &arg, T& out)
-{
-  const char delim = '=';
-  // Skip if key or delimiter not there
-  if ((arg.find(key) == std::string::npos) ||
-      (arg.find(delim) == std::string::npos))
-    return;
-
-  std::string skey, sval;
-  std::stringstream sstr(arg);
-  std::getline(sstr, skey, delim); // Dummy read to skip key
-  std::getline(sstr, sval, delim); // Get value
-  T tout;
-  if (!(std::istringstream(sval) >> std::boolalpha >> tout))
-    return;
-  out = tout;
-  std::cout << std::boolalpha << skey << ": "  << out << std::endl;
-}
-// Special version for string without the conversion
-template<>
-void fromSplit(const std::string& key, const std::string &arg, std::string &out)
-{
-  const char delim = '=';
-  // Skip if key or delimiter not there
-  if ((arg.find(key) == std::string::npos) ||
-      (arg.find(delim) == std::string::npos))
-    return;
-  std::string skey, sval;
-  std::stringstream sstr(arg);
-  std::getline(sstr, skey, delim); // Dummy read to skip key
-  std::getline(sstr, sval, delim); // Get value
-  out = sval;
-  std::cout << skey << ": "  << out << std::endl;
-}
 
 //=================== main =====================
 int main(int argc, char* argv[]){
@@ -575,20 +538,20 @@ void LoadHistos(int iRapBin, int iPTBin, int nState){
   std::cout << "get number of events" << std::endl;
   events_PRSR[iRapBin][iPTBin][0] = (TH1F*) fIn->Get("events_promptSR");
   events_NPSR[iRapBin][iPTBin][0] = (TH1F*) fIn->Get("events_nonpromptSR");
-  evtPinPRSR [iRapBin][iPTBin][0] = (int)events_PRSR[iRapBin][iPTBin][0]->GetBinContent(1);
-  evtNPinPRSR[iRapBin][iPTBin][0] = (int)events_PRSR[iRapBin][iPTBin][0]->GetBinContent(2);
-  evtBGinPRSR[iRapBin][iPTBin][0] = (int)events_PRSR[iRapBin][iPTBin][0]->GetBinContent(3);
-  evtPinNPSR [iRapBin][iPTBin][0] = (int)events_NPSR[iRapBin][iPTBin][0]->GetBinContent(1);
-  evtNPinNPSR[iRapBin][iPTBin][0] = (int)events_NPSR[iRapBin][iPTBin][0]->GetBinContent(2);
-  evtBGinNPSR[iRapBin][iPTBin][0] = (int)events_NPSR[iRapBin][iPTBin][0]->GetBinContent(3);
+  evtPinPRSR [iRapBin][iPTBin][0] = events_PRSR[iRapBin][iPTBin][0] ? (int)events_PRSR[iRapBin][iPTBin][0]->GetBinContent(1) : -1;
+  evtNPinPRSR[iRapBin][iPTBin][0] = events_PRSR[iRapBin][iPTBin][0] ? (int)events_PRSR[iRapBin][iPTBin][0]->GetBinContent(2) : -1;
+  evtBGinPRSR[iRapBin][iPTBin][0] = events_PRSR[iRapBin][iPTBin][0] ? (int)events_PRSR[iRapBin][iPTBin][0]->GetBinContent(3) : -1;
+  evtPinNPSR [iRapBin][iPTBin][0] = events_NPSR[iRapBin][iPTBin][0] ? (int)events_NPSR[iRapBin][iPTBin][0]->GetBinContent(1) : -1;
+  evtNPinNPSR[iRapBin][iPTBin][0] = events_NPSR[iRapBin][iPTBin][0] ? (int)events_NPSR[iRapBin][iPTBin][0]->GetBinContent(2) : -1;
+  evtBGinNPSR[iRapBin][iPTBin][0] = events_NPSR[iRapBin][iPTBin][0] ? (int)events_NPSR[iRapBin][iPTBin][0]->GetBinContent(3) : -1;
   events_PRSR[iRapBin][iPTBin][1] = (TH1F*) fIn1->Get("events_promptSR");
   events_NPSR[iRapBin][iPTBin][1] = (TH1F*) fIn1->Get("events_nonpromptSR");
-  evtPinPRSR [iRapBin][iPTBin][1] = (int)events_PRSR[iRapBin][iPTBin][1]->GetBinContent(1);
-  evtNPinPRSR[iRapBin][iPTBin][1] = (int)events_PRSR[iRapBin][iPTBin][1]->GetBinContent(2);
-  evtBGinPRSR[iRapBin][iPTBin][1] = (int)events_PRSR[iRapBin][iPTBin][1]->GetBinContent(3);
-  evtPinNPSR [iRapBin][iPTBin][1] = (int)events_NPSR[iRapBin][iPTBin][1]->GetBinContent(1);
-  evtNPinNPSR[iRapBin][iPTBin][1] = (int)events_NPSR[iRapBin][iPTBin][1]->GetBinContent(2);
-  evtBGinNPSR[iRapBin][iPTBin][1] = (int)events_NPSR[iRapBin][iPTBin][1]->GetBinContent(3);
+  evtPinPRSR [iRapBin][iPTBin][1] = events_PRSR[iRapBin][iPTBin][1] ? (int)events_PRSR[iRapBin][iPTBin][1]->GetBinContent(1) : -1;
+  evtNPinPRSR[iRapBin][iPTBin][1] = events_PRSR[iRapBin][iPTBin][1] ? (int)events_PRSR[iRapBin][iPTBin][1]->GetBinContent(2) : -1;
+  evtBGinPRSR[iRapBin][iPTBin][1] = events_PRSR[iRapBin][iPTBin][1] ? (int)events_PRSR[iRapBin][iPTBin][1]->GetBinContent(3) : -1;
+  evtPinNPSR [iRapBin][iPTBin][1] = events_NPSR[iRapBin][iPTBin][1] ? (int)events_NPSR[iRapBin][iPTBin][1]->GetBinContent(1) : -1;
+  evtNPinNPSR[iRapBin][iPTBin][1] = events_NPSR[iRapBin][iPTBin][1] ? (int)events_NPSR[iRapBin][iPTBin][1]->GetBinContent(2) : -1;
+  evtBGinNPSR[iRapBin][iPTBin][1] = events_NPSR[iRapBin][iPTBin][1] ? (int)events_NPSR[iRapBin][iPTBin][1]->GetBinContent(3) : -1;
 
   if(nState == 6){
     std::cout << "get fractions from file" << std::endl;
