@@ -79,19 +79,35 @@ namespace onia{
   double rapForPTRange[kNbRapForPTBins+1] = {0., 1.2};
   double rapRange[2*kNbRapForPTBins+1] = {-1.2, 0., 1.2};
 
+#ifndef USE_CHIC_BINNING
+#warning "USE_CHIC_BINNING is not defined. Setting it to 1"
+#define USE_CHIC_BINNING 1
+#endif
   //chic
+#if USE_CHIC_BINNING == 1
   const int kNbPTMaxBins = 5;
-  //const int kNbPTMaxBins = 4;
+#endif
+#if USE_CHIC_BINNING == 2
+  const int kNbPTMaxBins = 4; // chic2 binning
+#endif
   const int kNbPTBins[kNbRapForPTBins+1] = {kNbPTMaxBins, kNbPTMaxBins};//all y, y1
   double pTRange[kNbRapForPTBins+1][kNbPTMaxBins+1] = {
-      {10., 15., 20., 25., 30., 50.},//all rapidities
-      {10., 15., 20., 25., 30., 50.}};//forward rapidity
-      //chic1
-      //{10., 14., 18., 22., 30., 50.},//all rapidities
-      //{10., 14., 18., 22., 30., 50.}};
-      //chic2
-      //{10., 14., 20., 25., 50.},//all rapidities
-      //{10., 14., 20., 25., 50.}};
+#if USE_CHIC_BINNING == 1
+    // chic1 binning (standard)
+    {10., 15., 20., 25., 30., 50.},//all rapidities
+    {10., 15., 20., 25., 30., 50.}};//forward rapidity
+#endif
+#if USE_CHIC_BINNING == 2
+    // chic2 binning (last two pt bins merged)
+    {10., 15., 20., 25., 50.}, // all rapidities
+    {10., 15., 20., 25., 50.}}; // forward rapidity
+#endif
+  //chic1
+  //{10., 14., 18., 22., 30., 50.},//all rapidities
+  //{10., 14., 18., 22., 30., 50.}};
+  //chic2
+  //{10., 14., 20., 25., 50.},//all rapidities
+  //{10., 14., 20., 25., 50.}};
 
   //// Binning
   //const int kNbRapForPTBins = 15;
@@ -145,51 +161,51 @@ namespace onia{
   int marker_rapForPTBins[] = {20, 25, 21, 20, 22, 29};
 
   //Chic plots:
-	int colorBackground=1;
-	int colorChic0=901;
-	int colorChic1=417;
-	int colorChic2=632;
-	int colorPR=616;
-	int colorNP=600;
+  int colorBackground=1;
+  int colorChic0=901;
+  int colorChic1=417;
+  int colorChic2=632;
+  int colorPR=616;
+  int colorNP=600;
   //Jpsi plots:
-	int colorJpsi=633;
-	int ColorMuMuBG=903;
-	int ColorSumJpsiSignal=419;
-	int ColorPRJpsi=600;
-	int ColorNPJpsi=632;
+  int colorJpsi=633;
+  int ColorMuMuBG=903;
+  int ColorSumJpsiSignal=419;
+  int ColorPRJpsi=600;
+  int ColorNPJpsi=632;
 
 
-	double lineWidth_ML=2.;
-	double markerSize_ML=0.8;
-	double enlargeYby_ML=1.2;
-	int lineStyle_subComps_ML=7;
-	int lineStyle_subCompPRsignal_ML=3;
-	double lineWidth_PRsignal_ML=1.;
+  double lineWidth_ML=2.;
+  double markerSize_ML=0.8;
+  double enlargeYby_ML=1.2;
+  int lineStyle_subComps_ML=7;
+  int lineStyle_subCompPRsignal_ML=3;
+  double lineWidth_PRsignal_ML=1.;
 
-	int LifetimePlotBins=104;
-	int ChicMassPlotBins=80;
+  int LifetimePlotBins=104;
+  int ChicMassPlotBins=80;
 
-	const int nRegions=4;
-	int colorRegions[nRegions+1]={600,920+1,colorChic1,colorChic2,920+3};
+  const int nRegions=4;
+  int colorRegions[nRegions+1]={600,920+1,colorChic1,colorChic2,920+3};
 
 
   // Dimuon cuts
 
-      double cut_vtxProb=0.01;
-      double rap = 20.; //dimuon rap
+  double cut_vtxProb=0.01;
+  double rap = 20.; //dimuon rap
 
   // Gamma cuts
 
-      double cut_gammapt = 0.;
-      double cut_gammaeta=15.;
-      double cut_RconvMin = 1.5;
-      double cut_RconvMax = 200;
+  double cut_gammapt = 0.;
+  double cut_gammaeta=15.;
+  double cut_RconvMin = 1.5;
+  double cut_RconvMax = 200;
 
   // Chi cuts
 
-      double cut_dz=1.35;//1.
-      double cut_probFit = 0.; //0.01;
-      double chirap = rapForPTRange[kNbRapForPTBins]; //chi rap
+  double cut_dz=1.35;//1.
+  double cut_probFit = 0.; //0.01;
+  double chirap = rapForPTRange[kNbRapForPTBins]; //chi rap
 
 }
 

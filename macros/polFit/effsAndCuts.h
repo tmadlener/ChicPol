@@ -3,10 +3,21 @@
 #include "TRandom3.h"
 #include "TF1.h"
 
+#include <algorithm>
 
 enum { loose, tight };
 
-bool isMuonInAcceptance(int iCut, double pT, double eta){
+/** single muon acceptance function with variable overall shift (in GeV). Baseline is iCut == 10 */
+bool isMuonInAcceptanceShift(double pT, double eta, double shift)
+{
+  if (TMath::Abs(eta) < 1.2 && pT > (4.5 + shift)) return true;
+  if (TMath::Abs(eta) > 1.2 && TMath::Abs(eta) < 1.4 && pT > (3.5 + shift)) return true;
+  if (TMath::Abs(eta) > 1.4 && TMath::Abs(eta) < 1.6 && pT > (3. + shift)) return true;
+
+  return false;
+}
+
+bool isMuonInAcceptance(int iCut, double pT, double eta, double shift = 0.){
 
   //iCut=x correspinding to FidCuts=x+1 in scripts
   //iCut=-1 (FidCuts=0) - no cuts -> decision is always true
@@ -122,9 +133,12 @@ bool isMuonInAcceptance(int iCut, double pT, double eta){
     if(pT>5.) decision=kTRUE;
   }
 
+  if (iCut == 30) {
+    return isMuonInAcceptanceShift(pT, eta, shift);
+  }
+
   return decision;
 }
-
 
 void EvaluateEffFileName(int nEff, char EffFileName [200], bool singleLeptonEff) {
 
@@ -186,7 +200,8 @@ void EvaluateEffFileName(int nEff, char EffFileName [200], bool singleLeptonEff)
 
     if(nEff==100001) sprintf(EffFileName,"singleMuonEff_noTracking_L3ptg2_final.root");
     if(nEff==100002) sprintf(EffFileName,"singleMuonEff_noTracking_cowboys_L3ptg2_final.root");
-    if(nEff==100003) sprintf(EffFileName,"singleMuonEff_noTracking_seagulls_L3ptg2_final.root");
+    if(nEff==100003) sprintf(EffFileName,"singleMuonEff_L3ptg2_seagulls_final.root");
+    if(nEff==100004) sprintf(EffFileName, "ParametrizedFactDataEff_2016_01_14_Central.root"); // For MC truth parametrization (ALL)
   }
 
   if(!singleLeptonEff) {
@@ -271,6 +286,7 @@ double EvaluateRhoFactor( double& costh, double& phi, int nEff, TFile* fInRhoFac
   // returning a ludicrous value here such that it will be noticed, will still being able to suppress the warning
   std::cerr << "ERROR in EvaluateRhoFactor at " << __FILE__ << ":" << __LINE__
             << ": dropped through all if-clauses returning -999" << std::endl;
+  exit(-999);
   return -999.;
 
 }
@@ -524,13 +540,97 @@ double DenominatorAmapEfficiency( double& pT, double& eta, int nDenominatorAmap,
   return -999.;
 }
 
-//=============================
-double evalParametrizedEff(double &pT, double &eta, TF1 *func){
+int getBin(const TGraphAsymmErrors* f, double pT)
+{
+double x,y; f->GetPoint(0, x, y);
+  if (pT < x - f->GetErrorXlow(0)) {
+    std::cerr << "getBin(): pT = " << pT << " is below validity of " << f->GetName() << std::endl;
+    return -1;
+  }
+
+  for (int i = 0; i < f->GetN(); ++i) {
+    f->GetPoint(i, x, y);
+    if (pT > x - f->GetErrorXlow(i) && pT <= x + f->GetErrorXhigh(i)) {
+      return i;
+    }
+  }
+
+  std::cerr << "getBin(): Reached upper bound for pT = " << pT << " in " << f->GetName() << std::endl;
+  return f->GetN() - 1;
+}
+
+/**
+ * linearly interpolate between (x0,y0) and (x1,y1) given x.
+ * /f$ y = y_{0} + (y_{1} - y_{0}) \frac{x - x_{0}}{x_{1} - x_{0}}/f$
+ */
+inline double linInt(double x, double x0, double x1, double y0, double y1)
+{
+  return y0 + (y1 - y0) * (x - x0) / (x1 - x0);
+}
+
+/** calculate the error via a linear interpolation between the two points of TGraphAsymmErrors enclosing pT. */
+double calculateError(TGraphAsymmErrors* f, double pT)
+{
+  int pTbin = getBin(f, pT);
+  int extraBin; // bin needed to get the errors, etc. for interpolation
+
+  // do not extrapolate below the threshold of the TGraph; be conservative use larger error of lowest bin
+  if (pTbin < 0) return std::max(f->GetErrorYhigh(0), f->GetErrorYlow(0));
+
+  double x0, y0; f->GetPoint(pTbin, x0, y0);
+  double x1, y1;
+  if (pT > x0) { // this means that we need the bin to our right for interpolation
+    extraBin = pTbin + 1;
+    f->GetPoint(extraBin, x1, y1);
+  } else { // need bin to left. -> Swap the points (x0,y0) and (x1,y1) because 0 index is for left point!
+    extraBin = pTbin; pTbin--;
+    x1 = x0; y1 = y0;
+    f->GetPoint(pTbin, x0, y0);
+  }
+
+  // if we have no left sample point, we cannot interpolate! (Only happens when point is in the lower half of the lowest bin)
+  if (pTbin < 0) return std::max(f->GetErrorYhigh(0), f->GetErrorYlow(0));
+  // if we have no right sample point, we cannot interpolate! (Only happens when point is in the upper half of the highest bin)
+  if (extraBin >= f->GetN()) return std::max(f->GetErrorYhigh(f->GetN() - 1), f->GetErrorYlow(f->GetN() - 1));
+
+  double eh0 = f->GetErrorYhigh(pTbin);
+  double el0 = f->GetErrorYlow(pTbin);
+  double eh1 = f->GetErrorYhigh(extraBin);
+  double el1 = f->GetErrorYlow(extraBin);
+
+  // calculate the absolute values of the error bands and correct them for the central value
+  double errHigh = linInt(pT, x0, x1, y0 + eh0, y1 + eh1);
+  double errLow = linInt(pT, x0, x1, y0 - el0, y1 - el1);
+  double eff = linInt(pT, x0, x1, y0, y1);
+
+  return std::max(errHigh - eff, eff - errLow); // want absolute values!
+}
+
+/** overload for TGraphAsymmErrors as efficiencies. */
+double evalParametrizedEff(double &pT, double &eta, TGraphAsymmErrors *func, bool statVar=false){
 
   if(TMath::Abs(eta) > 1.8) return 0;
   double eff = func->Eval(pT);
+
+  if (statVar) { // take the efficiency as central value and get the error of that bin and draw from a normal distribution
+    // int bin = getBin(func, pT);
+    // double err = func->GetErrorY(bin); // gets sqrt(1/2 * (s_low^2 + s_high^2)) as sigma for the normal distribution
+    double err = calculateError(func, pT); // new version with interpolated errors
+    double eff = gRandom->Gaus(eff, err);
+  }
+
   if(eff > 1.) eff = 1;
   else if(eff < 0) eff = 0;
   return eff;
+}
 
+/** overload for TF1 as efficiencies. Last bool without use here! */
+double evalParametrizedEff(double &pT, double &eta, TF1* func, bool statVar = false)
+{
+  if(TMath::Abs(eta) > 1.8) return 0;
+  double eff = func->Eval(pT);
+
+  if(eff > 1.) eff = 1;
+  else if(eff < 0) eff = 0;
+  return eff;
 }
