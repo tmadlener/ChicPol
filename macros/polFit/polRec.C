@@ -24,7 +24,7 @@
 double etaRange[] = {0., 0.2, 0.3, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0};
 const int bins = 10;
 //=======
-bool isMuonInAcceptance(int iCut, double pT, double eta);
+// bool isMuonInAcceptance(int iCut, double pT, double eta, double shift = 0.);
 double singleLeptonEfficiency( double& pT, double& eta, int nEff, TFile *fInEff, TH2D* hEvalEff, bool MCeff, TEfficiency* TEff);
 // double evalParametrizedEff(double& pT, double& eta, TF1* func);
 void EvaluateEffFileName(int nEff, char EffFileName [200], bool singleLeptonEff);
@@ -401,8 +401,8 @@ void polRec(double rapdilepton_min = 1,
     double lepP_eta  = lepP_gen->PseudoRapidity();
     double lepN_eta  = lepN_gen->PseudoRapidity();
 
-    bool isEventAccepted = isMuonInAcceptance( FidCuts-1, lepP_pT, lepP_eta )
-      * isMuonInAcceptance( FidCuts-1, lepN_pT, lepN_eta );
+    bool isEventAccepted = isMuonInAcceptance( FidCuts-1, lepP_pT, lepP_eta, 0. )
+      * isMuonInAcceptance( FidCuts-1, lepN_pT, lepN_eta, 0. );
 
     //    if (lepP_gen->Phi()>0 && lepP_gen->Phi()<TMath::Pi()/8.) isEventAccepted=false;
     //    if (lepN_gen->Phi()>0 && lepN_gen->Phi()<TMath::Pi()/8.) isEventAccepted=false;

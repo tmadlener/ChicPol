@@ -19,6 +19,11 @@ datadir=${10}
 nSkipGen=${11}
 nState=${12}
 
+muAccShift=0
+if [ $# -gt 12 ]; then
+  muAccShift=${13}
+fi
+
 # echo $TreeID
 # echo $datadir
 # echo $nSkipGen
@@ -34,7 +39,11 @@ frameSig=1
 frameBkg=1
 
 ## efficiency setup (see runDataFits.sh for some more information on the different possibilities)
-nEff=100003
+nEff=100003  # tmadlener, 24.06.2016: 100003 uses hybrid efficiencies for seagulls only, 100001 uses parametrized
+# efficiencies (but for seagulls & cowboys combined!)
+# WARNING: MAKE SURE TO CHANGE THE PREPROCESSOR FLAG USE_TF1_EFFICIENCIES in polFit.C accordingly!
+# 100004 is MC truth (have not checked if this is the same as some other option)
+
 DataType=DATA # MC for MC closure, DATA for data, concerns single muon efficiencies only!
 UseMCeff=false
 nDileptonEff=1
@@ -45,7 +54,7 @@ nRhoFactor=1
 StatVarTotBGfraction=0 # apply statistical fluctuations on f_background
 StatVarTotBGmodel=0    # apply statistical fluctuations on Bg model
 StatVarRho=0           # apply statistical fluctuations on rho factor
-StatVarEff=1           # apply statistical fluctuations on the single muon efficiencies
+StatVarEff=0           # apply statistical fluctuations on the single muon efficiencies
 
 useAmapApproach=false
 nAmap=1
@@ -77,7 +86,7 @@ execbl="polGenRecFitPlot"${jobFileID}
 
 cp polGenRecFitPlot ${execbl}
 
-./${execbl} ${iFit}ThisGen ${JobID}=JobID ${storagedir}=storagedir ${basedir}=basedir ${nGenerations}=nGenerations ${polScenSig}polScenSig ${frameSig}frameSig ${polScenBkg}polScenBkg ${frameBkg}frameBkg ${rapBin}_rapBinMin ${rapBin}rapBinMax ${ptBin}ptBinMin ${ptBin}ptBinMax ${nEff}nEff ${nDileptonEff}nDiEff ${FidCuts}FidCuts ${nSample}nSample ${ConstEvents}ConstEvents ${nSkipGen}nSkipGen UseConstEv=${UseConstEv} gen=${gen} rec=${rec} fit=${fit} plot=${plot} ${TreeID}=TreeID ${datadir}=realdatadir UseMCeff=${UseMCeff} UseMCDileptoneff=${UseMCDileptoneff} ${nRhoFactor}nRhoFactor ${MPValgo}MPValgo NewAccCalc=${NewAccCalc} useAmapApproach=${useAmapApproach} nAmap=${nAmap} nDenominatorAmap=${nDenominatorAmap} useBatch=${useBatch} StatVarTotBGfraction=${StatVarTotBGfraction} StatVarTotBGmodel=${StatVarTotBGmodel} StatVarRho=${StatVarRho} StatVarEff=${StatVarEff} ${nState}=nState dataType=${DataType}
+./${execbl} ${iFit}ThisGen ${JobID}=JobID ${storagedir}=storagedir ${basedir}=basedir ${nGenerations}=nGenerations ${polScenSig}polScenSig ${frameSig}frameSig ${polScenBkg}polScenBkg ${frameBkg}frameBkg ${rapBin}_rapBinMin ${rapBin}rapBinMax ${ptBin}ptBinMin ${ptBin}ptBinMax ${nEff}nEff ${nDileptonEff}nDiEff ${FidCuts}FidCuts ${nSample}nSample ${ConstEvents}ConstEvents ${nSkipGen}nSkipGen UseConstEv=${UseConstEv} gen=${gen} rec=${rec} fit=${fit} plot=${plot} ${TreeID}=TreeID ${datadir}=realdatadir UseMCeff=${UseMCeff} UseMCDileptoneff=${UseMCDileptoneff} ${nRhoFactor}nRhoFactor ${MPValgo}MPValgo NewAccCalc=${NewAccCalc} useAmapApproach=${useAmapApproach} nAmap=${nAmap} nDenominatorAmap=${nDenominatorAmap} useBatch=${useBatch} StatVarTotBGfraction=${StatVarTotBGfraction} StatVarTotBGmodel=${StatVarTotBGmodel} StatVarRho=${StatVarRho} StatVarEff=${StatVarEff} ${nState}=nState dataType=${DataType} muAccShift=${muAccShift}
 
 exitcode=$?
 

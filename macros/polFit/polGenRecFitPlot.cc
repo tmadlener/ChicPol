@@ -3,6 +3,8 @@
 #include "ToyMC.h"
 #include "effsAndCuts.h"
 
+#include "clarg_parsing.h"
+
 #include "TSystem.h"
 #include "TROOT.h"
 #include "polGen.C"
@@ -68,6 +70,7 @@ int main(int argc, char** argv) {
   bool PlotForPaper=false;
 
   double n_sigmas_signal = 3.;
+  double muAccShift = 0.;
 
   Char_t *storagedir = "Default"; //Storage Directory
   Char_t *basedir = "Default"; //Code Directory
@@ -138,6 +141,7 @@ int main(int argc, char** argv) {
     if(std::string(argv[i]).find("dataType=MC") != std::string::npos) {
       dataType="MC";
     }
+    fromSplit("muAccShift", argv[i], muAccShift);
   }
 
   std::cout << "Using " << dataType << " single muon efficiencies" << std::endl;
@@ -426,7 +430,7 @@ int main(int argc, char** argv) {
 
   if(gen)polGen(raplow,raphigh,ptlow,pthigh,mass_signal_peak,mass_signal_sigma,n_sigmas_signal,n_events,f_BG,lambda_theta_sig_,lambda_phi_sig_,lambda_thetaphi_sig_,lambda_theta_bkg_,lambda_phi_bkg_,lambda_thetaphi_bkg_,frameSig,frameBkg,iGen,nState,OutputDirectory);
   if(rec)polRec(raplow,raphigh,ptlow*MassCorrFactor_polrec,pthigh*MassCorrFactor_polrec,mass_signal_peak,mass_signal_sigma,n_sigmas_signal,nRecEff,nRecDileptonEff,nRecRhoFactor,FidCuts,OutputDirectory, false, effDir, MCReceff, MCDileptonReceff, iRap, iPt, useAmapApproach, nAmap, nDenominatorAmap, StatVarTotBGfraction, StatVarRho);
-  if(fit)polFit(nSample,FidCuts, nEff, nDileptonEff, nRhoFactor, OutputDirectory, realdatadir, TreeBinID, TreeBinID_dataFile, RealData, effDir, MCeff, MCDileptoneff, iRap, iPt, NewAccCalc, MPValgo, useAmapApproach, nAmap, nDenominatorAmap, StatVarTotBGfraction, StatVarTotBGmodel, StatVarRho, StatVarEff, cutDeltaREllDpt, dataType, iGen);
+  if(fit)polFit(nSample,FidCuts, nEff, nDileptonEff, nRhoFactor, OutputDirectory, realdatadir, TreeBinID, TreeBinID_dataFile, RealData, effDir, MCeff, MCDileptoneff, iRap, iPt, NewAccCalc, MPValgo, useAmapApproach, nAmap, nDenominatorAmap, StatVarTotBGfraction, StatVarTotBGmodel, StatVarRho, StatVarEff, cutDeltaREllDpt, dataType, iGen, muAccShift);
   if(plot)polPlot(OutputDirectory, TreeBinID, RealData, MPValgo, scalePlots, nTotalFits, nState, ptlow, pthigh, raplow, raphigh, PlotForPaper);
 
   //sprintf(dirstruct,"%s/Generation%d",rapptstruct,iGen+nSkipGen);

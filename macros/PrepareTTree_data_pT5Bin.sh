@@ -5,14 +5,15 @@
 # source /afs/cern.ch/sw/lcg/app/releases/ROOT/5.34.05/x86_64-slc5-gcc43-opt/root/bin/thisroot.sh
 
 ## conditionally append to the JobID global variable
+## NOTE: make sure to have the appropriate condition
 append_jobID () {
-  if [ $(echo "${1} >= 0" | bc -l) -eq 1 ]; then
+  if [ $(echo "${1} != 0" | bc -l) -eq 1 ]; then
     JobID=${JobID}_${2}_${1}
   fi
 }
 
 ## either do this before or here! building the executables won't work else-wise!
-# export CHIC_BINNING=1 # use chi_c1 or chi_c2 binning? ## exporting this, such that make can read it
+export CHIC_BINNING=1 # use chi_c1 or chi_c2 binning? ## exporting this, such that make can read it
 
 Cdir=$PWD
 
@@ -25,7 +26,7 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
   for FidCuts in 11; do #defines the set of cuts to be used, see macros/polFit/effsAndCuts.h
     cd $Cdir
 
-    COPY_AND_COMPILE=0
+    COPY_AND_COMPILE=1
 
     rapMin=1     #takes bins, not actual values
     rapMax=1     #if you only want to process 1 y bin, rapMax = rapMin
@@ -59,6 +60,7 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     useRefittedChic=true # use the refitted mass for chic or use M_chic - M_jpsi + M_jpsi_pdg, NOTE: this will be set to false in bkgHistos_leptonBased.C if onia::KinParticleChi == false
     subtractNP=false #default == false
     cutDimuon10Gev=true # apply a 10 GeV cut in dimuon pt (at event selection stage)
+    singleMuAccShift=0 # overall shift that is applied to the single muon acceptance pT cuts
 
     #PlotFitPar:::
     AddInclusiveResult=false #Inclusive defined by rapFixTo, ptFixTo
@@ -77,17 +79,17 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     fitMassNP=false
 
     ## signal region definitions (default is -1 -> see commonVar.h to check used values, between 0 and 1 for adjusted ranges)
-    chic1MassLow=0.009
-    chic1MassHigh=0.99
-    chic2MassLow=0.05
+    chic1MassLow=-1
+    chic1MassHigh=-1
+    chic2MassLow=-1
     chic2MassHigh=-1
     nSigPR=-1
     nSigNP=-1
 
-    injectParams=true # change the values of fit values to other user-defined ones (defined in the $altFileName file)
+    injectParams=false # change the values of fit values to other user-defined ones (defined in the $altFileName file)
     # file in which fractions to be used in runBkgHistos_new when no fit values are present
     altFileName=defineFitVars.in
-    fillBkgRandom=true # fill the bkg histograms (cosThetaPhi and pTRapMass) with randomly drawn events (particle gun MC for non-empty bkg histos)
+    fillBkgRandom=false # fill the bkg histograms (cosThetaPhi and pTRapMass) with randomly drawn events (particle gun MC for non-empty bkg histos)
 
     DataID=Psi$[nState-3]S_ctauScen0_FracLSB-1_16Mar2013
     polDataPath=${basedir}/Psi/Data/${DataID}
@@ -96,39 +98,41 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     # JobID=chic_11April2016_nonRefit_useRef_${useRefittedChic}_rejCBs # fChi1MassLow = 0.1
     # JobID=jpsi_13May2016_MCclosure_rejCow_${rejectCowboys}_rejSea_${rejectSeagulls}
     # JobID=chic_23May2016_MCclosure_test
-    JobID=chic_30June2016_rejCow_pt10Cut_chic${CHIC_BINNING}Binning
+    JobID=chic_11July2016
     # JobID=chic_21June2016_rejCow_pt10Cut_chic2Binning_corrLib # added for comparison with old library
     # JobID=chic_15June2016_rejCow_pt10Cut_chic2Binning
     # JobID=chic_30March2016_ML30 # fChi1MassLow = 0.3
 
     ## safety feature to have unique job ids for different settings of these
-    append_jobID ${FracLSB} fLSB
-    append_jobID ${chic1MassLow} c1massL
-    append_jobID ${chic2MassLow} c2massL
-    append_jobID ${chic1MassHigh} c1massH
-    append_jobID ${chic2MassHigh} c2massH
-    append_jobID ${nSigPR} nSigPR
-    append_jobID ${nSigNP} nSigNP
+    # append_jobID ${FracLSB} fLSB
+    # append_jobID ${chic1MassLow} c1massL
+    # append_jobID ${chic2MassLow} c2massL
+    # append_jobID ${chic1MassHigh} c1massH
+    # append_jobID ${chic2MassHigh} c2massH
+    # append_jobID ${nSigPR} nSigPR
+    # append_jobID ${nSigNP} nSigNP
+
+    append_jobID ${singleMuAccShift} muAccShift
 
     ################ EXECUTABLES #################
 
     #following flags decide if the step is executed (1) or not (0):
     #IMPORTANT: for MC set execute_runWorkspace, execute_MassFit and execute_runLifetimeFit to 0
-    execute_runChiData=0			           		#independent of rapMin, rapMax, ptMin, ptMax
-    execute_runWorkspace=0	    					#independent of rapMin, rapMax, ptMin, ptMax
-    execute_runMassFit=0				    	    #can be executed for different pt and y bins
-    execute_runLifetimeFit=0   				    #can be executed for different pt and y bins
+    execute_runChiData=1			           		#independent of rapMin, rapMax, ptMin, ptMax
+    execute_runWorkspace=1	    					#independent of rapMin, rapMax, ptMin, ptMax
+    execute_runMassFit=1				    	    #can be executed for different pt and y bins
+    execute_runLifetimeFit=1  				    #can be executed for different pt and y bins
     execute_runPlotJpsiMassLifetime=0    			#can be executed for different pt and y bins
     execute_PlotJpsiFitPar=0              			#can be executed for different pt and y bins
-    execute_runChiMassLifetimeFit=0		  	    	#can be executed for different pt and y bins
+    execute_runChiMassLifetimeFit=1		  	    	#can be executed for different pt and y bins
     execute_runDefineRegionsAndFractions=1			#can be executed for different pt and y bins
-    execute_runPlotMassLifetime=1   				#can be executed for different pt and y bins
+    execute_runPlotMassLifetime=0   				#can be executed for different pt and y bins
     execute_PlotFitPar=0              				#can be executed for different pt and y bins
     execute_runPlotDataDistributions=0		 		#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
-    execute_runBkgHistos=0          				#can be executed for different pt and y bins
-    execute_PlotCosThetaPhiBG=0 		 			#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
+    execute_runBkgHistos=1          				#can be executed for different pt and y bins
+    execute_PlotCosThetaPhiBG=1 		 			#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
     execute_PlotMassRapPtBG=0 		 			#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
-    execute_PlotCosThetaPhiDistribution=0 			#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
+    execute_PlotCosThetaPhiDistribution=1 			#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
 
     #################################
     #PsiRelics:::
@@ -294,7 +298,7 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
       # if [ ${MCclosure} = 'true' ]; then
       #   ./runMC ${inputTrees} rejectCowboys=${rejectCowboys} FidCuts=${FidCuts} nState=${nState} RequestTrigger=${requestTrigger} rejectSeagulls=${rejectSeagulls}
       # else
-        ./runChiData ${inputTrees} rejectCowboys=${rejectCowboys} FidCuts=${FidCuts} nState=${nState} MC=${MC} RequestTrigger=${RequestTrigger} correctCtau=${correctCtau} useRefittedChic=${useRefittedChic} cutDimuon10Gev=${cutDimuon10Gev}
+        ./runChiData ${inputTrees} rejectCowboys=${rejectCowboys} FidCuts=${FidCuts} nState=${nState} MC=${MC} RequestTrigger=${RequestTrigger} correctCtau=${correctCtau} useRefittedChic=${useRefittedChic} cutDimuon10Gev=${cutDimuon10Gev} muAccShift=${singleMuAccShift}
       # fi
     fi
 

@@ -33,7 +33,8 @@ public :
   virtual int GetEntry(Long64_t entry);
   virtual Long64_t LoadTree(Long64_t entry);
   virtual void Init(TTree *tree);
-  virtual void Loop(int selDimuType, bool rejectCowboys, int FidCuts, bool MC, bool RequestTrigger, bool removeEta0p2_0p3, bool cutDeltaREllDpt, bool correctCtau, bool useRefittedChic, bool cutDimuon10Gev);
+  virtual void Loop(int selDimuType, bool rejectCowboys, int FidCuts, bool MC, bool RequestTrigger, bool removeEta0p2_0p3,
+                    bool cutDeltaREllDpt, bool correctCtau, bool useRefittedChic, bool cutDimuon10Gev, double muAccShift = 0.);
   virtual bool Notify();
   virtual void Show(Long64_t entry = -1);
 };

@@ -23,7 +23,7 @@ TLorentzVector *lepP_rf, *photon_rf, *jpsi_rf, *chic_rf, *lepN_rf;
 
 
 void PolChiData::Loop(int nState, bool rejectCowboys, int FidCuts, bool MC, bool RequestTrigger, bool removeEta0p2_0p3,
-                      bool cutDeltaREllDpt, bool correctCtau, bool useRefittedChic, bool cutDimuon10Gev) {
+                      bool cutDeltaREllDpt, bool correctCtau, bool useRefittedChic, bool cutDimuon10Gev, double muAccShift) {
 
   if (fChain == 0) return;
 
@@ -135,10 +135,7 @@ void PolChiData::Loop(int nState, bool rejectCowboys, int FidCuts, bool MC, bool
 
     //Muon CUTS
     //apply fiducial cuts
-    bool muonsInAcc = kFALSE;
-    if(isMuonInAcceptance(FidCuts-1, pTMuPos, etaMuPos) && isMuonInAcceptance(FidCuts-1, pTMuNeg, etaMuNeg)){
-      muonsInAcc = kTRUE;
-    }
+    bool muonsInAcc = isMuonInAcceptance(FidCuts-1, pTMuPos, etaMuPos, muAccShift) && isMuonInAcceptance(FidCuts-1,pTMuNeg, etaMuNeg, muAccShift);
 
     if(!muonsInAcc) continue;
     // count events after fiducial cuts

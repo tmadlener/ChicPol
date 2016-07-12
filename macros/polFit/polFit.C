@@ -81,7 +81,7 @@ const bool PX_is_natural_ACC = false;
 // minimum value of the dilepton efficiency
 const double min_dileptonEff = 0.01;
 
-bool isMuonInAcceptance(int iCut, double pT, double eta);
+// bool isMuonInAcceptance(int iCut, double pT, double eta, double shift = 0.);
 double singleLeptonEfficiency( double& pT, double& eta, int nEff, TFile *fInEff, TH2D* hEvalEff, bool MCeff, TEfficiency* TEff);
 // double evalParametrizedEff( double& pT, double& eta, TF1 *func);
 void EvaluateEffFileName(int nEff, char EffFileName [200], bool singleLeptonEff);
@@ -247,7 +247,8 @@ void polFit(int n_sampledPoints=1,
             bool StatVarEff=false,
             bool cutDeltaREllDpt=false,
             std::string DataType="DATA",
-            int iGen=-1){
+            int iGen=-1,
+            double muAccShift = 0.){
 
   cout<<"/////////////////////////////////"<<endl;
   cout<<"running polFit.C ........////////"<<endl;
@@ -921,8 +922,8 @@ void polFit(int n_sampledPoints=1,
     double deltaREll = TMath::Sqrt(deltaEta*deltaEta + TMath::Power(1.2*deltaPhi,2));
     double deltaREllDpt = TMath::Sqrt(deltaREll*deltaREll + TMath::Power(0.00157*deltaPT,2));
 
-    bool accept = isMuonInAcceptance( FidCuts-1, lepP_pT, lepP_eta )
-      * isMuonInAcceptance( FidCuts-1, lepN_pT, lepN_eta );
+    bool accept = isMuonInAcceptance( FidCuts-1, lepP_pT, lepP_eta, muAccShift )
+      * isMuonInAcceptance( FidCuts-1, lepN_pT, lepN_eta, muAccShift );
     bool isEventAccepted = false;
     if(accept && (!cutDeltaREllDpt || (cutDeltaREllDpt && deltaREllDpt > DeltaREllDptValue) )) isEventAccepted = true;
 
@@ -1241,8 +1242,8 @@ void polFit(int n_sampledPoints=1,
     double deltaREll = TMath::Sqrt(deltaEta*deltaEta + TMath::Power(1.2*deltaPhi,2));
     double deltaREllDpt = TMath::Sqrt(deltaREll*deltaREll + TMath::Power(0.00157*deltaPT,2));
 
-    bool accept = isMuonInAcceptance( FidCuts-1, lepP_pT, lepP_eta )
-      * isMuonInAcceptance( FidCuts-1, lepN_pT, lepN_eta );
+    bool accept = isMuonInAcceptance( FidCuts-1, lepP_pT, lepP_eta, muAccShift )
+      * isMuonInAcceptance( FidCuts-1, lepN_pT, lepN_eta, muAccShift );
     bool isEventAccepted = false;
     if(accept && (!cutDeltaREllDpt || (cutDeltaREllDpt && deltaREllDpt > DeltaREllDptValue) )) isEventAccepted = true;
 
@@ -1660,8 +1661,8 @@ void polFit(int n_sampledPoints=1,
     double deltaREll = TMath::Sqrt(deltaEta*deltaEta + TMath::Power(1.2*deltaPhi,2));
     double deltaREllDpt = TMath::Sqrt(deltaREll*deltaREll + TMath::Power(0.00157*deltaPT,2));
 
-    bool accept = isMuonInAcceptance( FidCuts-1, lepP_pT, lepP_eta )
-      * isMuonInAcceptance( FidCuts-1, lepN_pT, lepN_eta );
+    bool accept = isMuonInAcceptance( FidCuts-1, lepP_pT, lepP_eta, muAccShift )
+      * isMuonInAcceptance( FidCuts-1, lepN_pT, lepN_eta, muAccShift );
     bool isEventAccepted = false;
     if(accept && (!cutDeltaREllDpt || (cutDeltaREllDpt && deltaREllDpt > DeltaREllDptValue) )) isEventAccepted = true;
 
@@ -2034,8 +2035,8 @@ void polFit(int n_sampledPoints=1,
     double deltaREll = TMath::Sqrt(deltaEta*deltaEta + TMath::Power(1.2*deltaPhi,2));
     double deltaREllDpt = TMath::Sqrt(deltaREll*deltaREll + TMath::Power(0.00157*deltaPT,2));
 
-    bool accept = isMuonInAcceptance( FidCuts-1, lepP_pT, lepP_eta )
-      * isMuonInAcceptance( FidCuts-1, lepN_pT, lepN_eta );
+    bool accept = isMuonInAcceptance( FidCuts-1, lepP_pT, lepP_eta, muAccShift )
+      * isMuonInAcceptance( FidCuts-1, lepN_pT, lepN_eta, muAccShift );
     bool isEventAccepted = false;
     if(accept && (!cutDeltaREllDpt || (cutDeltaREllDpt && deltaREllDpt > DeltaREllDptValue) )) isEventAccepted = true;
 

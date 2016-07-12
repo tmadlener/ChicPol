@@ -7,7 +7,17 @@
 
 enum { loose, tight };
 
-bool isMuonInAcceptance(int iCut, double pT, double eta){
+/** single muon acceptance function with variable overall shift (in GeV). Baseline is iCut == 10 */
+bool isMuonInAcceptanceShift(double pT, double eta, double shift)
+{
+  if (TMath::Abs(eta) < 1.2 && pT > (4.5 + shift)) return true;
+  if (TMath::Abs(eta) > 1.2 && TMath::Abs(eta) < 1.4 && pT > (3.5 + shift)) return true;
+  if (TMath::Abs(eta) > 1.4 && TMath::Abs(eta) < 1.6 && pT > (3. + shift)) return true;
+
+  return false;
+}
+
+bool isMuonInAcceptance(int iCut, double pT, double eta, double shift = 0.){
 
   //iCut=x correspinding to FidCuts=x+1 in scripts
   //iCut=-1 (FidCuts=0) - no cuts -> decision is always true
@@ -23,6 +33,7 @@ bool isMuonInAcceptance(int iCut, double pT, double eta){
   //iCut=11  (FidCuts=12) - TPV cuts + 1000 MeV
   //iCut=12  (FidCuts=13) - TPV cuts + 0.2-0.3 eta cut
   //iCut=13  (FidCuts=14) - Chib cuts
+  // iCut == 30 (FidCuts=31) - same as FidCuts=11 but with a constant shift applied on the pT cuts
 
   Double_t etaBorderHLT[2][4] = {{0., 1.2, 1.6, 2.1}, {0., 1.2, 1.6, 2.1}}; //LOOSE, TIGHT cuts, Tracker muons
   Double_t pTBorderHLT[2][4] = {{3.5, 3.5, 2.0, 2.0}, {3.8, 3.8, 2.0, 2.0}};
@@ -123,9 +134,12 @@ bool isMuonInAcceptance(int iCut, double pT, double eta){
     if(pT>5.) decision=kTRUE;
   }
 
+  if (iCut == 30) {
+    return isMuonInAcceptanceShift(pT, eta, shift);
+  }
+
   return decision;
 }
-
 
 void EvaluateEffFileName(int nEff, char EffFileName [200], bool singleLeptonEff) {
 

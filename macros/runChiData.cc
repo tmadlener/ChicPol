@@ -44,6 +44,7 @@ int main(int argc, char* argv[]){
     FidCuts = 999,
     nState = 999;
 
+  double muAccShift = 0.; // overall shift that is applied to the single muon acceptance pT cuts
   // Loop over argument list
   for (int i=1; i < argc; i++)
     {
@@ -61,6 +62,7 @@ int main(int argc, char* argv[]){
       fromSplit("correctCtau", arg, correctCtau);
       if (!str.empty()) inputTrees.push_back(str);
       fromSplit("cutDimuon10Gev", arg, cutDimuon10Gev);
+      fromSplit("muAccShift", arg, muAccShift);
     }
 
   std::cout << "-----------------------------------\n" <<
@@ -87,7 +89,8 @@ int main(int argc, char* argv[]){
   BookHistosReco(nState);
   printf("after booking of histo\n");
   //tree->GetEvent(1);
-  treeReco.Loop(nState, rejectCowboys, FidCuts, MC, RequestTrigger, removeEta0p2_0p3, cutDeltaREllDpt, correctCtau, useRefittedChic, cutDimuon10Gev);
+  treeReco.Loop(nState, rejectCowboys, FidCuts, MC, RequestTrigger, removeEta0p2_0p3, cutDeltaREllDpt, correctCtau, useRefittedChic,
+                cutDimuon10Gev, muAccShift);
   printf("writing out the histograms\n");
   WriteHistosReco(fNameOut.c_str());
 
