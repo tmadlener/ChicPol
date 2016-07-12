@@ -8,25 +8,59 @@
 #include <iostream>
 #include <string>
 #include <sstream>
-using namespace std;
+#include <vector>
 
 #include "rootIncludes.inc"
 #include "commonVar.h"
 #include "ToyMC.h"
+#include "clarg_parsing.h"
 
+// #include "/afs/hephy.at/user/t/tmadlener/snippets/vector_stuff.h"
+
+using namespace std;
+
+/** small helper struct to clean up code. */
+struct SystematicInput {
+  /** constructor. Gets The TFile. Initializes the graph to nullptr. */
+  SystematicInput(const std::string& JobID, const std::string& basedir, const std::string& SystID, const std::string& state);
+  ~SystematicInput(); /**< Destructor. Closes the TFile. Delets the graph (if present) */
+  void loadGraph(const std::string& name);
+
+  std::string jobID; /**< JobID of the input. */
+  TGraphAsymmErrors* graph; /**< TGraphAsymmErrors associated with input file. */
+  TFile* inFile; /**< Input file. */
+};
+
+SystematicInput::SystematicInput(const std::string& JobID, const std::string& basedir, const std::string& SystID, const std::string& state) :
+  jobID(JobID),
+  graph(NULL)
+{
+  std::stringstream filename;
+  filename << basedir << "/macros/polFit/Systematics/" << SystID << "/" << JobID << "/TGraphResults_" << state << ".root";
+  inFile = TFile::Open(filename.str().c_str(), "READ");
+}
+
+SystematicInput::~SystematicInput()
+{
+  if (graph) delete graph;
+  // if (inFile && inFile->IsOpen()) inFile->Close(); // DO NOT do this. Cannot be stored in a vector then.
+}
+
+void SystematicInput::loadGraph(const std::string& name)
+{
+  std::cout << jobID << " loading graph " << name.c_str() << std::endl;
+  if (graph) delete graph; // do some cleanup before loading the new graph
+  graph = dynamic_cast<TGraphAsymmErrors*>(inFile->Get(name.c_str()));
+}
+
+/** main. (Comment merely fore orientation) */
 int main(int argc, char** argv) {
   Char_t *storagedir = "Default"; //Storage Directory
   Char_t *basedir = "Default"; //Storage Directory
-  Char_t *JobID1 = "Default";
-  Char_t *JobID2 = "Default";
-  Char_t *JobID3 = "Default";
-  Char_t *JobID4 = "Default";
-  Char_t *JobID5 = "Default";
-  Char_t *JobID6 = "Default";
-  Char_t *JobID7 = "Default";
-  Char_t *JobID8 = "Default";
-  Char_t *JobID9 = "Default";
   Char_t *SystID = "Default";
+
+  std::vector<SystematicInput> inputs;
+  std::vector<std::string> JobIDs;
 
   int ptBinMin=1;
   int ptBinMax=1;
@@ -34,16 +68,25 @@ int main(int argc, char** argv) {
   int nSystematics=1;
 
   for( int i=0;i < argc; ++i ) {
-
-    if(std::string(argv[i]).find("JobID1") != std::string::npos) {char* JobID1char = argv[i]; char* JobID1char2 = strtok (JobID1char, "="); JobID1 = JobID1char2; cout<<"JobID1 = "<<JobID1<<endl;}
-    if(std::string(argv[i]).find("JobID2") != std::string::npos) {char* JobID2char = argv[i]; char* JobID2char2 = strtok (JobID2char, "="); JobID2 = JobID2char2; cout<<"JobID2 = "<<JobID2<<endl;}
-    if(std::string(argv[i]).find("JobID3") != std::string::npos) {char* JobID3char = argv[i]; char* JobID3char2 = strtok (JobID3char, "="); JobID3 = JobID3char2; cout<<"JobID3 = "<<JobID3<<endl;}
-    if(std::string(argv[i]).find("JobID4") != std::string::npos) {char* JobID4char = argv[i]; char* JobID4char2 = strtok (JobID4char, "="); JobID4 = JobID4char2; cout<<"JobID4 = "<<JobID4<<endl;}
-    if(std::string(argv[i]).find("JobID5") != std::string::npos) {char* JobID5char = argv[i]; char* JobID5char2 = strtok (JobID5char, "="); JobID5 = JobID5char2; cout<<"JobID5 = "<<JobID5<<endl;}
-    if(std::string(argv[i]).find("JobID6") != std::string::npos) {char* JobID6char = argv[i]; char* JobID6char2 = strtok (JobID6char, "="); JobID6 = JobID6char2; cout<<"JobID6 = "<<JobID6<<endl;}
-    if(std::string(argv[i]).find("JobID7") != std::string::npos) {char* JobID7char = argv[i]; char* JobID7char2 = strtok (JobID7char, "="); JobID7 = JobID7char2; cout<<"JobID7 = "<<JobID7<<endl;}
-    if(std::string(argv[i]).find("JobID8") != std::string::npos) {char* JobID8char = argv[i]; char* JobID8char2 = strtok (JobID8char, "="); JobID8 = JobID8char2; cout<<"JobID8 = "<<JobID8<<endl;}
-    if(std::string(argv[i]).find("JobID9") != std::string::npos) {char* JobID9char = argv[i]; char* JobID9char2 = strtok (JobID9char, "="); JobID9 = JobID9char2; cout<<"JobID9 = "<<JobID9<<endl;}
+    std::string arg = argv[i];
+    std::string tmp = "";
+    fromSplit("JobID1", arg, tmp); if (!tmp.empty()) JobIDs.push_back(tmp);
+    tmp="";
+    fromSplit("JobID2", arg, tmp); if (!tmp.empty()) JobIDs.push_back(tmp);
+    tmp="";
+    fromSplit("JobID3", arg, tmp); if (!tmp.empty()) JobIDs.push_back(tmp);
+    tmp="";
+    fromSplit("JobID4", arg, tmp); if (!tmp.empty()) JobIDs.push_back(tmp);
+    tmp="";
+    fromSplit("JobID5", arg, tmp); if (!tmp.empty()) JobIDs.push_back(tmp);
+    tmp="";
+    fromSplit("JobID6", arg, tmp); if (!tmp.empty()) JobIDs.push_back(tmp);
+    tmp="";
+    fromSplit("JobID7", arg, tmp); if (!tmp.empty()) JobIDs.push_back(tmp);
+    tmp="";
+    fromSplit("JobID8", arg, tmp); if (!tmp.empty()) JobIDs.push_back(tmp);
+    tmp="";
+    fromSplit("JobID9", arg, tmp); if (!tmp.empty()) JobIDs.push_back(tmp);
 
     if(std::string(argv[i]).find("SystID") != std::string::npos) {char* SystIDchar = argv[i]; char* SystIDchar2 = strtok (SystIDchar, "="); SystID = SystIDchar2; cout<<"SystID = "<<SystID<<endl;}
     if(std::string(argv[i]).find("storagedir") != std::string::npos) {char* storagedirchar = argv[i]; char* storagedirchar2 = strtok (storagedirchar, "="); storagedir = storagedirchar2; cout<<"storagedir = "<<storagedir<<endl;}
@@ -56,33 +99,21 @@ int main(int argc, char** argv) {
 
   }
 
+  std::stringstream stateStr;
+  if (nState < 6) stateStr << "Psi" << nState - 3 << "S";
+  else stateStr << "chic" << nState - 5;
+
   char tmpfilename[200];
-  sprintf(tmpfilename,"%s/macros/polFit/Systematics/%s/AverageSyst/TGraphResults_Psi%dS.root",basedir,SystID,nState-3);
+  sprintf(tmpfilename,"%s/macros/polFit/Systematics/%s/AverageSyst/TGraphResults_%s.root",basedir,SystID,stateStr.str().c_str());
   gSystem->Unlink(tmpfilename);
 
-  char filename[200];
-  sprintf(filename,"%s/macros/polFit/Systematics/%s/%s/TGraphResults_Psi%dS.root",basedir,SystID,JobID1,nState-3);
-  TFile *infile1 = new TFile(filename,"READ");
-  sprintf(filename,"%s/macros/polFit/Systematics/%s/%s/TGraphResults_Psi%dS.root",basedir,SystID,JobID2,nState-3);
-  TFile *infile2 = new TFile(filename,"READ");
-  sprintf(filename,"%s/macros/polFit/Systematics/%s/%s/TGraphResults_Psi%dS.root",basedir,SystID,JobID3,nState-3);
-  TFile *infile3 = new TFile(filename,"READ");
-  sprintf(filename,"%s/macros/polFit/Systematics/%s/%s/TGraphResults_Psi%dS.root",basedir,SystID,JobID4,nState-3);
-  TFile *infile4 = new TFile(filename,"READ");
-  sprintf(filename,"%s/macros/polFit/Systematics/%s/%s/TGraphResults_Psi%dS.root",basedir,SystID,JobID5,nState-3);
-  TFile *infile5 = new TFile(filename,"READ");
-  sprintf(filename,"%s/macros/polFit/Systematics/%s/%s/TGraphResults_Psi%dS.root",basedir,SystID,JobID6,nState-3);
-  TFile *infile6 = new TFile(filename,"READ");
-  sprintf(filename,"%s/macros/polFit/Systematics/%s/%s/TGraphResults_Psi%dS.root",basedir,SystID,JobID7,nState-3);
-  TFile *infile7 = new TFile(filename,"READ");
-  sprintf(filename,"%s/macros/polFit/Systematics/%s/%s/TGraphResults_Psi%dS.root",basedir,SystID,JobID8,nState-3);
-  TFile *infile8 = new TFile(filename,"READ");
-  sprintf(filename,"%s/macros/polFit/Systematics/%s/%s/TGraphResults_Psi%dS.root",basedir,SystID,JobID9,nState-3);
-  TFile *infile9 = new TFile(filename,"READ");
+  for (size_t iID = 0; iID < JobIDs.size(); ++iID) {
+    inputs.push_back(SystematicInput(JobIDs[iID], basedir, SystID, stateStr.str()));
+  }
 
   char GraphName[200];
-
-  int nRapBins = 2;
+  char filename[200];
+  int nRapBins = 1;
   if(nState==5) nRapBins =  3;
   cout<<"nRapBins: "<<nRapBins<<endl;
 
@@ -90,8 +121,7 @@ int main(int argc, char** argv) {
 
     for(int rapBin = 1; rapBin <= nRapBins; rapBin++){
 
-      sprintf(filename,"%s/macros/polFit/Systematics/%s/AverageSyst/TGraphResults_Psi%dS.root",basedir,SystID,nState-3);
-      //ifChange  sprintf(filename,"%s/macros/polFit/Systematics/%s/%s_10B/TGraphResults_%dSUps.root",basedir,SystID,JobID1,nState);
+      sprintf(filename,"%s/macros/polFit/Systematics/%s/AverageSyst/TGraphResults_%s.root",basedir,SystID,stateStr.str().c_str());
       TFile *outfile = new TFile(filename,"UPDATE");
 
 
@@ -117,15 +147,10 @@ int main(int argc, char** argv) {
       if(iLam==18) sprintf(GraphName,"ltilde_PX_rap%d",rapBin);
       cout<<"GraphName: "<<GraphName<<endl;
 
-      TGraphAsymmErrors* graph1 = (TGraphAsymmErrors*) infile1->Get(GraphName);
-      TGraphAsymmErrors* graph2 = (TGraphAsymmErrors*) infile2->Get(GraphName);
-      TGraphAsymmErrors* graph3 = (TGraphAsymmErrors*) infile3->Get(GraphName);
-      TGraphAsymmErrors* graph4 = (TGraphAsymmErrors*) infile4->Get(GraphName);
-      TGraphAsymmErrors* graph5 = (TGraphAsymmErrors*) infile5->Get(GraphName);
-      TGraphAsymmErrors* graph6 = (TGraphAsymmErrors*) infile6->Get(GraphName);
-      TGraphAsymmErrors* graph7 = (TGraphAsymmErrors*) infile7->Get(GraphName);
-      TGraphAsymmErrors* graph8 = (TGraphAsymmErrors*) infile8->Get(GraphName);
-      TGraphAsymmErrors* graph9 = (TGraphAsymmErrors*) infile9->Get(GraphName);
+      // new way of input handling
+      for (size_t iInput = 0; iInput < inputs.size(); ++iInput) {
+        inputs[iInput].loadGraph(GraphName);
+      }
 
       int nBinspT=ptBinMax-ptBinMin+1;
       double ptCentre_[nBinspT];
@@ -155,18 +180,8 @@ int main(int argc, char** argv) {
         double ptCentreErr_low_Buffer=0;
         double ptCentreErr_high_Buffer=0;
 
-        for(int iSyst=0;iSyst<nSystematics;iSyst++){
-
-          if(iSyst==0)graph_=graph1;
-          if(iSyst==1)graph_=graph2;
-          if(iSyst==2)graph_=graph3;
-          if(iSyst==3)graph_=graph4;
-          if(iSyst==4)graph_=graph5;
-          if(iSyst==5)graph_=graph6;
-          if(iSyst==6)graph_=graph7;
-          if(iSyst==7)graph_=graph8;
-          if(iSyst==8)graph_=graph9;
-
+        for(int iSyst = 0; iSyst < nSystematics && iSyst < inputs.size(); iSyst++) {
+          graph_ = inputs[iSyst].graph;
           graph_->GetPoint(pt,ptCentre__[iSyst][pt],lmean_[iSyst][pt]);
           ptCentreErr_high_[iSyst][pt]=graph_->GetErrorXhigh(pt);
           ptCentreErr_low_[iSyst][pt]=graph_->GetErrorXlow(pt);
@@ -174,7 +189,6 @@ int main(int argc, char** argv) {
           fit_errlmean[iSyst]=graph_->GetErrorYhigh(pt);
           fit_lmean[iSyst]=lmean_[iSyst][pt];
           fit_X[iSyst]=0.;
-
         }
 
         double pTcentreReal=0;

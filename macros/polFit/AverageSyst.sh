@@ -1,5 +1,5 @@
-#!/bin/sh
-source /afs/ihep.ac.cn/users/z/zhangll/fs/rootset.sh
+#!/bin/bash
+# source /afs/ihep.ac.cn/users/z/zhangll/fs/rootset.sh
 
 homedir=$PWD
 cd ..
@@ -7,17 +7,23 @@ cd ..
 basedir=$PWD
 cd macros/polFit
 #storagedir=`more storagedir`/Data #please define the directory storagedir in the file macros/polFit/storagedir
-storagedir=${basedir}/Psi/Data
+# storagedir=${basedir}/Psi/Data
+storagedir=/afs/hephy.at/work/t/tmadlener/ChiPol/Systematics/test
 
 ########## INPUTS ##########
 
-for nState in 4 5;do
+# for nState in 4 5;do
+for nState in 6; do
+
+  DataID=SetOfCuts11_chic_30June2016_rejCow_pt10Cut_chic1Binning
 
   cp ../../interface/rootIncludes.inc               rootIncludes.inc
-  cp ../../interface/commonVar_Psi$[nState-3]S.h    commonVar.h
-  cp ../../interface/ToyMC_Psi$[nState-3]S.h        ToyMC.h
+  # cp ../../interface/commonVar_Psi$[nState-3]S.h    commonVar.h
+  # cp ../../interface/ToyMC_Psi$[nState-3]S.h        ToyMC.h
+  cp ../../macros/DataFiles/${DataID}/commonVar.h   commonVar.h
+  cp ../../interface/ToyMC_chi.h                    ToyMC.h
 
-  SystID=Framework
+  SystID=FrameworkTest
 
   nSystematics=3
 
@@ -57,12 +63,21 @@ for nState in 4 5;do
     ptBinMax=5
   fi
 
+  if [ $nState -eq 6 ]; then
+    ptBinMin=1
+    ptBinMax=5
+  fi
+  if [ $nState -eq 7 ]; then
+    ptBinMin=1
+    ptBinMax=4
+  fi
+
   ########################################
 
   cd ${homedir}
 
-  touch AverageSystematics.cc
-  make
+  # touch AverageSystematics.cc
+  make -B AverageSystematics
 
   mkdir Systematics
   mkdir Systematics/${SystID}
@@ -71,7 +86,7 @@ for nState in 4 5;do
 
   mkdir ${SystDir}
 
-  ./AverageSystematics ${JobID1}=JobID1 ${JobID2}=JobID2 ${JobID3}=JobID3 ${JobID4}=JobID4 ${JobID5}=JobID5 ${JobID6}=JobID6 ${JobID7}=JobID7 ${JobID8}=JobID8 ${JobID9}=JobID9 ${SystID}=SystID ${storagedir}=storagedir ${basedir}=basedir ${ptBinMin}ptBinMin ${ptBinMax}ptBinMax ${nState}nState ${nSystematics}nSystematics
+  ./AverageSystematics JobID1=${JobID1} JobID2=${JobID2} JobID3=${JobID3} JobID4=${JobID4} JobID5=${JobID5} JobID6=${JobID6} JobID7=${JobID7} JobID8=${JobID8} JobID9=${JobID9} ${SystID}=SystID ${storagedir}=storagedir ${basedir}=basedir ${ptBinMin}ptBinMin ${ptBinMax}ptBinMax ${nState}nState ${nSystematics}nSystematics
 
   rm AverageSystematics
 done
