@@ -50,6 +50,7 @@ if [ ${FILESPRESENT} -ne 1 ]; then
   cp ${basedir}${datadir}/commonVar.h ${resultDir}/commonVar.h
   cp ${basedir}/interface/ToyMC_chi.h ${resultDir}/ToyMC.h
   cp ${basedir}/interface/effsAndCuts_chi.h ${resultDir}/effsAndCuts.h
+  cp ${basedir}/interface/clarg_parsing.h ${resultDir}/clarg_parsing.h
 fi
 
 if [ ${EXECMADE} -ne 1 ]; then
