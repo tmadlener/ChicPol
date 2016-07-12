@@ -1,5 +1,5 @@
 #!/bin/sh
-source /afs/ihep.ac.cn/users/z/zhangll/fs/rootset.sh
+# source /afs/ihep.ac.cn/users/z/zhangll/fs/rootset.sh
 
 homedir=$PWD
 cd ..
@@ -7,22 +7,23 @@ cd ..
 basedir=$PWD
 cd macros/polFit
 #storagedir=`more storagedir`/Data #please define the directory storagedir in the file macros/polFit/storagedir
-storagedir=$basedir/Psi/Data
+storagedir=/afs/hephy.at/work/t/tmadlener/ChiPol/results
 
 ########## INPUTS ##########
 
-for nState in 4;do
+for nState in 6;do
 
   cp ../../interface/rootIncludes.inc               rootIncludes.inc
-  cp ../../interface/commonVar_Psi$[nState-3]S.h    commonVar.h
-  cp ../../interface/ToyMC_Psi$[nState-3]S.h        ToyMC.h
+  cp ../../interface/commonVar.h    commonVar.h
+  cp ../../interface/ToyMC_chi.h        ToyMC.h
 
   #touch AlterPPD.cc
   #make
 
-  JobID=AlteredPPD_BKGlinPLUSRestSquaredGauss_5nRand_Apr5
+  JobID=AlterPPD_Fwk_TnP
 
-  DefaultID=Psi$[nState-3]S_ctauScen0_FracLSB-1_19Mar2013_1FracBg_1BgModel_1Rho
+  DefaultID=chic$[$nState-5]_30June2016_rejCow_cutDiMu10_chic1Binning_c1massL_0.05
+
   ShiftID=BiasCorrection_1S2S3SAug12_1Sig
   ShiftResults=0
 
@@ -30,14 +31,14 @@ for nState in 4;do
 
   #ProbDist 1...gauss, 2...linear
 
-  SystID1Base=BackgroundModel
-  SystID1Specify=fLSB100_TO_fLSB0 #in the cc file, this values are multiplied by sqrt12
-  SystID1Title=BKGmodel
-  SystID1ProbDist=2
+  SystID1Base=FrameworkTest
+  SystID1Specify=AverageSyst
+  SystID1Title=FrameworkTotal
+  SystID1ProbDist=1
 
-  SystID2Base=TotalSyst
-  SystID2Specify=SquaredSystApr4_ExceptBKGmodel
-  SystID2Title=TotalSyst_ExceptBKGmodel
+  SystID2Base=FrameworkTest
+  SystID2Specify=Efficiencies
+  SystID2Title=TnP_Model
   SystID2ProbDist=1
 
   if [ $nState -eq 4 ]
@@ -51,6 +52,13 @@ for nState in 4;do
   then
     rapBinMin=1
     rapBinMax=3
+    ptBinMin=1
+    ptBinMax=5
+  fi
+
+  if [ $nState -eq 6 ]; then
+    rapBinMin=1
+    rapBinMax=1
     ptBinMin=1
     ptBinMax=5
   fi
@@ -100,7 +108,7 @@ for nState in 4;do
   cd ${homedir}
 
   touch AlterPPD.cc
-  make
+  make AlterPPD
 
   JobIDDir=${storagedir}/${DefaultID}
   JobIDDirAlterPPD=${storagedir}/${DefaultID}_${JobID}
@@ -114,8 +122,8 @@ for nState in 4;do
     while [ $pT_ -le ${ptBinMax} ]
     do
 
-      rm ${JobIDDirAlterPPD}/results_Psi$[nState-3]S_rap${rap_}_pT${pT_}.root
-      cp ${JobIDDir}/results_Psi$[nState-3]S_rap${rap_}_pT${pT_}.root ${JobIDDirAlterPPD}/results_Psi$[nState-3]S_rap${rap_}_pT${pT_}.root
+      rm ${JobIDDirAlterPPD}/results_chic$[$nState-5]_rap${rap_}_pT${pT_}.root
+      cp ${JobIDDir}/results_chic$[$nState-5]_rap${rap_}_pT${pT_}.root ${JobIDDirAlterPPD}/results_chic$[$nState-5]_rap${rap_}_pT${pT_}.root
 
       ./AlterPPD ${DefaultID}=DefaultID ${ShiftID}=ShiftID ${JobID}=JobID ${SystID1Base}=SystID1Base ${SystID1Specify}=SystID1Specify ${SystID1Title}=SystID1Title ${SystID2Base}=SystID2Base ${SystID2Specify}=SystID2Specify ${SystID2Title}=SystID2Title ${SystID3Base}=SystID3Base ${SystID3Specify}=SystID3Specify ${SystID3Title}=SystID3Title ${SystID4Base}=SystID4Base ${SystID4Specify}=SystID4Specify ${SystID4Title}=SystID4Title ${SystID5Base}=SystID5Base ${SystID5Specify}=SystID5Specify ${SystID5Title}=SystID5Title ${SystID6Base}=SystID6Base ${SystID6Specify}=SystID6Specify ${SystID6Title}=SystID6Title ${SystID7Base}=SystID7Base ${SystID7Specify}=SystID7Specify ${SystID7Title}=SystID7Title ${SystID8Base}=SystID8Base ${SystID8Specify}=SystID8Specify ${SystID8Title}=SystID8Title ${SystID1ProbDist}SystID1ProbDist ${SystID2ProbDist}SystID2ProbDist ${SystID3ProbDist}SystID3ProbDist ${SystID4ProbDist}SystID4ProbDist ${SystID5ProbDist}SystID5ProbDist ${SystID6ProbDist}SystID6ProbDist ${SystID7ProbDist}SystID7ProbDist ${SystID8ProbDist}SystID8ProbDist ${basedir}=basedir ${storagedir}=storagedir ${pT_}ptBinMin ${pT_}ptBinMax ${rap_}rapBinMin ${rap_}rapBinMax ${nSystematics}nSystematics ${nState}nState ShiftResults=${ShiftResults}
 

@@ -133,32 +133,41 @@ int main(int argc, char** argv) {
 
   char filename[200];
 
-  sprintf(filename,"%s/macros/polFit/Systematics/%s/%s/TGraphResults_Psi%dS.root",basedir,SystID1Base,SystID1Specify,nState-3);
-  TFile *infileSyst1 = new TFile(filename,"READ");
+  // sprintf(filename,"%s/macros/polFit/Systematics/%s/%s/TGraphResults_Psi%dS.root",basedir,SystID1Base,SystID1Specify,nState-3);
+  sprintf(filename,"%s/macros/polFit/Systematics/%s/%s/TGraphResults_chic%d.root",basedir,SystID1Base,SystID1Specify,nState-5);
+  TFile *infileSyst1 = TFile::Open(filename,"READ");
 
-  sprintf(filename,"%s/macros/polFit/Systematics/%s/%s/TGraphResults_Psi%dS.root",basedir,SystID2Base,SystID2Specify,nState-3);
-  TFile *infileSyst2 = new TFile(filename,"READ");
+  // sprintf(filename,"%s/macros/polFit/Systematics/%s/%s/TGraphResults_chic%d.root",basedir,SystID2Base,SystID2Specify,nState-5);
+  sprintf(filename,"%s/macros/polFit/Systematics/%s/%s/TGraphResults_chic%d.root",basedir,SystID2Base,SystID2Specify,nState-5);
+  TFile *infileSyst2 = TFile::Open(filename,"READ");
 
-  sprintf(filename,"%s/macros/polFit/Systematics/%s/%s/TGraphResults_Psi%dS.root",basedir,SystID3Base,SystID3Specify,nState-3);
-  TFile *infileSyst3 = new TFile(filename,"READ");
+  // sprintf(filename,"%s/macros/polFit/Systematics/%s/%s/TGraphResults_chic%d.root",basedir,SystID3Base,SystID3Specify,nState-5);
+  sprintf(filename,"%s/macros/polFit/Systematics/%s/%s/TGraphResults_chic%d.root",basedir,SystID3Base,SystID3Specify,nState-5);
+  TFile *infileSyst3 = TFile::Open(filename,"READ");
 
-  sprintf(filename,"%s/macros/polFit/Systematics/%s/%s/TGraphResults_Psi%dS.root",basedir,SystID4Base,SystID4Specify,nState-3);
-  TFile *infileSyst4 = new TFile(filename,"READ");
+  // sprintf(filename,"%s/macros/polFit/Systematics/%s/%s/TGraphResults_chic%d.root",basedir,SystID4Base,SystID4Specify,nState-5);
+  sprintf(filename,"%s/macros/polFit/Systematics/%s/%s/TGraphResults_chic%d.root",basedir,SystID4Base,SystID4Specify,nState-5);
+  TFile *infileSyst4 = TFile::Open(filename,"READ");
 
-  sprintf(filename,"%s/macros/polFit/Systematics/%s/%s/TGraphResults_Psi%dS.root",basedir,SystID5Base,SystID5Specify,nState-3);
-  TFile *infileSyst5 = new TFile(filename,"READ");
+  // sprintf(filename,"%s/macros/polFit/Systematics/%s/%s/TGraphResults_chic%d.root",basedir,SystID5Base,SystID5Specify,nState-5);
+  sprintf(filename,"%s/macros/polFit/Systematics/%s/%s/TGraphResults_chic%d.root",basedir,SystID5Base,SystID5Specify,nState-5);
+  TFile *infileSyst5 = TFile::Open(filename,"READ");
 
-  sprintf(filename,"%s/macros/polFit/Systematics/%s/%s/TGraphResults_Psi%dS.root",basedir,SystID6Base,SystID6Specify,nState-3);
-  TFile *infileSyst6 = new TFile(filename,"READ");
+  // sprintf(filename,"%s/macros/polFit/Systematics/%s/%s/TGraphResults_chic%d.root",basedir,SystID6Base,SystID6Specify,nState-5);
+  sprintf(filename,"%s/macros/polFit/Systematics/%s/%s/TGraphResults_chic%d.root",basedir,SystID6Base,SystID6Specify,nState-5);
+  TFile *infileSyst6 = TFile::Open(filename,"READ");
 
-  sprintf(filename,"%s/macros/polFit/Systematics/%s/%s/TGraphResults_Psi%dS.root",basedir,SystID7Base,SystID7Specify,nState-3);
-  TFile *infileSyst7 = new TFile(filename,"READ");
+  // sprintf(filename,"%s/macros/polFit/Systematics/%s/%s/TGraphResults_chic%d.root",basedir,SystID7Base,SystID7Specify,nState-5);
+  sprintf(filename,"%s/macros/polFit/Systematics/%s/%s/TGraphResults_chic%d.root",basedir,SystID7Base,SystID7Specify,nState-5);
+  TFile *infileSyst7 = TFile::Open(filename,"READ");
 
-  sprintf(filename,"%s/macros/polFit/Systematics/%s/%s/TGraphResults_Psi%dS.root",basedir,SystID8Base,SystID8Specify,nState-3);
-  TFile *infileSyst8 = new TFile(filename,"READ");
+  // sprintf(filename,"%s/macros/polFit/Systematics/%s/%s/TGraphResults_chic%d.root",basedir,SystID8Base,SystID8Specify,nState-5);
+  sprintf(filename,"%s/macros/polFit/Systematics/%s/%s/TGraphResults_chic%d.root",basedir,SystID8Base,SystID8Specify,nState-5);
+  TFile *infileSyst8 = TFile::Open(filename,"READ");
 
-  sprintf(filename,"%s/%s/TGraphResults_Psi%dS.root",storagedir,ShiftID,nState-3);
-  TFile *infileShift = new TFile(filename,"READ");
+  // sprintf(filename,"%s/%s/TGraphResults_chic%d.root",storagedir,ShiftID,nState-5);
+  sprintf(filename,"%s/%s/TGraphResults_chic%d.root",storagedir,ShiftID,nState-5);
+  TFile *infileShift = TFile::Open(filename,"READ");
 
   if(!ShiftResults) infileShift=infileSyst1;
 
@@ -233,7 +242,7 @@ int main(int argc, char** argv) {
 
   //// Start variation of PPD ///////////////
 
-  sprintf(filename,"%s/%s_%s/results_Psi%dS_rap%d_pT%d.root",storagedir,DefaultID,JobID,nState-3,rapBin,ptBin);
+  sprintf(filename,"%s/%s_%s/results_chic%d_rap%d_pT%d.root",storagedir,DefaultID,JobID,nState-5,rapBin,ptBin);
   TFile *results = new TFile(filename,"UPDATE");
 
 
