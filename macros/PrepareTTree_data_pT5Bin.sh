@@ -47,8 +47,8 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     incChic0InMassFit=true # include the Chic0 in the mass(-lifetime) fit of the chic
     includeBkgInMassFit=true # if false the chic mass model is simply the sum of the chic1 and the chic2 mass
     correctCtau=false   #correct pseudo-proper lifetime
-    rejectCowboys=true
-    rejectSeagulls=false # not checked if cowboys are rejected! (Only implemented for MC at the moment!)
+    rejectCowboys=false
+    rejectSeagulls=true # not checked if cowboys are rejected!
     RequestTrigger=true
     MC=false
     MCclosure=false # run MCclosure, CAUTION with setting what (and what not) to execute (not everything works!)
@@ -98,7 +98,7 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     # JobID=chic_11April2016_nonRefit_useRef_${useRefittedChic}_rejCBs # fChi1MassLow = 0.1
     # JobID=jpsi_13May2016_MCclosure_rejCow_${rejectCowboys}_rejSea_${rejectSeagulls}
     # JobID=chic_23May2016_MCclosure_test
-    JobID=chic_11July2016
+    JobID=chic_11July2016_rejSeag_pt10Cut_chic1Binning
     # JobID=chic_21June2016_rejCow_pt10Cut_chic2Binning_corrLib # added for comparison with old library
     # JobID=chic_15June2016_rejCow_pt10Cut_chic2Binning
     # JobID=chic_30March2016_ML30 # fChi1MassLow = 0.3
@@ -112,7 +112,7 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     # append_jobID ${nSigPR} nSigPR
     # append_jobID ${nSigNP} nSigNP
 
-    append_jobID ${singleMuAccShift} muAccShift
+    # append_jobID ${singleMuAccShift} muAccShift
 
     ################ EXECUTABLES #################
 
@@ -130,9 +130,9 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     execute_PlotFitPar=0              				#can be executed for different pt and y bins
     execute_runPlotDataDistributions=0		 		#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
     execute_runBkgHistos=1          				#can be executed for different pt and y bins
-    execute_PlotCosThetaPhiBG=1 		 			#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
+    execute_PlotCosThetaPhiBG=0 		 			#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
     execute_PlotMassRapPtBG=0 		 			#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
-    execute_PlotCosThetaPhiDistribution=1 			#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
+    execute_PlotCosThetaPhiDistribution=0 			#This step only has to be executed once for each set of cuts (indep. of FracLSB and nSigma)
 
     #################################
     #PsiRelics:::
@@ -298,7 +298,7 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
       # if [ ${MCclosure} = 'true' ]; then
       #   ./runMC ${inputTrees} rejectCowboys=${rejectCowboys} FidCuts=${FidCuts} nState=${nState} RequestTrigger=${requestTrigger} rejectSeagulls=${rejectSeagulls}
       # else
-        ./runChiData ${inputTrees} rejectCowboys=${rejectCowboys} FidCuts=${FidCuts} nState=${nState} MC=${MC} RequestTrigger=${RequestTrigger} correctCtau=${correctCtau} useRefittedChic=${useRefittedChic} cutDimuon10Gev=${cutDimuon10Gev} muAccShift=${singleMuAccShift}
+        ./runChiData ${inputTrees} rejectCowboys=${rejectCowboys} FidCuts=${FidCuts} nState=${nState} MC=${MC} RequestTrigger=${RequestTrigger} correctCtau=${correctCtau} useRefittedChic=${useRefittedChic} cutDimuon10Gev=${cutDimuon10Gev} muAccShift=${singleMuAccShift} rejectSeagulls=${rejectSeagulls}
       # fi
     fi
 

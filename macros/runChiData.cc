@@ -36,6 +36,7 @@ int main(int argc, char* argv[]){
     RequestTrigger=false,
     removeEta0p2_0p3=false,
     cutDeltaREllDpt=false;
+  bool rejectSeagulls = false;
   bool correctCtau  = false;
   bool useRefittedChic = true;
   bool cutDimuon10Gev = false;
@@ -63,6 +64,7 @@ int main(int argc, char* argv[]){
       if (!str.empty()) inputTrees.push_back(str);
       fromSplit("cutDimuon10Gev", arg, cutDimuon10Gev);
       fromSplit("muAccShift", arg, muAccShift);
+      fromSplit("rejectSeagullss", arg, rejectSeagulls);
     }
 
   std::cout << "-----------------------------------\n" <<
@@ -90,7 +92,7 @@ int main(int argc, char* argv[]){
   printf("after booking of histo\n");
   //tree->GetEvent(1);
   treeReco.Loop(nState, rejectCowboys, FidCuts, MC, RequestTrigger, removeEta0p2_0p3, cutDeltaREllDpt, correctCtau, useRefittedChic,
-                cutDimuon10Gev, muAccShift);
+                cutDimuon10Gev, muAccShift, rejectSeagulls);
   printf("writing out the histograms\n");
   WriteHistosReco(fNameOut.c_str());
 

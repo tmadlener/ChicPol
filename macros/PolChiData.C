@@ -23,7 +23,8 @@ TLorentzVector *lepP_rf, *photon_rf, *jpsi_rf, *chic_rf, *lepN_rf;
 
 
 void PolChiData::Loop(int nState, bool rejectCowboys, int FidCuts, bool MC, bool RequestTrigger, bool removeEta0p2_0p3,
-                      bool cutDeltaREllDpt, bool correctCtau, bool useRefittedChic, bool cutDimuon10Gev, double muAccShift) {
+                      bool cutDeltaREllDpt, bool correctCtau, bool useRefittedChic, bool cutDimuon10Gev, double muAccShift,
+                      bool rejectSeagulls) {
 
   if (fChain == 0) return;
 
@@ -149,9 +150,11 @@ void PolChiData::Loop(int nState, bool rejectCowboys, int FidCuts, bool MC, bool
       if (onia_pt < 10.) continue;
     }
     //if(jpsiVprob < onia::cut_vtxProb) continue;
-    if(rejectCowboys)
+    if(rejectCowboys) {
       if(deltaPhi < 0.)  continue;
-
+    } else if (rejectSeagulls) { // keep the seagulls if the cowboys are rejected
+      if(deltaPhi > 0.) continue;
+    }
     //check the trigger flag: 0... no trigger, 1 ... triggered+matched, 3 ... triggered (HLT_DoubleMu0)
     //for a full list of accessible triggers, check https://espace.cern.ch/cms-quarkonia/onia-polarization/L1%20%20HLT/unprescaledTriggersVsRun.aspx
     int trigDecision = -99;
