@@ -53,6 +53,50 @@ void SystematicInput::loadGraph(const std::string& name)
   graph = dynamic_cast<TGraphAsymmErrors*>(inFile->Get(name.c_str()));
 }
 
+/**
+ * subtract two TGraphAsymmErrors from each other, returning a new one.
+ * subtracts central values of g2 from g1. Errors in x are not touched,
+ * errors in y is the absolute value of the difference of the errors of g1 and g2.
+ */
+TGraphAsymmErrors* subtractTGAE(const TGraphAsymmErrors* g1, const TGraphAsymmErrors* g2)
+{
+  if (g1->GetN() != g2->GetN()) {
+    std::cerr << "cannot subtract TGraphAsymmErrors with different numbers of points!" << std::endl;
+    return NULL;
+  }
+
+  int nBins = g1->GetN();
+  std::vector<double> centValsY; centValsY.reserve(nBins);
+  std::vector<double> centValsX; centValsX.reserve(nBins);
+  std::vector<double> highErrY; highErrY.reserve(nBins);
+  std::vector<double> lowErrY; lowErrY.reserve(nBins);
+  std::vector<double> highErrX; highErrX.reserve(nBins);
+  std::vector<double> lowErrX; lowErrX.reserve(nBins);
+
+  for (int iBin = 0; iBin < nBins; ++iBin) {
+    double c1, c2; // central values
+    double el1, eh1, el2, eh2; // low and high error values
+    double x; // dummy value to read in the x-coordinates, which are not used
+
+    if (g1->GetPoint(iBin, x, c1) > 0 && g2->GetPoint(iBin, x, c2)) {
+      centValsY.push_back(c2 - c1);
+      lowErrY.push_back( TMath::Abs(g1->GetErrorYlow(iBin) - TMath::Abs(g2->GetErrorYhigh(iBin))) );
+      highErrY.push_back( TMath::Abs(g1->GetErrorYhigh(iBin) - TMath::Abs(g2->GetErrorYhigh(iBin))) );
+
+      // no subtraction in X direction, assume errors are the same and get the errors of g1
+      centValsX.push_back(x);
+      lowErrX.push_back(g1->GetErrorXlow(iBin));
+      highErrX.push_back(g1->GetErrorXhigh(iBin));
+    } else {
+      std::cerr << "Could not get point " << iBin << " in on of the TGraphsASymmErrors" << std::endl;
+      return NULL;
+    }
+  }
+
+  return new TGraphAsymmErrors(nBins, centValsX.data(), centValsY.data(),
+                               lowErrX.data(), highErrX.data(), lowErrY.data(), highErrY.data());
+}
+
 /** main. (Comment merely fore orientation) */
 int main(int argc, char** argv) {
   Char_t *storagedir = "Default"; //Storage Directory
