@@ -15,8 +15,6 @@
 #include "ToyMC.h"
 #include "clarg_parsing.h"
 
-#include "/afs/hephy.at/user/t/tmadlener/snippets/vector_stuff.h"
-
 using namespace std;
 
 /** small helper struct to clean up code. */
@@ -79,7 +77,6 @@ TGraphAsymmErrors* subtractTGAE(const TGraphAsymmErrors* g1, const TGraphAsymmEr
     double x; // dummy value to read in the x-coordinates, which are not used
 
     if (g1->GetPoint(iBin, x, c1) == iBin && g2->GetPoint(iBin, x, c2) == iBin) {
-      std::cout << "point " << iBin << ": x = " << x << ", y1 = " << c1 << ", y2 = " << c2 << std::endl;
       centValsY.push_back(c2 - c1);
       lowErrY.push_back( TMath::Abs(g1->GetErrorYlow(iBin) - TMath::Abs(g2->GetErrorYhigh(iBin))) );
       highErrY.push_back( TMath::Abs(g1->GetErrorYhigh(iBin) - TMath::Abs(g2->GetErrorYhigh(iBin))) );
