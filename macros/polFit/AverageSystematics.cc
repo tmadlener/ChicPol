@@ -15,7 +15,7 @@
 #include "ToyMC.h"
 #include "clarg_parsing.h"
 
-// #include "/afs/hephy.at/user/t/tmadlener/snippets/vector_stuff.h"
+#include "/afs/hephy.at/user/t/tmadlener/snippets/vector_stuff.h"
 
 using namespace std;
 
@@ -53,6 +53,67 @@ void SystematicInput::loadGraph(const std::string& name)
   graph = dynamic_cast<TGraphAsymmErrors*>(inFile->Get(name.c_str()));
 }
 
+/**
+ * subtract two TGraphAsymmErrors from each other, returning a new one.
+ * subtracts central values of g2 from g1. Errors in x are not touched,
+ * errors in y is the absolute value of the difference of the errors of g1 and g2.
+ */
+TGraphAsymmErrors* subtractTGAE(const TGraphAsymmErrors* g1, const TGraphAsymmErrors* g2)
+{
+  if (g1->GetN() != g2->GetN()) {
+    std::cerr << "cannot subtract TGraphAsymmErrors with different numbers of points!" << std::endl;
+    return NULL;
+  }
+
+  int nBins = g1->GetN();
+  std::vector<double> centValsY; centValsY.reserve(nBins);
+  std::vector<double> centValsX; centValsX.reserve(nBins);
+  std::vector<double> highErrY; highErrY.reserve(nBins);
+  std::vector<double> lowErrY; lowErrY.reserve(nBins);
+  std::vector<double> highErrX; highErrX.reserve(nBins);
+  std::vector<double> lowErrX; lowErrX.reserve(nBins);
+
+  for (int iBin = 0; iBin < nBins; ++iBin) {
+    double c1, c2; // central values
+    // double el1, eh1, el2, eh2; // low and high error values
+    double x; // dummy value to read in the x-coordinates, which are not used
+
+    if (g1->GetPoint(iBin, x, c1) == iBin && g2->GetPoint(iBin, x, c2) == iBin) {
+      std::cout << "point " << iBin << ": x = " << x << ", y1 = " << c1 << ", y2 = " << c2 << std::endl;
+      centValsY.push_back(c2 - c1);
+      lowErrY.push_back( TMath::Abs(g1->GetErrorYlow(iBin) - TMath::Abs(g2->GetErrorYhigh(iBin))) );
+      highErrY.push_back( TMath::Abs(g1->GetErrorYhigh(iBin) - TMath::Abs(g2->GetErrorYhigh(iBin))) );
+
+      // no subtraction in X direction, assume errors are the same and get the errors of g1
+      centValsX.push_back(x);
+      lowErrX.push_back(g1->GetErrorXlow(iBin));
+      highErrX.push_back(g1->GetErrorXhigh(iBin));
+    } else {
+      std::cerr << "Could not get point " << iBin << " in on of the TGraphsAsymmErrors" << std::endl;
+      return NULL;
+    }
+  }
+
+  return new TGraphAsymmErrors(nBins, centValsX.data(), centValsY.data(),
+                               lowErrX.data(), highErrX.data(), lowErrY.data(), highErrY.data());
+}
+
+/** multiply all values of the y-coordinate with a factor. */
+void multiplyFactor(TGraphAsymmErrors* g, const double factor)
+{
+  for (int iBin = 0; iBin < g->GetN(); ++iBin) {
+    double x, y;
+    if (g->GetPoint(iBin, x, y) == iBin) { // only reset the values if retrieval is succesful
+      y *= factor;
+      double el = g->GetErrorYlow(iBin) * factor;
+      double eh = g->GetErrorYhigh(iBin) * factor;
+
+      g->SetPoint(iBin, x, y);
+      g->SetPointError(iBin, g->GetErrorXlow(iBin), g->GetErrorXhigh(iBin), el, eh);
+    }
+  }
+}
+
 /** main. (Comment merely fore orientation) */
 int main(int argc, char** argv) {
   Char_t *storagedir = "Default"; //Storage Directory
@@ -67,8 +128,12 @@ int main(int argc, char** argv) {
   int nState=1;
   int nSystematics=1;
 
+  bool subtractGraphs = false;
+
   for( int i=0;i < argc; ++i ) {
     std::string arg = argv[i];
+    fromSplit("subtractGraphs", arg, subtractGraphs);
+
     std::string tmp = "";
     fromSplit("JobID1", arg, tmp); if (!tmp.empty()) JobIDs.push_back(tmp);
     tmp="";
@@ -169,93 +234,101 @@ int main(int argc, char** argv) {
 
       double lmean_[nSystematics][nBinspT];
 
-
       TGraphAsymmErrors* graph_;
 
-      int pt=0;
-      for(int ptBin = ptBinMin; ptBin < ptBinMax+1; ptBin++) {
+      if(!subtractGraphs) {
+        int pt=0;
+        for(int ptBin = ptBinMin; ptBin < ptBinMax+1; ptBin++) {
 
-        double lmean_Buffer=0;
-        double ptCentre_Buffer=0;
-        double ptCentreErr_low_Buffer=0;
-        double ptCentreErr_high_Buffer=0;
+          double lmean_Buffer=0;
+          double ptCentre_Buffer=0;
+          double ptCentreErr_low_Buffer=0;
+          double ptCentreErr_high_Buffer=0;
 
-        for(int iSyst = 0; iSyst < nSystematics && iSyst < inputs.size(); iSyst++) {
-          graph_ = inputs[iSyst].graph;
-          graph_->GetPoint(pt,ptCentre__[iSyst][pt],lmean_[iSyst][pt]);
-          ptCentreErr_high_[iSyst][pt]=graph_->GetErrorXhigh(pt);
-          ptCentreErr_low_[iSyst][pt]=graph_->GetErrorXlow(pt);
+          for(int iSyst = 0; iSyst < nSystematics && iSyst < inputs.size(); iSyst++) {
+            graph_ = inputs[iSyst].graph;
+            graph_->GetPoint(pt,ptCentre__[iSyst][pt],lmean_[iSyst][pt]);
+            ptCentreErr_high_[iSyst][pt]=graph_->GetErrorXhigh(pt);
+            ptCentreErr_low_[iSyst][pt]=graph_->GetErrorXlow(pt);
 
-          fit_errlmean[iSyst]=graph_->GetErrorYhigh(pt);
-          fit_lmean[iSyst]=lmean_[iSyst][pt];
-          fit_X[iSyst]=0.;
-        }
-
-        double pTcentreReal=0;
-        double pTcentreReallow=0;
-        double pTcentreRealhigh=0;
-
-        double lmeanHighest = 0.;
-        for(int iSyst=0;iSyst<nSystematics;iSyst++){
-          //lmean_Buffer=lmean_Buffer+TMath::Abs(lmean_[iSyst][pt]); //ifMean
-          //lmean_Buffer=lmean_Buffer+lmean_[iSyst][pt]; //ifChange
-          //lmean_[iSyst][pt] = lmean_[iSyst][pt] / 2. ;  //fracBg0_TO_default_half
-          lmean_Buffer=lmean_Buffer+lmean_[iSyst][pt]*lmean_[iSyst][pt]; //ifSquare
-          //if(ptBin<10 && iSyst==0) lmean_Buffer = lmean_Buffer + lmean_[iSyst][pt]*lmean_[iSyst][pt];
-          //if(ptBin>=10 && iSyst==1)  lmean_Buffer = lmean_Buffer + lmean_[iSyst][pt]*lmean_[iSyst][pt];
-
-          cout<<"lmean["<<iSyst<<"]["<<pt<<"]: "<<lmean_[iSyst][pt]<<endl;
-          //if(lmean_[iSyst][pt]*lmean_[iSyst][pt]>lmeanHighest){
-          //	lmeanHighest = lmean_[iSyst][pt]*lmean_[iSyst][pt] ;
-          //	lmean_Buffer = lmeanHighest ;
-          //	cout<<"lmeanHighest: "<<sqrt(lmeanHighest)<<endl;
-          //}
-
-          ptCentre_Buffer=ptCentre_Buffer+ptCentre__[iSyst][pt];
-          ptCentreErr_low_Buffer=ptCentreErr_low_Buffer+ptCentreErr_low_[iSyst][pt];
-          ptCentreErr_high_Buffer=ptCentreErr_high_Buffer+ptCentreErr_high_[iSyst][pt];
-
-          if(iSyst==0) {//delete loop
-            pTcentreReal=ptCentre__[iSyst][pt];
-            pTcentreReallow=ptCentreErr_low_[iSyst][pt];
-            pTcentreRealhigh=ptCentreErr_high_[iSyst][pt];
+            fit_errlmean[iSyst]=graph_->GetErrorYhigh(pt);
+            fit_lmean[iSyst]=lmean_[iSyst][pt];
+            fit_X[iSyst]=0.;
           }
 
+          double pTcentreReal=0;
+          double pTcentreReallow=0;
+          double pTcentreRealhigh=0;
+
+          double lmeanHighest = 0.;
+          for(int iSyst=0;iSyst<nSystematics;iSyst++){
+            //lmean_Buffer=lmean_Buffer+TMath::Abs(lmean_[iSyst][pt]); //ifMean
+            //lmean_Buffer=lmean_Buffer+lmean_[iSyst][pt]; //ifChange
+            //lmean_[iSyst][pt] = lmean_[iSyst][pt] / 2. ;  //fracBg0_TO_default_half
+            lmean_Buffer=lmean_Buffer+lmean_[iSyst][pt]*lmean_[iSyst][pt]; //ifSquare
+            //if(ptBin<10 && iSyst==0) lmean_Buffer = lmean_Buffer + lmean_[iSyst][pt]*lmean_[iSyst][pt];
+            //if(ptBin>=10 && iSyst==1)  lmean_Buffer = lmean_Buffer + lmean_[iSyst][pt]*lmean_[iSyst][pt];
+
+            cout<<"lmean["<<iSyst<<"]["<<pt<<"]: "<<lmean_[iSyst][pt]<<endl;
+            //if(lmean_[iSyst][pt]*lmean_[iSyst][pt]>lmeanHighest){
+            //	lmeanHighest = lmean_[iSyst][pt]*lmean_[iSyst][pt] ;
+            //	lmean_Buffer = lmeanHighest ;
+            //	cout<<"lmeanHighest: "<<sqrt(lmeanHighest)<<endl;
+            //}
+
+            ptCentre_Buffer=ptCentre_Buffer+ptCentre__[iSyst][pt];
+            ptCentreErr_low_Buffer=ptCentreErr_low_Buffer+ptCentreErr_low_[iSyst][pt];
+            ptCentreErr_high_Buffer=ptCentreErr_high_Buffer+ptCentreErr_high_[iSyst][pt];
+
+            if(iSyst==0) {//delete loop
+              pTcentreReal=ptCentre__[iSyst][pt];
+              pTcentreReallow=ptCentreErr_low_[iSyst][pt];
+              pTcentreRealhigh=ptCentreErr_high_[iSyst][pt];
+            }
+
+          }
+
+          ptCentre_[pt]=ptCentre_Buffer/nSystematics;
+          ptCentreErr_low[pt]=ptCentreErr_low_Buffer/nSystematics;
+          ptCentreErr_high[pt]=ptCentreErr_high_Buffer/nSystematics;
+
+          ptCentre_[pt]=pTcentreReal;//delete
+          ptCentreErr_low[pt]=pTcentreReallow;//delete
+          ptCentreErr_high[pt]=pTcentreRealhigh;//delete
+
+          //lmean[pt]=lmean_Buffer/nSystematics; //ifMean
+          //if(pt>3) {lmean[pt]=0; std::cout << "point 4 set to 0" << std::endl;} // ifrho
+          lmean[pt]=TMath::Sqrt(lmean_Buffer); //ifSquare
+          //lmean[pt]=lmean_Buffer;
+
+          std::cout << pt << ": pT = " << ptCentre_[pt] << ", lambda = " << lmean[pt] << std::endl;
+
+          // IF FIT THE NSYSTEMATIC VALUES INSTEAD OF USING THE MEAN:::
+
+          //if(pt==9) {
+          //      fit_X[2]=-999.;
+          //}
+
+          //TGraphAsymmErrors *fitGraph = new TGraphAsymmErrors(nSystematics,fit_X,fit_lmean,0,0,fit_errlmean,fit_errlmean);
+          //TF1* fConst = new TF1("fConst","pol0",-1,1);
+          //fitGraph->Fit("fConst","EFNR");
+          //
+          //lmean[pt]=fConst->GetParameter(0);
+          //errlmean[pt]=fConst->GetParError(0);
+
+          // END Fit
+
+          pt++;
+        } // pT-Loop
+      } else { // i.e. if subtractGraph
+        TGraphAsymmErrors* diffSyst = subtractTGAE(inputs[0].graph, inputs[1].graph);
+        multiplyFactor(diffSyst, TMath::Sqrt(12.));
+        for (int i = 0; i < nBinspT; ++i) {
+          diffSyst->GetPoint(i, ptCentre_[i], lmean[i]); // WARNING: assuming nBinspT and diffSyst->GetN() are the same
+          ptCentreErr_low[i] = diffSyst->GetErrorXlow(i);
+          ptCentreErr_high[i] = diffSyst->GetErrorXhigh(i);
         }
-
-        ptCentre_[pt]=ptCentre_Buffer/nSystematics;
-        ptCentreErr_low[pt]=ptCentreErr_low_Buffer/nSystematics;
-        ptCentreErr_high[pt]=ptCentreErr_high_Buffer/nSystematics;
-
-        ptCentre_[pt]=pTcentreReal;//delete
-        ptCentreErr_low[pt]=pTcentreReallow;//delete
-        ptCentreErr_high[pt]=pTcentreRealhigh;//delete
-
-        //lmean[pt]=lmean_Buffer/nSystematics; //ifMean
-        //if(pt>3) {lmean[pt]=0; std::cout << "point 4 set to 0" << std::endl;} // ifrho
-        lmean[pt]=TMath::Sqrt(lmean_Buffer); //ifSquare
-        //lmean[pt]=lmean_Buffer;
-
-        std::cout << pt << ": pT = " << ptCentre_[pt] << ", lambda = " << lmean[pt] << std::endl;
-
-        // IF FIT THE NSYSTEMATIC VALUES INSTEAD OF USING THE MEAN:::
-
-        //if(pt==9) {
-        //      fit_X[2]=-999.;
-        //}
-
-        //TGraphAsymmErrors *fitGraph = new TGraphAsymmErrors(nSystematics,fit_X,fit_lmean,0,0,fit_errlmean,fit_errlmean);
-        //TF1* fConst = new TF1("fConst","pol0",-1,1);
-        //fitGraph->Fit("fConst","EFNR");
-        //
-        //lmean[pt]=fConst->GetParameter(0);
-        //errlmean[pt]=fConst->GetParError(0);
-
-        // END Fit
-
-        pt++;
       }
-
       //////////////// Change TGraphs
       /*
         double ptCentre_Change[nBinspT-2];

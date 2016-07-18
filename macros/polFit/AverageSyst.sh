@@ -25,10 +25,19 @@ for nState in 6; do
 
   SystID=FrameworkTest
 
-  nSystematics=3
+  nSystematics=2
 
-  JobID1=FrameworkI
-  JobID2=FrameworkII
+  # subtract JobID2 from JobID1 and store the result under SystID
+  # Can be used to calculate the uncertainties associated to the background contamination when the lambdas for
+  # fLSB=0 and fLSB=100 are present.
+  # NOTE: also multiplies the result with a factor of sqrt(12), since this is an assumption that is needed by
+  # AlterPPD and PlotResults
+  subtractGraphs=true
+  moveTo=Background # AverageSystematics stores the result in AverageSyst. this is where the subtracted Graph
+                    # gets stored
+
+  JobID1=fLSB0
+  JobID2=fLSB100
   JobID3=FrameworkIII
   JobID4=
   JobID5=
@@ -86,7 +95,12 @@ for nState in 6; do
 
   mkdir ${SystDir}
 
-  ./AverageSystematics JobID1=${JobID1} JobID2=${JobID2} JobID3=${JobID3} JobID4=${JobID4} JobID5=${JobID5} JobID6=${JobID6} JobID7=${JobID7} JobID8=${JobID8} JobID9=${JobID9} ${SystID}=SystID ${storagedir}=storagedir ${basedir}=basedir ${ptBinMin}ptBinMin ${ptBinMax}ptBinMax ${nState}nState ${nSystematics}nSystematics
+  ./AverageSystematics JobID1=${JobID1} JobID2=${JobID2} JobID3=${JobID3} JobID4=${JobID4} JobID5=${JobID5} JobID6=${JobID6} JobID7=${JobID7} JobID8=${JobID8} JobID9=${JobID9} ${SystID}=SystID ${storagedir}=storagedir ${basedir}=basedir ${ptBinMin}ptBinMin ${ptBinMax}ptBinMax ${nState}nState ${nSystematics}nSystematics subtractGraphs=${subtractGraphs}
+
+  if [ ${subtractGraphs} = "true" ]; then
+    mkdir -p Systematics/${SystID}/${moveTo}
+    mv Systematics/${SystID}/AverageSyst/TGraphResults*.root Systematics/${SystID}/${moveTo}/
+  fi
 
   rm AverageSystematics
 done
