@@ -30,6 +30,8 @@ for nState in 6;do
   nSystematics=2
 
   #ProbDist 1...gauss, 2...linear
+  # NOTE: tmadlener, 18.07.2016 until AlterPPD.cc is refactored the linear option assumes that the
+  # Systematic uncertainty is already multiplied by sqrt(12) !!
 
   SystID1Base=FrameworkTest
   SystID1Specify=AverageSyst
