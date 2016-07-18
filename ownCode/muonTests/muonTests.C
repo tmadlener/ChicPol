@@ -34,14 +34,12 @@ void muonTests::Loop()
       pt1vspt2[rap][pt] = new TH2F("ptNvsptP","negMu pT vs posMu pT",1000,0,40,1000,0,40);
       pt1vseta1[rap][pt] = new TH2F("ptNvsetaN","negMu pT vs negMu eta",1000,0,40,320,-2.4,2.4);
       pt2vseta2[rap][pt] = new TH2F("ptPvsetaP","posMu pT vs posMu eta",1000,0,40,320,-2.4,2.4);
-      dPhivsdPt[rap][pt] = new TH2F("dPhiVSdPt", "delta phi vs delta pT", 400, -3.3, 3.3, 1000, 0, 40);
+      dPhivsdPt[rap][pt] = new TH2F("dPhiVSdPt", "delta phi vs delta pT", 400, -3.3, 3.3, 1000, -40, 40);
       dPhivsdEta[rap][pt] = new TH2F("dPhiVSdEta", "delta phi vs delta eta", 400, -3.3, 3.3, 500, -5, 5);
     }
   }
 
   bool rejectCowboys;
-
-  int trigDecision = -99;
 
   //   In a ROOT session, you can do:
   //      Root > .L muonTests.C
@@ -77,7 +75,7 @@ void muonTests::Loop()
 
   std::cout << "number of entries = " << nentries << std::endl;
 
-  nentries = 1000000;
+  // nentries = 1000000;
 
   Long64_t nbytes = 0, nb = 0;
 
@@ -94,21 +92,7 @@ void muonTests::Loop()
 
         nb = fChain->GetEntry(jentry);   nbytes += nb;
 
-	// if( HLT_Dimuon8_Jpsi_v3 == 1  ||
-        //     HLT_Dimuon8_Jpsi_v4 == 1  ||
-        //     HLT_Dimuon8_Jpsi_v5 == 1  ||
-        //     HLT_Dimuon8_Jpsi_v6 == 1  ||
-        //     HLT_Dimuon8_Jpsi_v7 == 1  ||
-        //     HLT_Dimuon10_Jpsi_v3 == 1 ||
-        //     HLT_Dimuon10_Jpsi_v4 == 1 ||
-        //     HLT_Dimuon10_Jpsi_v5 == 1 ||
-        //     HLT_Dimuon10_Jpsi_v6 == 1 )
-        // replace 9 possible comparisons with 9 cheap additions and one comparison
-        if (HLT_Dimuon8_Jpsi_v3 + HLT_Dimuon8_Jpsi_v4 + HLT_Dimuon8_Jpsi_v5 + HLT_Dimuon8_Jpsi_v6 + HLT_Dimuon8_Jpsi_v7
-            + HLT_Dimuon10_Jpsi_v3 + HLT_Dimuon10_Jpsi_v4 + HLT_Dimuon10_Jpsi_v5 + HLT_Dimuon10_Jpsi_v6)
-          trigDecision = 1;
-
-	if(trigDecision != 1 ) continue;
+	if(!triggerAccepted()) continue;
 	if(onia->Pt() > 990.) continue;
 
 

@@ -10,10 +10,16 @@
 #ifndef muonTests_h
 #define muonTests_h
 
+#include <iostream>
+#include <vector>
+#include <string>
+
 #include "TROOT.h"
 #include "TChain.h"
 #include "TFile.h"
 #include "TLorentzVector.h"
+
+
 
 class muonTests {
 public :
@@ -22,50 +28,26 @@ public :
 
   // Declaration of leaf types
   TLorentzVector  *onia, *muPos, *muNeg;
-  int eventNb;
-  int runNb;
-  int lumiBlock;
-  int nPriVtx;
-
-  double Jpsict;
-  double JpsictErr;
-  double JpsiMassErr;
-  double JpsiVprob;
-  double JpsiDistM1;
-  double JpsiDphiM1;
-  double JpsiDrM1;
-  double JpsiDistM2;
-  double JpsiDphiM2;
-  double JpsiDrM2;
 
   // trigger
-  // Jpsi
-  int HLT_Dimuon8_Jpsi_v3;
-  int HLT_Dimuon8_Jpsi_v4;
-  int HLT_Dimuon8_Jpsi_v5;
-  int HLT_Dimuon8_Jpsi_v6;
-  int HLT_Dimuon8_Jpsi_v7;
-  int HLT_Dimuon10_Jpsi_v3;
-  int HLT_Dimuon10_Jpsi_v4;
-  int HLT_Dimuon10_Jpsi_v5;
-  int HLT_Dimuon10_Jpsi_v6;
+  std::vector<int> Triggers;
 
-
-  muonTests(TTree *tree=0);
+  muonTests(const std::vector<std::string>& triggers, TTree *tree=0);
   virtual ~muonTests();
   virtual int Cut(Long64_t entry);
   virtual int GetEntry(Long64_t entry);
   virtual Long64_t LoadTree(Long64_t entry);
-  virtual void     Init(TTree *tree);
+  virtual void     Init(TTree *tree, const std::vector<std::string>& triggers);
   virtual void     Loop();
   virtual Bool_t   Notify();
   virtual void     Show(Long64_t entry = -1);
+  virtual bool triggerAccepted(); /**< returns true if at least one of the elements in Triggers is != 0*/
 };
 
 #endif
 
 #ifdef muonTests_cxx
-muonTests::muonTests(TTree *tree) : fChain(0)
+muonTests::muonTests(const std::vector<std::string>& triggers, TTree *tree) : fChain(0)
 {
   // if parameter tree is not specified (or zero), connect the file
   // used to generate this class and read the Tree.
@@ -80,7 +62,7 @@ muonTests::muonTests(TTree *tree) : fChain(0)
 
   }
 
-  Init(tree);
+  Init(tree, triggers);
 }
 
 muonTests::~muonTests()
@@ -108,7 +90,7 @@ Long64_t muonTests::LoadTree(Long64_t entry)
   return centry;
 }
 
-void muonTests::Init(TTree *tree)
+void muonTests::Init(TTree *tree, const std::vector<std::string>& triggers)
 {
   // The Init() function is called when the selector needs to initialize
   // a new tree or chain. Typically here the branch addresses and branch
@@ -127,37 +109,36 @@ void muonTests::Init(TTree *tree)
   muNeg = 0;
   muPos = 0;
 
-  fChain->SetBranchAddress("JpsiP", &onia);
-  fChain->SetBranchAddress("muNegP", &muNeg);
-  fChain->SetBranchAddress("muPosP", &muPos);
+  const char* jpsiBNs[] = {"JpsiP", "jpsi", "dimuon_p4"};
+  const char* muPBNs[] = {"muPosP", "lepP", "muonP_p4"};
+  const char* muNBNs[] = {"muNegP", "lepN", "muonN_p4"};
 
-  fChain->SetBranchAddress("eventNb", &eventNb);
-  fChain->SetBranchAddress("runNb", &runNb);
-  fChain->SetBranchAddress("lumiBlock", &lumiBlock);
-  fChain->SetBranchAddress("nPriVtx", &nPriVtx);
+  // loop over all possible names and break if SetBranchAddress returns 0 (indicating success)
+  for (int i = 0; i < 3; ++i) {
+    if (!fChain->SetBranchAddress(jpsiBNs[i], &onia)) break;
+    if (i==2) {
+      std::cerr << "Cannot set the branch address for the Jpsi" << std::endl;
+    }
+  }
+  for (int i = 0; i < 3; ++i) {
+    if (!fChain->SetBranchAddress(muNBNs[i], &muNeg)) break;
+    if (i==2) {
+      std::cerr << "Cannot set the branch address for the negative muon" << std::endl;
+    }
+  }
+  for (int i = 0; i < 3; ++i) {
+    if (!fChain->SetBranchAddress(muPBNs[i], &muPos)) break;
+    if (i==2) {
+      std::cerr << "Cannot set the branch address for the positive muon" << std::endl;
+    }
+  }
 
-  fChain->SetBranchAddress("Jpsict", &Jpsict);
-  fChain->SetBranchAddress("JpsictErr", &JpsictErr);
-  fChain->SetBranchAddress("JpsiMassErr", &JpsiMassErr);
-  fChain->SetBranchAddress("JpsiVprob", &JpsiVprob);
-  fChain->SetBranchAddress("JpsiDistM1", &JpsiDistM1);
-  fChain->SetBranchAddress("JpsiDphiM1", &JpsiDphiM1);
-  fChain->SetBranchAddress("JpsiDrM1", &JpsiDrM1);
-  fChain->SetBranchAddress("JpsiDistM2", &JpsiDistM2);
-  fChain->SetBranchAddress("JpsiDphiM2", &JpsiDphiM2);
-  fChain->SetBranchAddress("JpsiDrM2", &JpsiDrM2);
-
-
-  fChain->SetBranchAddress("HLT_Dimuon8_Jpsi_v3", &HLT_Dimuon8_Jpsi_v3);
-  fChain->SetBranchAddress("HLT_Dimuon8_Jpsi_v4", &HLT_Dimuon8_Jpsi_v4);
-  fChain->SetBranchAddress("HLT_Dimuon8_Jpsi_v5", &HLT_Dimuon8_Jpsi_v5);
-  fChain->SetBranchAddress("HLT_Dimuon8_Jpsi_v6", &HLT_Dimuon8_Jpsi_v6);
-  fChain->SetBranchAddress("HLT_Dimuon8_Jpsi_v7", &HLT_Dimuon8_Jpsi_v7);
-  fChain->SetBranchAddress("HLT_Dimuon10_Jpsi_v3", &HLT_Dimuon10_Jpsi_v3);
-  fChain->SetBranchAddress("HLT_Dimuon10_Jpsi_v4", &HLT_Dimuon10_Jpsi_v4);
-  fChain->SetBranchAddress("HLT_Dimuon10_Jpsi_v5", &HLT_Dimuon10_Jpsi_v5);
-  fChain->SetBranchAddress("HLT_Dimuon10_Jpsi_v6", &HLT_Dimuon10_Jpsi_v6);
-
+  // read triggers into vector
+  Triggers.clear(); // clear the vector to read in the trigger values properly for more than one file
+  for (size_t i = 0; i < triggers.size(); ++i) {
+    Triggers.push_back(0);
+    fChain->SetBranchAddress(triggers[i].c_str(), &Triggers[i]);
+  }
 
   Notify();
 }
@@ -187,4 +168,15 @@ Int_t muonTests::Cut(Long64_t entry)
   // returns -1 otherwise.
   return 1;
 }
+
+bool muonTests::triggerAccepted()
+{
+  if (Triggers.empty()) return true;
+  typedef std::vector<int>::const_iterator vecIt;
+  for (vecIt it = Triggers.begin(); it != Triggers.end(); ++it) {
+    if (*it) return true;
+  }
+  return false;
+}
+
 #endif // #ifdef muonTests_cxx
