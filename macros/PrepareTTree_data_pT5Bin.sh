@@ -23,15 +23,15 @@ cd macros
 
 # input arguments
 for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chic2
-  for FidCuts in 11; do #defines the set of cuts to be used, see macros/polFit/effsAndCuts.h
+  for FidCuts in 32; do #defines the set of cuts to be used, see macros/polFit/effsAndCuts.h
     cd $Cdir
 
-    COPY_AND_COMPILE=1
+    COPY_AND_COMPILE=0
 
     rapMin=1     #takes bins, not actual values
     rapMax=1     #if you only want to process 1 y bin, rapMax = rapMin
     ptMin=1      #takes bins, not acutal values
-    ptMax=5      # chic1 pt binning
+    ptMax=1      # chic1 pt binning
     if [ ${CHIC_BINNING} -eq 2 ]; then
       ptMax=4
     fi
@@ -47,8 +47,8 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     incChic0InMassFit=true # include the Chic0 in the mass(-lifetime) fit of the chic
     includeBkgInMassFit=true # if false the chic mass model is simply the sum of the chic1 and the chic2 mass
     correctCtau=false   #correct pseudo-proper lifetime
-    rejectCowboys=false
-    rejectSeagulls=true # not checked if cowboys are rejected!
+    rejectCowboys=true
+    rejectSeagulls=false # not checked if cowboys are rejected!
     RequestTrigger=true
     MC=false
     MCclosure=false # run MCclosure, CAUTION with setting what (and what not) to execute (not everything works!)
@@ -60,7 +60,7 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     useRefittedChic=true # use the refitted mass for chic or use M_chic - M_jpsi + M_jpsi_pdg, NOTE: this will be set to false in bkgHistos_leptonBased.C if onia::KinParticleChi == false
     subtractNP=false #default == false
     cutDimuon10Gev=true # apply a 10 GeV cut in dimuon pt (at event selection stage)
-    singleMuAccShift=0 # overall shift that is applied to the single muon acceptance pT cuts
+    singleMuAccShift=5.6 # overall shift that is applied to the single muon acceptance pT cuts for FidCuts 31 or the uniform acceptance cut for FidCuts 32
 
     #PlotFitPar:::
     AddInclusiveResult=false #Inclusive defined by rapFixTo, ptFixTo
@@ -98,7 +98,7 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     # JobID=chic_11April2016_nonRefit_useRef_${useRefittedChic}_rejCBs # fChi1MassLow = 0.1
     # JobID=jpsi_13May2016_MCclosure_rejCow_${rejectCowboys}_rejSea_${rejectSeagulls}
     # JobID=chic_23May2016_MCclosure_test
-    JobID=chic_11July2016_rejSeag_pt10Cut_chic1Binning
+    JobID=chic_17July2016_rejCow_pt10Cut_chic1Binning
     # JobID=chic_21June2016_rejCow_pt10Cut_chic2Binning_corrLib # added for comparison with old library
     # JobID=chic_15June2016_rejCow_pt10Cut_chic2Binning
     # JobID=chic_30March2016_ML30 # fChi1MassLow = 0.3
@@ -112,15 +112,15 @@ for nState in 6;do    #1,2,3,Upsi(1S,2S,3S); 4=Jpsi, 5=PsiPrime, 6=chic1 and chi
     # append_jobID ${nSigPR} nSigPR
     # append_jobID ${nSigNP} nSigNP
 
-    # append_jobID ${singleMuAccShift} muAccShift
+    append_jobID ${singleMuAccShift} accCut
 
     ################ EXECUTABLES #################
 
     #following flags decide if the step is executed (1) or not (0):
     #IMPORTANT: for MC set execute_runWorkspace, execute_MassFit and execute_runLifetimeFit to 0
-    execute_runChiData=1			           		#independent of rapMin, rapMax, ptMin, ptMax
-    execute_runWorkspace=1	    					#independent of rapMin, rapMax, ptMin, ptMax
-    execute_runMassFit=1				    	    #can be executed for different pt and y bins
+    execute_runChiData=0			           		#independent of rapMin, rapMax, ptMin, ptMax
+    execute_runWorkspace=0	    					#independent of rapMin, rapMax, ptMin, ptMax
+    execute_runMassFit=0				    	    #can be executed for different pt and y bins
     execute_runLifetimeFit=1  				    #can be executed for different pt and y bins
     execute_runPlotJpsiMassLifetime=0    			#can be executed for different pt and y bins
     execute_PlotJpsiFitPar=0              			#can be executed for different pt and y bins
