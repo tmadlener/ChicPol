@@ -153,9 +153,9 @@ void muonTests::Loop()
       if (rejCows) {
         for (int i = 0; i < kNbRapForPTBins + 1; ++i) {
           for (int j = 0; j < kNbPTMaxBins + 1; ++j) {
-            dPhivsdPt[i][j]->GetXaxis()->SetTitle("#phi(#mu^{-}) - #phi(#mu^{-})");
+            dPhivsdPt[i][j]->GetXaxis()->SetTitle("#phi(#mu^{-}) - #phi(#mu^{+})");
             dPhivsdPt[i][j]->GetYaxis()->SetTitle("p_{T}(#mu^{-}) - p_{T}(#mu^{+})");
-            dPhivsdEta[i][j]->GetXaxis()->SetTitle("#phi(#mu^{-}) - #phi(#mu^{-})");
+            dPhivsdEta[i][j]->GetXaxis()->SetTitle("#phi(#mu^{-}) - #phi(#mu^{+})");
             dPhivsdEta[i][j]->GetYaxis()->SetTitle("y(#mu^{-}) - y(#mu^{+})");
 
             dPhivsdPt[i][j]->Draw("colz");
