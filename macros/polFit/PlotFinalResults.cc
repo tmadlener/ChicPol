@@ -199,7 +199,7 @@ int main(int argc, char**  argv) {
 
   double PlotpTMinInitial = 6., PlotpTMaxInitial = 72.;
   if(PlotFinalData) PlotpTMinInitial = 10.;
-  double PlotpTMin = PlotpTMinInitial, 
+  double PlotpTMin = PlotpTMinInitial,
     PlotpTMax = PlotpTMaxInitial;
 
   int OneSigColor=416;
@@ -781,27 +781,27 @@ int main(int argc, char**  argv) {
           yMax=0.02;  //0.025
           if(iLam==2||iLam==8||iLam==14){
             yMin=-0.012;
-            yMax=0.012; 
+            yMax=0.012;
           }
           if(nState==4){
             yMin=-0.004; //-0.005;
             yMax=0.004; //0.005;
           }
-        } 
+        }
 
         if(iLam==1||iLam==2||iLam==3){
           yMin=-0.02; //-0.05;
           yMax=0.02; //0.05;
           if(nState==4&&iLam==3){
             yMin=-0.005;
-            yMax=0.005; 
+            yMax=0.005;
           }
           if(nState==5){
             yMin=-0.035; //-0.05;
             yMax=0.035; //0.05;
             if(iLam==3){
               yMin=-0.02;
-              yMax=0.02; 
+              yMax=0.02;
             }
           }
         }
@@ -1678,7 +1678,7 @@ int main(int argc, char**  argv) {
         if(!CombineRapsForSB){
           LSBgraph = graphCompareFile1;
           RSBgraph = graphCompareFile2;
-        } 
+        }
 
 
         if(CombineRapsForSB){
@@ -2413,7 +2413,7 @@ int main(int argc, char**  argv) {
               ptCentre[pt] = ptCentre[pt] + DeltaXCompare;
               ptCentreErr_high[pt] = ptCentreErr_high[pt]-DeltaXCompare; //0.
               ptCentreErr_low[pt] = ptCentreErr_low[pt]+DeltaXCompare; //0.
-            } 
+            }
             pt++;
           }
           graphCompareFile2 = new TGraphAsymmErrors(nBinspT,ptCentre,lmean,ptCentreErr_low,ptCentreErr_high,lmean_errlow,lmean_errhigh);
@@ -2465,7 +2465,7 @@ int main(int argc, char**  argv) {
               ptCentre[pt] = ptCentre[pt] + 2*DeltaXCompare;
               ptCentreErr_high[pt] = ptCentreErr_high[pt]-2*DeltaXCompare; //0.
               ptCentreErr_low[pt] = ptCentreErr_low[pt]+2*DeltaXCompare; //0.
-            } 
+            }
             pt++;
           }
           graphCompareFile4 = new TGraphAsymmErrors(nBinspT,ptCentre,lmean,ptCentreErr_low,ptCentreErr_high,lmean_errlow,lmean_errhigh);
@@ -2484,7 +2484,7 @@ int main(int argc, char**  argv) {
 
       char texTex[200];
       if(rapBin==1) sprintf(texTex,"      |#it{y}| < 1.2");
-      if(rapBinComb){ 
+      if(rapBinComb){
         sprintf(texTex,"      |#it{y}| < 1.2");
         if(nState==5) sprintf(texTex,"      |#it{y}| < 1.5");
       }
@@ -2498,7 +2498,7 @@ int main(int argc, char**  argv) {
         TLatex *text2 = new TLatex(PlotpTMax*0.7,yMin+(yMax-yMin)*0.122,texTex2);
         text2->SetTextSize(0.05);
         text2->Draw( "same" );
-      } 
+      }
 
 
 
@@ -2563,7 +2563,7 @@ int main(int argc, char**  argv) {
         bool Psi_MPplots_Old = false;
         bool Psi_MPplots_New = false;
         if(nState==4) Psi_MPplots_New = true;
-				
+
 
         cout<<"Drawing MultiPanel"<<endl;
 
@@ -2577,7 +2577,7 @@ int main(int argc, char**  argv) {
           PlotpTMin = 10.;
           PlotpTMax = 50.;
         }
-                                
+
         int MPframe;
         int iPanel;
 
@@ -2773,7 +2773,7 @@ int main(int argc, char**  argv) {
             TLegend* MPframedepLegend;
             //June3
             MPframedepLegend=new TLegend(errorLegendX1-0.08,errorLegendY1,errorLegendX2-0.33,errorLegendY2);
-            if(nState>3&&MPframe==1) 
+            if(nState>3&&MPframe==1)
               MPframedepLegend=new TLegend(errorLegendX1-0.08,errorLegendY1+0.05,errorLegendX2-0.33,errorLegendY2+0.02);
 
             //MPframedepLegend=new TLegend(errorLegendX1+0.27,errorLegendY1,errorLegendX2+0.1,errorLegendY2);
@@ -2997,17 +2997,17 @@ int main(int argc, char**  argv) {
             MPXlabeltext->SetTextColor(kBlack);
             //if(iPanel==nPanels) MPXlabeltext->Draw( "same" );
 
-            if(iLam==3&&((nState<=4&&rapBin==2)||(nState==5&&rapBin==3))){  
+            if(iLam==3&&((nState<=4&&rapBin==2)||(nState==5&&rapBin==3))){
               sprintf(filename,"%s/FinalResultsCS_chic%d.pdf",FigDir,nState-5);
               if(PlotFinalData) MPcanvasCS->SaveAs(filename);
               MPcanvasCS->Close();
             }
-            if(iLam==9&&((nState<=4&&rapBin==2)||(nState==5&&rapBin==3))){  
+            if(iLam==9&&((nState<=4&&rapBin==2)||(nState==5&&rapBin==3))){
               sprintf(filename,"%s/FinalResultsHX_chic%d.pdf",FigDir,nState-5);
               if(PlotFinalData) MPcanvasHX->SaveAs(filename);
               MPcanvasHX->Close();
             }
-            if(iLam==15&&((nState<=4&&rapBin==2)||(nState==5&&rapBin==3))){  
+            if(iLam==15&&((nState<=4&&rapBin==2)||(nState==5&&rapBin==3))){
               sprintf(filename,"%s/FinalResultsPX_chic%d.pdf",FigDir,nState-5);
               if(PlotFinalData) MPcanvasPX->SaveAs(filename);
               MPcanvasPX->Close();
@@ -3027,7 +3027,7 @@ int main(int argc, char**  argv) {
           if(nState>3) {
             if(nState==5) MPcanvasXpixel = MPcanvasXpixelInitial * (2.+1./(1-Left_margin)) / (1.+1./(1-Left_margin) ); //* 1.46
             else MPcanvasXpixel = MPcanvasXpixelInitial;
-            MPcanvasYpixel = MPcanvasYpixelInitial  / ( (2.+1./(1-lowestBottomMargin)) * (1.-lowestBottomMargin) ); // *0.384 
+            MPcanvasYpixel = MPcanvasYpixelInitial  / ( (2.+1./(1-lowestBottomMargin)) * (1.-lowestBottomMargin) ); // *0.384
           }
           cout<<"MPcanvasXpixel: "<<MPcanvasXpixel<<" MPcanvasYpixel: "<<MPcanvasYpixel<<endl;
 
@@ -3161,7 +3161,7 @@ int main(int argc, char**  argv) {
 
               int ptBinMinMP1=3, ptBinMaxMP1=12;
               int ptBinMinMP2=2, ptBinMaxMP2=5;
-              int nBinspTMP1 = ptBinMaxMP1-ptBinMinMP1+1, 
+              int nBinspTMP1 = ptBinMaxMP1-ptBinMinMP1+1,
                 nBinspTMP2 = ptBinMaxMP2-ptBinMinMP2+1;
 
               double ptCentreMP1[nBinspTMP1];
@@ -3238,28 +3238,28 @@ int main(int argc, char**  argv) {
               graphMP2->SetMarkerSize(MarkerSizeMP[MarkerDefinitionForThisBin[mainframe][iFrameMP]]);
 
 
-              if(mainframe==1&&iFrameMP==1){ 
+              if(mainframe==1&&iFrameMP==1){
                 sprintf(MPtildeLegendEntry,"CS"); MPtildeLegend->AddEntry(graphMP1,MPtildeLegendEntry,"p");
                 //sprintf(MPtildeLegendEntry,"CS"); MPtildeLegend->AddEntry(graphMP1,MPtildeLegendEntry,"lp");
               }
-              if(mainframe!=1&&iFrameMP==1){ 
-                sprintf(MPtildeLegendEntry,"CS"); MPtildeLegend->AddEntry(graphMP1,MPtildeLegendEntry,"p"); 
+              if(mainframe!=1&&iFrameMP==1){
+                sprintf(MPtildeLegendEntry,"CS"); MPtildeLegend->AddEntry(graphMP1,MPtildeLegendEntry,"p");
               }
 
-              if(mainframe==2&&iFrameMP==2){ 
+              if(mainframe==2&&iFrameMP==2){
                 sprintf(MPtildeLegendEntry,"HX"); MPtildeLegend->AddEntry(graphMP1,MPtildeLegendEntry,"p");
-                //sprintf(MPtildeLegendEntry,"HX"); MPtildeLegend->AddEntry(graphMP1,MPtildeLegendEntry,"lp"); 
+                //sprintf(MPtildeLegendEntry,"HX"); MPtildeLegend->AddEntry(graphMP1,MPtildeLegendEntry,"lp");
               }
-              if(mainframe!=2&&iFrameMP==2){ 
+              if(mainframe!=2&&iFrameMP==2){
                 sprintf(MPtildeLegendEntry,"HX"); MPtildeLegend->AddEntry(graphMP1,MPtildeLegendEntry,"p");
               }
 
-              if(mainframe==3&&iFrameMP==3){ 
+              if(mainframe==3&&iFrameMP==3){
                 sprintf(MPtildeLegendEntry,"PX"); MPtildeLegend->AddEntry(graphMP1,MPtildeLegendEntry,"p");
-                //sprintf(MPtildeLegendEntry,"PX"); MPtildeLegend->AddEntry(graphMP1,MPtildeLegendEntry,"lp"); 
+                //sprintf(MPtildeLegendEntry,"PX"); MPtildeLegend->AddEntry(graphMP1,MPtildeLegendEntry,"lp");
               }
 
-              if(mainframe!=3&&iFrameMP==3){ 
+              if(mainframe!=3&&iFrameMP==3){
                 sprintf(MPtildeLegendEntry,"PX"); MPtildeLegend->AddEntry(graphMP1,MPtildeLegendEntry,"p");
               }
 
@@ -3312,7 +3312,7 @@ int main(int argc, char**  argv) {
                 graphMP2_2sig->SetPointEXlow(ipoint, ColordBandWidth); graphMP2_2sig->SetPointEXhigh(ipoint, ColordBandWidth);
                 graphMP2_3sig->SetPointEXlow(ipoint, ColordBandWidth); graphMP2_3sig->SetPointEXhigh(ipoint, ColordBandWidth);
               }
-              //end--remove X bin error 
+              //end--remove X bin error
 
               graphMP1_1sig->SetFillColor(kGreen);
               graphMP1_1sig->SetFillStyle(1001);
@@ -3665,9 +3665,9 @@ int main(int argc, char**  argv) {
 
               //2013-7-4
               if(iStateMP==2) MPhist->GetXaxis()->SetNdivisions(504,true);
-              if(iLam==2||iLam==8||iLam==14||iLam==3||iLam==9||iLam==15)  
+              if(iLam==2||iLam==8||iLam==14||iLam==3||iLam==9||iLam==15)
                 MPhist->GetYaxis()->SetNdivisions(404,true);
-              if(iLam==1||iLam==7||iLam==13)  
+              if(iLam==1||iLam==7||iLam==13)
                 MPhist->GetYaxis()->SetNdivisions(505,true);
 
               MPhist->SetYTitle(axislabel);
@@ -3863,7 +3863,7 @@ int main(int argc, char**  argv) {
               graphMP_1sig_rap1 -> SetMarkerStyle(20);
               graphMP_1sig_rap1 -> SetMarkerSize(2.75);
 
-              graphMP_1sig_rap2 -> SetLineColor(kBlue); 
+              graphMP_1sig_rap2 -> SetLineColor(kBlue);
               graphMP_1sig_rap2 -> SetMarkerColor(kBlue);
               graphMP_1sig_rap2 -> SetMarkerStyle(25);
               graphMP_1sig_rap2 -> SetMarkerSize(2.75);
@@ -3927,7 +3927,7 @@ int main(int argc, char**  argv) {
               axisMPX2->Draw("same");
 
               XtitlePositionYshift=0.06;
-              whereTexteInPlotX=2; 
+              whereTexteInPlotX=2;
               whereTexteInPlotY=(yMaxMP+yMinMP)/2.-(yMaxMP-yMinMP)*XtitlePositionYshift;
 
               XtitlePositionYshift=0.025;
@@ -4034,7 +4034,7 @@ int main(int argc, char**  argv) {
               //	CentralsText2MP->Draw( "same" );
 
               //}
-							
+
               cout<<"DRAW CMS preliminary Latex"<<endl;
               char text[200];
 
@@ -4103,7 +4103,7 @@ int main(int argc, char**  argv) {
             MPXlabeltext->SetTextColor(kBlack);
             //if(iPanel==nPanels) MPXlabeltext->Draw( "same" );
 
-            if(iLam==3){  
+            if(iLam==3){
               sprintf(filename,"%s/FinalResultsCS.pdf",FigDir);
               if(PlotFinalData) MPcanvasCS_New->SaveAs(filename);
               sprintf(filename,"%s/FinalResultsCS.C",FigDir);
@@ -4136,7 +4136,7 @@ int main(int argc, char**  argv) {
           lowestBottomMargin =  lowestBottomMargin;
 
           MPcanvasXpixel = MPcanvasXpixelInitial;
-          MPcanvasYpixel = MPcanvasYpixelInitial  / ( (2.+1./(1-lowestBottomMargin)) * (1.-lowestBottomMargin) ); // *0.384 
+          MPcanvasYpixel = MPcanvasYpixelInitial  / ( (2.+1./(1-lowestBottomMargin)) * (1.-lowestBottomMargin) ); // *0.384
           cout<<"MPcanvasXpixel: "<<MPcanvasXpixel<<" MPcanvasYpixel: "<<MPcanvasYpixel<<endl;
 
           if( (iLam==6||iLam==12||iLam==18 ) && rapBin<3 ){
@@ -4320,28 +4320,28 @@ int main(int argc, char**  argv) {
                 graphMP_1sig->SetMarkerStyle(MarkerStyleMP[MarkerDefinitionForThisBin[mainframe][iFrameMP]]);
                 graphMP_1sig->SetMarkerSize(MarkerSizeMP[MarkerDefinitionForThisBin[mainframe][iFrameMP]]);
 
-                if(mainframe==1&&iFrameMP==1){ 
+                if(mainframe==1&&iFrameMP==1){
                   sprintf(MPtildeLegendEntry,"CS"); MPtildeLegend->AddEntry(graphMP_1sig,MPtildeLegendEntry,"p");
                   //sprintf(MPtildeLegendEntry,"CS"); MPtildeLegend->AddEntry(graphMP_1sig,MPtildeLegendEntry,"lp");
                 }
-                if(mainframe!=1&&iFrameMP==1){ 
-                  sprintf(MPtildeLegendEntry,"CS"); MPtildeLegend->AddEntry(graphMP_1sig,MPtildeLegendEntry,"p"); 
+                if(mainframe!=1&&iFrameMP==1){
+                  sprintf(MPtildeLegendEntry,"CS"); MPtildeLegend->AddEntry(graphMP_1sig,MPtildeLegendEntry,"p");
                 }
 
-                if(mainframe==2&&iFrameMP==2){ 
+                if(mainframe==2&&iFrameMP==2){
                   sprintf(MPtildeLegendEntry,"HX"); MPtildeLegend->AddEntry(graphMP_1sig,MPtildeLegendEntry,"p");
-                  //sprintf(MPtildeLegendEntry,"HX"); MPtildeLegend->AddEntry(graphMP_1sig,MPtildeLegendEntry,"lp"); 
+                  //sprintf(MPtildeLegendEntry,"HX"); MPtildeLegend->AddEntry(graphMP_1sig,MPtildeLegendEntry,"lp");
                 }
-                if(mainframe!=2&&iFrameMP==2){ 
+                if(mainframe!=2&&iFrameMP==2){
                   sprintf(MPtildeLegendEntry,"HX"); MPtildeLegend->AddEntry(graphMP_1sig,MPtildeLegendEntry,"p");
                 }
 
-                if(mainframe==3&&iFrameMP==3){ 
+                if(mainframe==3&&iFrameMP==3){
                   sprintf(MPtildeLegendEntry,"PX"); MPtildeLegend->AddEntry(graphMP_1sig,MPtildeLegendEntry,"p");
-                  //sprintf(MPtildeLegendEntry,"PX"); MPtildeLegend->AddEntry(graphMP_1sig,MPtildeLegendEntry,"lp"); 
+                  //sprintf(MPtildeLegendEntry,"PX"); MPtildeLegend->AddEntry(graphMP_1sig,MPtildeLegendEntry,"lp");
                 }
 
-                if(mainframe!=3&&iFrameMP==3){ 
+                if(mainframe!=3&&iFrameMP==3){
                   sprintf(MPtildeLegendEntry,"PX"); MPtildeLegend->AddEntry(graphMP_1sig,MPtildeLegendEntry,"p");
                 }
 
@@ -4528,9 +4528,9 @@ int main(int argc, char**  argv) {
               if(mainframe==1&&rapBin==2) sprintf(filename,"%s/FinalResultsTildeCS_rap2.pdf",FigDir);
               if(mainframe==2&&rapBin==2) sprintf(filename,"%s/FinalResultsTildeHX_rap2.pdf",FigDir);
               if(mainframe==3&&rapBin==2) sprintf(filename,"%s/FinalResultsTildePX_rap2.pdf",FigDir);
-              if(PlotFinalData) { 
-                if(rapBin==1) MPcanvasTilde_rap1->SaveAs(filename); 
-                if(rapBin==2) MPcanvasTilde_rap2->SaveAs(filename); 
+              if(PlotFinalData) {
+                if(rapBin==1) MPcanvasTilde_rap1->SaveAs(filename);
+                if(rapBin==2) MPcanvasTilde_rap2->SaveAs(filename);
               }
 
               if(mainframe==1&&rapBin==1) sprintf(filename,"%s/FinalResultsTildeCS_rap1.C",FigDir);
@@ -4539,9 +4539,9 @@ int main(int argc, char**  argv) {
               if(mainframe==1&&rapBin==2) sprintf(filename,"%s/FinalResultsTildeCS_rap2.C",FigDir);
               if(mainframe==2&&rapBin==2) sprintf(filename,"%s/FinalResultsTildeHX_rap2.C",FigDir);
               if(mainframe==3&&rapBin==2) sprintf(filename,"%s/FinalResultsTildePX_rap2.C",FigDir);
-              if(PlotFinalData) { 
-                if(rapBin==1) MPcanvasTilde_rap1->SaveAs(filename); 
-                if(rapBin==2) MPcanvasTilde_rap2->SaveAs(filename); 
+              if(PlotFinalData) {
+                if(rapBin==1) MPcanvasTilde_rap1->SaveAs(filename);
+                if(rapBin==2) MPcanvasTilde_rap2->SaveAs(filename);
               }
 
               if(rapBin==1)MPcanvasTilde_rap1->Close();
@@ -4643,9 +4643,9 @@ int main(int argc, char**  argv) {
             MPhist_PsiDep->GetYaxis()->SetTitleOffset(titleoffset);
             MPhist_PsiDep->GetYaxis()->SetTitleSize(0.);
 
-            if((nState==4&&rapBin==2)||(nState==5&&rapBin==3)) 
+            if((nState==4&&rapBin==2)||(nState==5&&rapBin==3))
               MPhist_PsiDep->GetYaxis()->SetTitleOffset(titleoffset*1.35);
-            if((nState==4&&rapBin==2)||(nState==5&&rapBin==3)) 
+            if((nState==4&&rapBin==2)||(nState==5&&rapBin==3))
               MPhist_PsiDep->GetYaxis()->SetTitleSize(0.*(1-lowestBottomMargin));
 
             MPhist_PsiDep->GetYaxis()->SetLabelSize(LabelSize*1.25);
@@ -4654,7 +4654,7 @@ int main(int argc, char**  argv) {
             if(iPanel>1) MPhist_PsiDep->GetYaxis()->SetLabelOffset(0.08);
             MPhist_PsiDep->GetXaxis()->SetLabelOffset(-0.06);
 
-            if((nState==4&&rapBin==2)||(nState==5&&rapBin==3)) 
+            if((nState==4&&rapBin==2)||(nState==5&&rapBin==3))
               MPhist_PsiDep->GetYaxis()->SetLabelSize(LabelSize*1.25*(1-lowestBottomMargin));
             MPhist_PsiDep->GetXaxis()->SetTitleSize(TitleSize*0.85);
             MPhist_PsiDep->GetXaxis()->SetAxisColor(kWhite);
@@ -4665,7 +4665,7 @@ int main(int argc, char**  argv) {
 
             TLegend* MPframedepLegend;
             MPframedepLegend=new TLegend(errorLegendX1,errorLegendY1,errorLegendX2,errorLegendY2);
-            if((nState==2||nState==3)&&MPframe==1) 
+            if((nState==2||nState==3)&&MPframe==1)
               MPframedepLegend=new TLegend(errorLegendX1, errorLegendY2-(errorLegendY2-errorLegendY1)*(1-lowestBottomMargin),
                                            errorLegendX2,errorLegendY2);
 
@@ -4745,11 +4745,11 @@ int main(int argc, char**  argv) {
             if(iLam==2||iLam==8||iLam==14)  sprintf(axistitleMPdep,"#lambda_{#varphi}");
             if(iLam==3||iLam==9||iLam==15)  sprintf(axistitleMPdep,"#lambda_{#vartheta#varphi}");
 
-            if((nState==4&&rapBin==2)||(nState==5&&rapBin==3)) 
+            if((nState==4&&rapBin==2)||(nState==5&&rapBin==3))
               YaxistitleLatexSize=YaxistitleLatexSize*(1-lowestBottomMargin);
             //TLatex *MPYtitletext = new TLatex(whereTexteInPlotX,whereTexteInPlotY ,axistitleMPdep);
             //MPYtitletext->SetTextSize(YaxistitleLatexSize);
-            //if((nState==4&&rapBin==2)||(nState==5&&rapBin==3)) 
+            //if((nState==4&&rapBin==2)||(nState==5&&rapBin==3))
             //	MPYtitletext->SetTextSize(YaxistitleLatexSize*(1-lowestBottomMargin));
             //MPYtitletext->SetTextColor(kBlack);
             //MPYtitletext->PaintLatex(whereTexteInPlotX,whereTexteInPlotY, YtitleAngle, YaxistitleLatexSize, axislabel);
@@ -4881,17 +4881,17 @@ int main(int argc, char**  argv) {
             MPXlabeltext->SetTextColor(kBlack);
             //if(iPanel==nPanels) MPXlabeltext->Draw( "same" );
 
-            if(iLam==3&&((nState<=4&&rapBin==2)||(nState==5&&rapBin==3))){  
+            if(iLam==3&&((nState<=4&&rapBin==2)||(nState==5&&rapBin==3))){
               sprintf(filename,"%s/FinalResultsCS_chic%d_OLD.pdf",FigDir,nState-5);
               if(PlotFinalData) MPcanvasCS_Psi->SaveAs(filename);
               MPcanvasCS_Psi->Close();
             }
-            if(iLam==9&&((nState<=4&&rapBin==2)||(nState==5&&rapBin==3))){  
+            if(iLam==9&&((nState<=4&&rapBin==2)||(nState==5&&rapBin==3))){
               sprintf(filename,"%s/FinalResultsHX_chic%d_OLD.pdf",FigDir,nState-5);
               if(PlotFinalData) MPcanvasHX_Psi->SaveAs(filename);
               MPcanvasHX_Psi->Close();
             }
-            if(iLam==15&&((nState<=4&&rapBin==2)||(nState==5&&rapBin==3))){  
+            if(iLam==15&&((nState<=4&&rapBin==2)||(nState==5&&rapBin==3))){
               sprintf(filename,"%s/FinalResultsPX_chic%d_OLD.pdf",FigDir,nState-5);
               if(PlotFinalData) MPcanvasPX_Psi->SaveAs(filename);
               MPcanvasPX_Psi->Close();
@@ -5358,7 +5358,7 @@ int main(int argc, char**  argv) {
                 double yMeanStatErrorLine=yMin+(yMax-yMin)*errorLegendY2-(errorLegendY2-errorLegendY1)*StatErrorLineShift;
 
 
-                TLine* StatErrorLine = new TLine( xStatErrorLine, yMeanStatErrorLine-StatErrorLineLength/2., 
+                TLine* StatErrorLine = new TLine( xStatErrorLine, yMeanStatErrorLine-StatErrorLineLength/2.,
                                                   xStatErrorLine ,yMeanStatErrorLine+StatErrorLineLength/2.);
                 StatErrorLine->SetLineWidth( 1 );
                 StatErrorLine->SetLineStyle( 1 );
@@ -5374,7 +5374,7 @@ int main(int argc, char**  argv) {
                 double yMeanStatErrorLine=yMin+(yMax-yMin)*errorLegendY2-(errorLegendY2-errorLegendY1)*StatErrorLineShift;
 
 
-                TLine* StatErrorLine = new TLine( xStatErrorLine, yMeanStatErrorLine-StatErrorLineLength/2., 
+                TLine* StatErrorLine = new TLine( xStatErrorLine, yMeanStatErrorLine-StatErrorLineLength/2.,
                                                   xStatErrorLine ,yMeanStatErrorLine+StatErrorLineLength/2.);
                 StatErrorLine->SetLineWidth( 1 );
                 StatErrorLine->SetLineStyle( 1 );
@@ -5707,19 +5707,19 @@ int main(int argc, char**  argv) {
                 graphMP3->SetMarkerSize(MarkerSizeMP[MarkerDefinitionForThisBin[mainframe][iFrameMP]]);
 
 
-                if(mainframe==1&&iFrameMP==1){ sprintf(MPtildeLegendEntry,"CS"); 
+                if(mainframe==1&&iFrameMP==1){ sprintf(MPtildeLegendEntry,"CS");
                   MPtildeLegend->AddEntry(graphMP1,MPtildeLegendEntry,"p"); }
                 if(mainframe!=1&&iFrameMP==1){ sprintf(MPtildeLegendEntry,"CS");
                   MPtildeLegend->AddEntry(graphMP1,MPtildeLegendEntry,"p"); }
 
-                if(mainframe==2&&iFrameMP==2){ sprintf(MPtildeLegendEntry,"HX"); 
+                if(mainframe==2&&iFrameMP==2){ sprintf(MPtildeLegendEntry,"HX");
                   MPtildeLegend->AddEntry(graphMP1,MPtildeLegendEntry,"p"); }
-                if(mainframe!=2&&iFrameMP==2){ sprintf(MPtildeLegendEntry,"HX"); 
+                if(mainframe!=2&&iFrameMP==2){ sprintf(MPtildeLegendEntry,"HX");
                   MPtildeLegend->AddEntry(graphMP1,MPtildeLegendEntry,"p"); }
 
-                if(mainframe==3&&iFrameMP==3){ sprintf(MPtildeLegendEntry,"PX"); 
+                if(mainframe==3&&iFrameMP==3){ sprintf(MPtildeLegendEntry,"PX");
                   MPtildeLegend->AddEntry(graphMP1,MPtildeLegendEntry,"p"); }
-                if(mainframe!=3&&iFrameMP==3){ sprintf(MPtildeLegendEntry,"PX"); 
+                if(mainframe!=3&&iFrameMP==3){ sprintf(MPtildeLegendEntry,"PX");
                   MPtildeLegend->AddEntry(graphMP1,MPtildeLegendEntry,"p"); }
 
                 if(mainframe==1){
@@ -6726,7 +6726,7 @@ int main(int argc, char**  argv) {
 
 
 
-      double PlotpTMin = PlotpTMinInitial, 
+      double PlotpTMin = PlotpTMinInitial,
         PlotpTMax = PlotpTMaxInitial;
 
       // Systematic uncertainties
@@ -6767,7 +6767,7 @@ int main(int argc, char**  argv) {
       double LegendXmin=0.6; // for FrameworkIII: 0.5
       if(ExtendLegendInX) LegendXmin=0.25;
 
-      TLegend* plotLegend; 
+      TLegend* plotLegend;
       plotLegend=new TLegend(LegendXmin,LegendYmin[nSystematics-1],0.98,0.98);
       //plotLegend=new TLegend(0.12,0.12,0.45,0.45);
       if(PlotSystematics&&PlotSysSquare) {
@@ -7008,7 +7008,7 @@ int main(int argc, char**  argv) {
       if(iTab==1){
         if(nState>3)
           fprintf(NumFile, "\\begin{table}[!H]\n\\centering\n \\caption{Results of polarization parameters of the $\\Psi(%dS)$ analysis}\n \\begin{tabular}{|c|cccc|}\n\\hline\n",nState-5);
-        else 
+        else
           fprintf(NumFile, "\\begin{table}[!H]\n\\centering\n \\caption{Results of polarization parameters of the $\\Upsilon(%dS)$ analysis}\n \\begin{tabular}{|c|cccc|}\n\\hline\n",nState);
         fprintf(NumFile, "$p_{T}$ [GeV] & $\\lambda_{\\vartheta}$ & $\\lambda_{\\varphi}$ &  $\\lambda_{\\vartheta \\varphi}$ & $\\tilde{\\lambda}$ \\\\\n");
       }
