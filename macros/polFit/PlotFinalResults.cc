@@ -211,13 +211,13 @@ int main(int argc, char**  argv) {
   char filename[200];
   sprintf(filename,"%s/%s/TGraphResults_chic%d.root",storagedir,DefaultID,nState-5);
   if(CompareSyst)sprintf(filename,"%s/macros/polFit/Systematics/%s/%s/TGraphResults_chic%d.root",basedir,SystID1Base,SystID1Specify,nState-5);
-  TFile *infileRes = new TFile(filename,"READ");
+  TFile *infileRes = TFile::Open(filename,"READ");
 
   sprintf(filename,"%s/%s/TGraphResults_chic%d_2sigma.root",storagedir,DefaultID,nState-5);
-  TFile *infileRes2sigma = new TFile(filename,"READ");
+  TFile *infileRes2sigma = TFile::Open(filename,"READ");
 
   sprintf(filename,"%s/%s/TGraphResults_chic%d_3sigma.root",storagedir,DefaultID,nState-5);
-  TFile *infileRes3sigma = new TFile(filename,"READ");
+  TFile *infileRes3sigma = TFile::Open(filename,"READ");
 
   if(!PlotBrazilian){
     infileRes2sigma=infileRes;
@@ -227,32 +227,32 @@ int main(int argc, char**  argv) {
   if(PlotMattForICHEP) PlotBrazilian=false;
 
   sprintf(filename,"/afs/ihep.ac.cn/users/z/zhangll/fs/work/polarization/PsiPol2011/macros/polFit/Systematics/TotalSyst/%s/TGraphResults_chic%d.root",MPCentralsWithTotalSystID,nState-5);
-  TFile *infileStat = new TFile(filename,"READ");
+  TFile *infileStat = TFile::Open(filename,"READ");
   if(!PlotAlteredPPDResults) infileStat=infileRes;
 
   sprintf(filename,"%s/macros/polFit/Systematics/%s/%s/TGraphResults_chic%d.root",basedir,SystID1Base,SystID1Specify,nState-5);
-  TFile *infileSyst1 = new TFile(filename,"READ");
+  TFile *infileSyst1 = TFile::Open(filename,"READ");
 
   sprintf(filename,"%s/macros/polFit/Systematics/%s/%s/TGraphResults_chic%d.root",basedir,SystID2Base,SystID2Specify,nState-5);
-  TFile *infileSyst2 = new TFile(filename,"READ");
+  TFile *infileSyst2 = TFile::Open(filename,"READ");
 
   sprintf(filename,"%s/macros/polFit/Systematics/%s/%s/TGraphResults_chic%d.root",basedir,SystID3Base,SystID3Specify,nState-5);
-  TFile *infileSyst3 = new TFile(filename,"READ");
+  TFile *infileSyst3 = TFile::Open(filename,"READ");
 
   sprintf(filename,"%s/macros/polFit/Systematics/%s/%s/TGraphResults_chic%d.root",basedir,SystID4Base,SystID4Specify,nState-5);
-  TFile *infileSyst4 = new TFile(filename,"READ");
+  TFile *infileSyst4 = TFile::Open(filename,"READ");
 
   sprintf(filename,"%s/macros/polFit/Systematics/%s/%s/TGraphResults_chic%d.root",basedir,SystID5Base,SystID5Specify,nState-5);
-  TFile *infileSyst5 = new TFile(filename,"READ");
+  TFile *infileSyst5 = TFile::Open(filename,"READ");
 
   sprintf(filename,"%s/macros/polFit/Systematics/%s/%s/TGraphResults_chic%d.root",basedir,SystID6Base,SystID6Specify,nState-5);
-  TFile *infileSyst6 = new TFile(filename,"READ");
+  TFile *infileSyst6 = TFile::Open(filename,"READ");
 
   sprintf(filename,"%s/macros/polFit/Systematics/%s/%s/TGraphResults_chic%d.root",basedir,SystID7Base,SystID7Specify,nState-5);
-  TFile *infileSyst7 = new TFile(filename,"READ");
+  TFile *infileSyst7 = TFile::Open(filename,"READ");
 
   sprintf(filename,"%s/macros/polFit/Systematics/%s/%s/TGraphResults_chic%d.root",basedir,SystID8Base,SystID8Specify,nState-5);
-  TFile *infileSyst8 = new TFile(filename,"READ");
+  TFile *infileSyst8 = TFile::Open(filename,"READ");
 
   //sprintf(filename,"%s/macros/polFit/MattRes/TGraphResults_chic%d_MattResults.root",basedir,nState-5);
   //TFile *MattFileStat = new TFile(filename,"READ");
@@ -263,91 +263,91 @@ int main(int argc, char**  argv) {
   //if(nState>1) MattFileSyst=infileRes;
 
   sprintf(filename,"%s/macros/polFit/CDFRes/TGraphResults_chic%d_CDFStat.root",basedir,nState-5);
-  TFile *MattFileStat = new TFile(filename,"READ");
+  TFile *MattFileStat = TFile::Open(filename,"READ");
 
   sprintf(filename,"%s/macros/polFit/CDFRes/TGraphResults_chic%d_CDFSyst.root",basedir,nState-5);
-  TFile *MattFileSyst = new TFile(filename,"READ");
+  TFile *MattFileSyst = TFile::Open(filename,"READ");
 
   sprintf(filename,"%s/macros/polFit/CDFRes/TGraphResults_chic%d_CDFTotal.root",basedir,nState-5);
-  TFile *MattFileTotal = new TFile(filename,"READ");
+  TFile *MattFileTotal = TFile::Open(filename,"READ");
 
   sprintf(filename,"%s/macros/polFit/CDFRes/TGraphResults_Psi1S_CDFStat.root",basedir);
-  TFile *infileMP1SCDF_Stat = new TFile(filename,"READ");
+  TFile *infileMP1SCDF_Stat = TFile::Open(filename,"READ");
   sprintf(filename,"%s/macros/polFit/CDFRes/TGraphResults_Psi2S_CDFStat.root",basedir);
-  TFile *infileMP2SCDF_Stat = new TFile(filename,"READ");
+  TFile *infileMP2SCDF_Stat = TFile::Open(filename,"READ");
   sprintf(filename,"%s/macros/polFit/CDFRes/TGraphResults_Psi3S_CDFStat.root",basedir);
-  TFile *infileMP3SCDF_Stat = new TFile(filename,"READ");
+  TFile *infileMP3SCDF_Stat = TFile::Open(filename,"READ");
 
   sprintf(filename,"%s/macros/polFit/CDFRes/TGraphResults_Psi1S_CDFTotal.root",basedir);
-  TFile *infileMP1SCDF_Total = new TFile(filename,"READ");
+  TFile *infileMP1SCDF_Total = TFile::Open(filename,"READ");
   sprintf(filename,"%s/macros/polFit/CDFRes/TGraphResults_Psi2S_CDFTotal.root",basedir);
-  TFile *infileMP2SCDF_Total = new TFile(filename,"READ");
+  TFile *infileMP2SCDF_Total = TFile::Open(filename,"READ");
   sprintf(filename,"%s/macros/polFit/CDFRes/TGraphResults_Psi3S_CDFTotal.root",basedir);
-  TFile *infileMP3SCDF_Total = new TFile(filename,"READ");
+  TFile *infileMP3SCDF_Total = TFile::Open(filename,"READ");
 
   sprintf(filename,"%s/%s/TGraphResults_chic%d.root",storagedir,CompareID1,nState-5);
   if(CompareSyst)sprintf(filename,"%s/macros/polFit/Systematics/%s/%s/TGraphResults_Psi1S.root",basedir,SystID2Base,SystID2Specify,nState);
-  TFile *CompareFile1 = new TFile(filename,"READ");
+  TFile *CompareFile1 = TFile::Open(filename,"READ");
   if(nComp<1) CompareFile1=infileRes;
 
   sprintf(filename,"%s/%s/TGraphResults_chic%d.root",storagedir,CompareID2,nState-5);
   if(CompareSyst)sprintf(filename,"%s/macros/polFit/Systematics/%s/%s/TGraphResults_Psi2S.root",basedir,SystID3Base,SystID3Specify,nState);
-  TFile *CompareFile2 = new TFile(filename,"READ");
+  TFile *CompareFile2 = TFile::Open(filename,"READ");
   if(nComp<2) CompareFile2=infileRes;
 
   sprintf(filename,"%s/%s/TGraphResults_chic%d.root",storagedir,CompareID3,nState-5);
   if(CompareSyst)sprintf(filename,"%s/macros/polFit/Systematics/%s/%s/TGraphResults_Psi2S.root",basedir,SystID4Base,SystID4Specify,nState);
-  TFile *CompareFile3 = new TFile(filename,"READ");
+  TFile *CompareFile3 = TFile::Open(filename,"READ");
   if(nComp<3) CompareFile3=infileRes;
 
   sprintf(filename,"%s/%s/TGraphResults_chic%d.root",storagedir,CompareID4,nState-5);
-  TFile *CompareFile4 = new TFile(filename,"READ");
+  TFile *CompareFile4 = TFile::Open(filename,"READ");
   if(nComp<4) CompareFile4=infileRes;
 
 
 
 
   sprintf(filename,"/afs/ihep.ac.cn/users/z/zhangll/fs/work/polarization/PsiPol2011/macros/polFit/Systematics/TotalSyst/%s/TGraphResults_Psi1S.root",MPCentralsWithTotalSystID);
-  TFile *infileMP1 = new TFile(filename,"READ");
+  TFile *infileMP1 = TFile::Open(filename,"READ");
   if(!MultiPanelPlots) infileMP1=infileRes;
 
   sprintf(filename,"/afs/ihep.ac.cn/users/z/zhangll/fs/work/polarization/PsiPol2011/macros/polFit/Systematics/TotalSyst/%s/TGraphResults_Psi2S.root",MPCentralsWithTotalSystID);
-  TFile *infileMP2 = new TFile(filename,"READ");
+  TFile *infileMP2 = TFile::Open(filename,"READ");
   if(!MultiPanelPlots) infileMP2=infileRes;
 
   sprintf(filename,"/afs/ihep.ac.cn/users/z/zhangll/fs/work/polarization/PsiPol2011/macros/polFit/Systematics/TotalSyst/%s/TGraphResults_Psi3S.root",MPCentralsWithTotalSystID);
-  TFile *infileMP3 = new TFile(filename,"READ");
+  TFile *infileMP3 = TFile::Open(filename,"READ");
   if(!MultiPanelPlots) infileMP3=infileRes;
 
 
   sprintf(filename,"%s/%s/TGraphResults_Psi1S_1sigma.root",storagedir,DefaultID);
-  TFile *infileMP1_1sig = new TFile(filename,"READ");
+  TFile *infileMP1_1sig = TFile::Open(filename,"READ");
   if(!MultiPanelPlots) infileMP1_1sig=infileRes;
   sprintf(filename,"%s/%s/TGraphResults_Psi1S_2sigma.root",storagedir,DefaultID);
-  TFile *infileMP1_2sig = new TFile(filename,"READ");
+  TFile *infileMP1_2sig = TFile::Open(filename,"READ");
   if(!MultiPanelPlots) infileMP1_2sig=infileRes;
   sprintf(filename,"%s/%s/TGraphResults_Psi1S_3sigma.root",storagedir,DefaultID);
-  TFile *infileMP1_3sig = new TFile(filename,"READ");
+  TFile *infileMP1_3sig = TFile::Open(filename,"READ");
   if(!MultiPanelPlots) infileMP1_3sig=infileRes;
 
   sprintf(filename,"%s/%s/TGraphResults_Psi2S_1sigma.root",storagedir,DefaultID);
-  TFile *infileMP2_1sig = new TFile(filename,"READ");
+  TFile *infileMP2_1sig = TFile::Open(filename,"READ");
   if(!MultiPanelPlots) infileMP2_1sig=infileRes;
   sprintf(filename,"%s/%s/TGraphResults_Psi2S_2sigma.root",storagedir,DefaultID);
-  TFile *infileMP2_2sig = new TFile(filename,"READ");
+  TFile *infileMP2_2sig = TFile::Open(filename,"READ");
   if(!MultiPanelPlots) infileMP2_2sig=infileRes;
   sprintf(filename,"%s/%s/TGraphResults_Psi2S_3sigma.root",storagedir,DefaultID);
-  TFile *infileMP2_3sig = new TFile(filename,"READ");
+  TFile *infileMP2_3sig = TFile::Open(filename,"READ");
   if(!MultiPanelPlots) infileMP2_3sig=infileRes;
 
   sprintf(filename,"%s/%s/TGraphResults_Psi3S_1sigma.root",storagedir,DefaultID);
-  TFile *infileMP3_1sig = new TFile(filename,"READ");
+  TFile *infileMP3_1sig = TFile::Open(filename,"READ");
   if(!MultiPanelPlots) infileMP3_1sig=infileRes;
   sprintf(filename,"%s/%s/TGraphResults_Psi3S_2sigma.root",storagedir,DefaultID);
-  TFile *infileMP3_2sig = new TFile(filename,"READ");
+  TFile *infileMP3_2sig = TFile::Open(filename,"READ");
   if(!MultiPanelPlots) infileMP3_2sig=infileRes;
   sprintf(filename,"%s/%s/TGraphResults_Psi3S_3sigma.root",storagedir,DefaultID);
-  TFile *infileMP3_3sig = new TFile(filename,"READ");
+  TFile *infileMP3_3sig = TFile::Open(filename,"READ");
   if(!MultiPanelPlots) infileMP3_3sig=infileRes;
 
   if(!PlotCompare) CompareFile1=infileRes;
@@ -363,11 +363,11 @@ int main(int argc, char**  argv) {
   }
   if(BGratioFits){
     sprintf(filename,"%s/macros/polFit/Systematics/%s/%s/TGraphResults_Psi1S.root",basedir,SystID1Base,SystID1Specify);
-    CompareFile1 = new TFile(filename,"READ");
+    CompareFile1 = TFile::Open(filename,"READ");
     sprintf(filename,"%s/macros/polFit/Systematics/%s/%s/TGraphResults_Psi2S.root",basedir,SystID2Base,SystID2Specify);
-    CompareFile2 = new TFile(filename,"READ");
+    CompareFile2 = TFile::Open(filename,"READ");
     sprintf(filename,"%s/macros/polFit/Systematics/%s/%s/TGraphResults_Psi3S.root",basedir,SystID3Base,SystID3Specify);
-    CompareFile3 = new TFile(filename,"READ");
+    CompareFile3 = TFile::Open(filename,"READ");
   }
 
 
