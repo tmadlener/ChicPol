@@ -215,152 +215,62 @@ int main(int argc, char** argv) {
       }
 
       int nBinspT=ptBinMax-ptBinMin+1;
-      double ptCentre_[nBinspT];
-      double ptCentreErr_low[nBinspT];
-      double ptCentreErr_high[nBinspT];
-      double lmean[nBinspT];
-      double errlmean[nBinspT];
+      std::vector<double> ptCenters;
+      std::vector<double> ptCenterErrsLow;
+      std::vector<double> ptCenterErrsHigh;
+      std::vector<double> lmeans;
+      // std::vector<double> errsLmean;
 
-      double fit_lmean[nSystematics];
-      double fit_errlmean[nSystematics];
-      double fit_X[nSystematics];
+      if (!subtractGraphs) {
+        for (int ptBin = ptBinMin; ptBin < ptBinMax + 1; ++ptBin) {
+          int pt = ptBin - ptBinMin; // indices in TGraphAsymmErrors start at zero
+          // accumulate the values of all bins to take the mean in the end (except for lmean)
+          double ptCenterAcc = 0;
+          double lmeanAcc = 0;
+          double pTErrHigh = 0;
+          double pTErrLow = 0;
+          // double lMeanErrHigh = 0;
+          // double lMeanErrLow = 0;
 
-      double ptCentre__[nSystematics][nBinspT];
-      double ptCentreErr_low_[nSystematics][nBinspT];
-      double ptCentreErr_high_[nSystematics][nBinspT];
+          // casting to uint is only done to suppress compiler warning!
+          for (int iSyst = 0; iSyst < nSystematics && (uint)iSyst < inputs.size(); ++iSyst) {
+            TGraphAsymmErrors* graph = inputs[iSyst].graph;
+            double ptCenter, lmean;
+            graph->GetPoint(pt, ptCenter, lmean);
+            ptCenterAcc += ptCenter;
+            lmeanAcc += lmean * lmean; // add the "errors" squared
+            pTErrHigh += graph->GetErrorXhigh(pt);
+            pTErrLow += graph->GetErrorXlow(pt);
+            // lMeanErrHigh += graph->GetErrorYhigh(pt);
+            // lMeanErrLow += graph->GetErrorYlow(pt);
 
-      double lmean_[nSystematics][nBinspT];
-
-      TGraphAsymmErrors* graph_;
-
-      if(!subtractGraphs) {
-        int pt=0;
-        for(int ptBin = ptBinMin; ptBin < ptBinMax+1; ptBin++) {
-
-          double lmean_Buffer=0;
-          double ptCentre_Buffer=0;
-          double ptCentreErr_low_Buffer=0;
-          double ptCentreErr_high_Buffer=0;
-
-          for(int iSyst = 0; iSyst < nSystematics && iSyst < inputs.size(); iSyst++) {
-            graph_ = inputs[iSyst].graph;
-            graph_->GetPoint(pt,ptCentre__[iSyst][pt],lmean_[iSyst][pt]);
-            ptCentreErr_high_[iSyst][pt]=graph_->GetErrorXhigh(pt);
-            ptCentreErr_low_[iSyst][pt]=graph_->GetErrorXlow(pt);
-
-            fit_errlmean[iSyst]=graph_->GetErrorYhigh(pt);
-            fit_lmean[iSyst]=lmean_[iSyst][pt];
-            fit_X[iSyst]=0.;
+            std::cout << "lmean[" << iSyst << "][" << pt << "]: " << lmean << std::endl;
           }
 
-          double pTcentreReal=0;
-          double pTcentreReallow=0;
-          double pTcentreRealhigh=0;
+          ptCenters.push_back( ptCenterAcc / nSystematics ); // WARNING: could be that inputs.size() is smaller!
+          ptCenterErrsHigh.push_back( pTErrHigh / nSystematics );
+          ptCenterErrsLow.push_back( pTErrLow / nSystematics );
+          lmeans.push_back( TMath::Sqrt(lmeanAcc) ); // squared addition of errors requires a sqrt at the end
 
-          double lmeanHighest = 0.;
-          for(int iSyst=0;iSyst<nSystematics;iSyst++){
-            //lmean_Buffer=lmean_Buffer+TMath::Abs(lmean_[iSyst][pt]); //ifMean
-            //lmean_Buffer=lmean_Buffer+lmean_[iSyst][pt]; //ifChange
-            //lmean_[iSyst][pt] = lmean_[iSyst][pt] / 2. ;  //fracBg0_TO_default_half
-            lmean_Buffer=lmean_Buffer+lmean_[iSyst][pt]*lmean_[iSyst][pt]; //ifSquare
-            //if(ptBin<10 && iSyst==0) lmean_Buffer = lmean_Buffer + lmean_[iSyst][pt]*lmean_[iSyst][pt];
-            //if(ptBin>=10 && iSyst==1)  lmean_Buffer = lmean_Buffer + lmean_[iSyst][pt]*lmean_[iSyst][pt];
-
-            cout<<"lmean["<<iSyst<<"]["<<pt<<"]: "<<lmean_[iSyst][pt]<<endl;
-            //if(lmean_[iSyst][pt]*lmean_[iSyst][pt]>lmeanHighest){
-            //	lmeanHighest = lmean_[iSyst][pt]*lmean_[iSyst][pt] ;
-            //	lmean_Buffer = lmeanHighest ;
-            //	cout<<"lmeanHighest: "<<sqrt(lmeanHighest)<<endl;
-            //}
-
-            ptCentre_Buffer=ptCentre_Buffer+ptCentre__[iSyst][pt];
-            ptCentreErr_low_Buffer=ptCentreErr_low_Buffer+ptCentreErr_low_[iSyst][pt];
-            ptCentreErr_high_Buffer=ptCentreErr_high_Buffer+ptCentreErr_high_[iSyst][pt];
-
-            if(iSyst==0) {//delete loop
-              pTcentreReal=ptCentre__[iSyst][pt];
-              pTcentreReallow=ptCentreErr_low_[iSyst][pt];
-              pTcentreRealhigh=ptCentreErr_high_[iSyst][pt];
-            }
-
-          }
-
-          ptCentre_[pt]=ptCentre_Buffer/nSystematics;
-          ptCentreErr_low[pt]=ptCentreErr_low_Buffer/nSystematics;
-          ptCentreErr_high[pt]=ptCentreErr_high_Buffer/nSystematics;
-
-          ptCentre_[pt]=pTcentreReal;//delete
-          ptCentreErr_low[pt]=pTcentreReallow;//delete
-          ptCentreErr_high[pt]=pTcentreRealhigh;//delete
-
-          //lmean[pt]=lmean_Buffer/nSystematics; //ifMean
-          //if(pt>3) {lmean[pt]=0; std::cout << "point 4 set to 0" << std::endl;} // ifrho
-          lmean[pt]=TMath::Sqrt(lmean_Buffer); //ifSquare
-          //lmean[pt]=lmean_Buffer;
-
-          std::cout << pt << ": pT = " << ptCentre_[pt] << ", lambda = " << lmean[pt] << std::endl;
-
-          // IF FIT THE NSYSTEMATIC VALUES INSTEAD OF USING THE MEAN:::
-
-          //if(pt==9) {
-          //      fit_X[2]=-999.;
-          //}
-
-          //TGraphAsymmErrors *fitGraph = new TGraphAsymmErrors(nSystematics,fit_X,fit_lmean,0,0,fit_errlmean,fit_errlmean);
-          //TF1* fConst = new TF1("fConst","pol0",-1,1);
-          //fitGraph->Fit("fConst","EFNR");
-          //
-          //lmean[pt]=fConst->GetParameter(0);
-          //errlmean[pt]=fConst->GetParError(0);
-
-          // END Fit
-
-          pt++;
-        } // pT-Loop
+          std::cout << pt << ": pT = " << ptCenters.back() << ", lambda = " << lmeans.back() << std::endl;
+        }
       } else { // i.e. if subtractGraph
         TGraphAsymmErrors* diffSyst = subtractTGAE(inputs[0].graph, inputs[1].graph);
         multiplyFactor(diffSyst, TMath::Sqrt(12.));
         for (int i = 0; i < nBinspT; ++i) {
-          diffSyst->GetPoint(i, ptCentre_[i], lmean[i]); // WARNING: assuming nBinspT and diffSyst->GetN() are the same
-          ptCentreErr_low[i] = diffSyst->GetErrorXlow(i);
-          ptCentreErr_high[i] = diffSyst->GetErrorXhigh(i);
+          double center, lmean;
+          diffSyst->GetPoint(i, center, lmean);
+          ptCenters.push_back(center);
+          lmeans.push_back(lmean);
+          ptCenterErrsHigh.push_back( diffSyst->GetErrorXhigh(i) );
+          ptCenterErrsLow.push_back( diffSyst->GetErrorXlow(i) );
         }
       }
-      //////////////// Change TGraphs
-      /*
-        double ptCentre_Change[nBinspT-2];
-        double ptCentreErr_low_Change[nBinspT-2];
-        double ptCentreErr_highChange[nBinspT-2];
-        double lmeanChange[nBinspT-2];
 
-        pt=0;
-        for(int ptBin = ptBinMin; ptBin < ptBinMax+1-2; ptBin++) {
-        ptCentre_Change[pt]=ToyMC::ptCentre[rapBin-1][pt];
-        ptCentreErr_low_Change[pt]=TMath::Abs(ToyMC::ptCentre[rapBin-1][pt]-onia::pTRange[rapBin][pt]);
-        ptCentreErr_highChange[pt]=TMath::Abs(ToyMC::ptCentre[rapBin-1][pt]-onia::pTRange[rapBin][pt+1]);
+      // construct final TGraphAsymmErrors with no errors on the mean lambdas
+      TGraphAsymmErrors* graphSyst = new TGraphAsymmErrors(nBinspT, ptCenters.data(), lmeans.data(),
+                                                           ptCenterErrsLow.data(), ptCenterErrsHigh.data());
 
-        if(pt<5)lmeanChange[pt]=lmean_[0][pt];
-        if(pt==5)lmeanChange[pt]=(lmean_[0][5]+lmean_[0][6])/2.;
-        if(pt==6)lmeanChange[pt]=(lmean_[0][7]+lmean_[0][8])/2.;
-        if(pt==7)lmeanChange[pt]=lmean_[0][9];
-        if(pt==8)lmeanChange[pt]=lmean_[0][10];
-        if(pt==9)lmeanChange[pt]=lmean_[0][11];
-
-        pt++;
-        }
-
-
-        TGraphAsymmErrors *graphSyst = new TGraphAsymmErrors(nBinspT-2,ptCentre_Change,lmeanChange,ptCentreErr_low_Change,ptCentreErr_highChange,0,0);
-        graphSyst->SetMarkerColor(ToyMC::MarkerColor[rapBin]);
-        graphSyst->SetLineColor(ToyMC::MarkerColor[rapBin]);
-        //              graphSyst->SetMarkerStyle(ToyMC::MarkerStyle[rapBin]);
-        graphSyst->SetMarkerSize(2);
-        graphSyst->SetName(GraphName);
-      */
-      //////////////// END Change TGraphs
-
-      TGraphAsymmErrors *graphSyst = new TGraphAsymmErrors(nBinspT,ptCentre_,lmean,ptCentreErr_low,ptCentreErr_high,0,0);//Original
-      //TGraphAsymmErrors *graphSyst = new TGraphAsymmErrors(nBinspT,ptCentre_,lmean,ptCentreErr_low,ptCentreErr_high,errlmean,errlmean);//If Fit the nSyst values with constant
       graphSyst->SetMarkerColor(ToyMC::MarkerColor[rapBin]);
       graphSyst->SetLineColor(ToyMC::MarkerColor[rapBin]);
       //graphSyst->SetMarkerStyle(ToyMC::MarkerStyle[rapBin]);
