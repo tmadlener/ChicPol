@@ -766,12 +766,12 @@ void bkgHistos_chi(const std::string infilename, int rapBin, int ptBin, bool fol
         // folding in phi
         double phiFolded = thisPhi[iFrame];
         double thetaAdjusted = thisCosTh[iFrame];
-        if(thisPhi[iFrame] > -90. && thisPhi[iFrame] < 0.) phiFolded *= -1;
-        else if(thisPhi[iFrame] > 90 && thisPhi[iFrame] < 180){
+        if(thisPhi[iFrame] >= -90. && thisPhi[iFrame] < 0.) phiFolded *= -1;
+        else if(thisPhi[iFrame] >= 90 && thisPhi[iFrame] < 180){
           phiFolded = 180. - thisPhi[iFrame];
           thetaAdjusted *= -1;
         }
-        else if(thisPhi[iFrame] > -180. && thisPhi[iFrame] < -90.){
+        else if(thisPhi[iFrame] >= -180. && thisPhi[iFrame] < -90.){
           phiFolded = 180. + thisPhi[iFrame];
           thetaAdjusted *= -1;
         }

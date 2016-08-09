@@ -61,7 +61,7 @@ bool subtractBG=true;
 int n_MCevents_NORM = 1000000;
 
 // Numerical inputs to calculate decay angles:
-const double pbeam_ = 8000.; // exact number irrelevant as long as pbeam >> Mprot
+const double pbeam_ = 4000.; // exact number irrelevant as long as pbeam >> Mprot
 const double Mprot_ = 0.9382720;
 const double Mlepton_ = 0.10566;  // (muon)
 const double gPI_ = TMath::Pi();
