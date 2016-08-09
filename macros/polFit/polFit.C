@@ -292,7 +292,7 @@ void polFit(int n_sampledPoints=1,
   std::cout << "get rho file" << std::endl;
   EvaluateEffFileName(nRhoFactor,EffFileName,false);
   sprintf(EffFile,"%s/%s",effDir,EffFileName);
-  TFile *fInRhoFactor = new TFile(EffFile);
+  TFile *fInRhoFactor = TFile::Open(EffFile);
   //cout<<"EffFile: "<<EffFile<<endl;
 
   cout<<"Filling Efficiency Evaluation Histogram"<<endl;
