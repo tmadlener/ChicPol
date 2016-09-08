@@ -34,6 +34,9 @@ int main(int argc, char* argv[])
   bool rejectSeagulls = false;
   bool removeEta0p2_0p3 = false;
   bool cutDeltaREllDpt = false;
+  double muAccShift = 0.;
+  bool singleMuSameRap = false;
+  bool singleMuDiffRap = false;
 
   for (int i = 1; i < argc; ++i) {
     std::string arg(argv[i]);
@@ -44,6 +47,9 @@ int main(int argc, char* argv[])
     fromSplit("removeEta0p2_0p3", arg, removeEta0p2_0p3);
     fromSplit("cutDeltaREllDpt", arg, cutDeltaREllDpt);
     fromSplit("rejectSeagulls", arg, rejectSeagulls);
+    fromSplit("muAccShift", arg, muAccShift);
+    fromSplit("singleMuSameRap", arg, singleMuSameRap);
+    fromSplit("singleMuDiffRap", arg, singleMuDiffRap);
 
     std::string str;
     fromSplit("inputTree", arg, str);
@@ -65,7 +71,7 @@ int main(int argc, char* argv[])
   BookHistosReco(nState, outHistos);
   PolDataMC polData(tree);
   polData.Loop(outTree, outHistos, nState, FidCuts, requestTrigger, rejectCowboys, rejectSeagulls,
-               removeEta0p2_0p3, cutDeltaREllDpt);
+               removeEta0p2_0p3, cutDeltaREllDpt, muAccShift, singleMuSameRap, singleMuDiffRap);
   WriteHistosReco(fNameOut, outTree, outHistos);
 
   fOut->Close();

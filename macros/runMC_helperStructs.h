@@ -81,7 +81,8 @@ struct PolDataMC {
   virtual Long64_t LoadTree(Long64_t entry);
   virtual void Init(TTree* tree);
   virtual void Loop(OutTree& outTree, OutHistograms& outHistos, int nState, int FidCuts, bool RequestTrigger,
-                    bool rejectCowboys, bool rejectSeagulls, bool removeEta0p2_0p3, bool cutDeltaREllDpt);
+                    bool rejectCowboys, bool rejectSeagulls, bool removeEta0p2_0p3, bool cutDeltaREllDpt,
+                    double muAccShift = 0., bool singleMuSameRap = false, bool singleMuDiffRap = false);
   virtual bool Notify();
   virtual void Show(Long64_t entry = -1);
   bool jpsiTriggerDecision(); /**< returns true if ANY of the triggers fired. */
@@ -205,7 +206,8 @@ int PolDataMC::Cut(Long64_t entry)
 }
 
 void PolDataMC::Loop(OutTree& outTree, OutHistograms& outHistos, int nState, int FidCuts, bool RequestTrigger,
-                     bool rejectCowboys, bool rejectSeagulls, bool removeEta0p2_0p3, bool cutDeltaREllDpt)
+                     bool rejectCowboys, bool rejectSeagulls, bool removeEta0p2_0p3, bool cutDeltaREllDpt,
+                     double muAccShift, bool singleMuSameRap, bool singleMuDiffRap)
 {
   if (!fChain) return;
 
@@ -216,7 +218,7 @@ void PolDataMC::Loop(OutTree& outTree, OutHistograms& outHistos, int nState, int
 
   std::cout << "number of entries = " << nentries << std::endl;
 
-  // nentries = 250000; // for development
+  // nentries = 2500; // for development
   for (Long64_t jentry = 0; jentry < nentries; ++jentry) {
     if (jentry % 100000 == 0) std::cout << "event " << jentry << " of " << nentries << std::endl;
 
@@ -271,10 +273,15 @@ void PolDataMC::Loop(OutTree& outTree, OutHistograms& outHistos, int nState, int
     double pTMuNeg = muNeg->Pt();
 
     // NOTE: make sure to provide the appropriate version of this function!
-    if (!isMuonInAcceptance(FidCuts-1, pTMuPos, etaMuPos) || !isMuonInAcceptance(FidCuts-1, pTMuNeg, etaMuNeg))
+    if (!isMuonInAcceptance(FidCuts-1, pTMuPos, etaMuPos, muAccShift) ||
+        !isMuonInAcceptance(FidCuts-1, pTMuNeg, etaMuNeg, muAccShift))
       continue;
     outHistos.Reco_StatEv->Fill(5.5); // count events after fiducial cuts
 
+    // want both muons to have the same pseudo-rapidity sign?
+    if (singleMuSameRap && (etaMuPos * etaMuNeg < 0)) continue;
+    // want both muons to have different pseudo-rapidity signs?
+    if (singleMuDiffRap && (etaMuPos * etaMuNeg > 0)) continue;
 
     if (removeEta0p2_0p3) {
       if ( (TMath::Abs(etaMuPos) > 0.2 && TMath::Abs(etaMuPos) < 0.3) ||
@@ -316,9 +323,10 @@ bool PolDataMC::jpsiTriggerDecision()
   for (vecIt it = HLT_Dimuon8_Jpsi.begin(); it != HLT_Dimuon8_Jpsi.end(); ++it) {
     if (*it == 1) return true;
   }
-  for (vecIt it = HLT_Dimuon10_Jpsi.begin(); it != HLT_Dimuon10_Jpsi.end(); ++it) {
-    if (*it == 1) return true;
-  }
+  // tmadlener, 07.09.2016: HLT_Dimuon10 is seeded by a different L1 seed (compared to 2011), only few percent of events are affected by this
+  // for (vecIt it = HLT_Dimuon10_Jpsi.begin(); it != HLT_Dimuon10_Jpsi.end(); ++it) {
+  //   if (*it == 1) return true;
+  // }
   return false;
 }
 
