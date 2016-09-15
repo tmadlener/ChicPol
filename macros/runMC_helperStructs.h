@@ -164,17 +164,22 @@ void PolDataMC::Init(TTree* tree)
   fChain->SetBranchAddress("muPosP_qual", &muPosP_qual);
   fChain->SetBranchAddress("muNegP_qual", &muNegP_qual);
 
+  // tmadlener: We have to allocate the needed size here! Otherwise it is possible that a reallocation takes place in the loop body
+  // this would make any Branch addresses set prior to that invalid, resulting in no filling of that entries.
+  HLT_Dimuon8_Jpsi.reserve(Dimuon8_vs.size());
   for (size_t i = 0; i < Dimuon8_vs.size(); ++i) {
     const std::string branchname = std::string("HLT_Dimuon8_Jpsi_v") + Dimuon8_vs[i];
     HLT_Dimuon8_Jpsi.push_back(0);
     fChain->SetBranchAddress(branchname.c_str(), &HLT_Dimuon8_Jpsi[i]);
   }
 
-  for (size_t i = 0; i < Dimuon8_vs.size(); ++i) {
-    const std::string branchname = std::string("HLT_Dimuon10_Jpsi_v") + Dimuon10_vs[i];
-    HLT_Dimuon10_Jpsi.push_back(0);
-    fChain->SetBranchAddress(branchname.c_str(), &HLT_Dimuon10_Jpsi[i]);
-  }
+  // tmadlener: 15.09.2016 HLT_Dimuon10_Jpsi triggers disabled due to "weird" L1 seed
+  // HLT_Dimuon10_Jpsi.reserve(Dimuon10_vs.size());
+  // for (size_t i = 0; i < Dimuon10_vs.size(); ++i) {
+  //   const std::string branchname = std::string("HLT_Dimuon10_Jpsi_v") + Dimuon10_vs[i];
+  //   HLT_Dimuon10_Jpsi.push_back(0);
+  //   fChain->SetBranchAddress(branchname.c_str(), &HLT_Dimuon10_Jpsi[i]);
+  // }
 
 }
 
@@ -218,15 +223,12 @@ void PolDataMC::Loop(OutTree& outTree, OutHistograms& outHistos, int nState, int
 
   std::cout << "number of entries = " << nentries << std::endl;
 
-  // nentries = 2500; // for development
+  nentries = 1000000; // for development
   for (Long64_t jentry = 0; jentry < nentries; ++jentry) {
     if (jentry % 100000 == 0) std::cout << "event " << jentry << " of " << nentries << std::endl;
 
     if (LoadTree(jentry) < 0) break;
     nb = fChain->GetEntry(jentry);
-
-    // check muon id
-    if (muPosP_id < 1 || muNegP_id < 1 || muPosP_qual < 1 || muNegP_qual < 1) continue;
 
     // process only reconstructed events
     if (onia->Pt() > 990.) continue;
@@ -234,6 +236,9 @@ void PolDataMC::Loop(OutTree& outTree, OutHistograms& outHistos, int nState, int
 
     // count all events
     outHistos.Reco_StatEv->Fill(0.5);
+
+    // check muon id
+    if (muPosP_id < 1 || muNegP_id < 1 || muPosP_qual < 1 || muNegP_qual < 1) continue;
 
     // different trigger for different particles
     // Jpsi trigger paths
