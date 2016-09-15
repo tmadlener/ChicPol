@@ -138,6 +138,11 @@ bool isMuonInAcceptance(int iCut, double pT, double eta, double shift = 0.){
     return isMuonInAcceptanceShift(pT, eta, shift);
   }
 
+  if (iCut == 31) {
+    // std::cout << pT << " " << (pT > shift) << std::endl;
+    return pT > shift;
+  }
+
   return decision;
 }
 
@@ -219,6 +224,7 @@ void EvaluateEffFileName(int nEff, char EffFileName [200], bool singleLeptonEff)
     if(nEff==306 || nEff==316 || nEff==326) sprintf(EffFileName,"rhoFactor_Psi1S_combinedMC_leptons_Luca_4March2013.root");
     if(nEff==307 || nEff==317 || nEff==327) sprintf(EffFileName,"rhoFactor_Psi1S_changedCuts_combinedMC_leptons_Luca_2May2013.root");
     if(nEff==308 || nEff==318 || nEff==328) sprintf(EffFileName,"rhoFactor_Psi1S_changedCuts_dREllDpt0p18_combinedMC_leptons_Luca_2May2013.root");
+    if(nEff==329) sprintf(EffFileName, "rhoFactor_2012_JPsiMC_bruno.root"); // 2012 MC rho_factors
   }
 
 
@@ -229,16 +235,19 @@ double EvaluateRhoFactor( double& costh, double& phi, int nEff, TFile* fInRhoFac
   double eff=1;
   if(nEff==1) return eff;
 
+  // tmadlener, 27. July 2016, this seems no longer true
   //if(pT<30.) return eff;
-  if(pT<35.) return eff; // for pT > 35, apply rho correction
+  // if(pT<35.) return eff; // for pT > 35, apply rho correction
 
-  int pTbin;
-  int rapBin;
-  const int nRhoPtBins=16;
+  int pTbin = 0;
+  int rapBin = 0;
+  // const int nRhoPtBins=16;
+  const int nRhoPtBins=13; // 2012
   const int nRhorapBins=2;
   Double_t rapRangeRho[nRhorapBins+1] = {0.,0.6,1.2};
   //Double_t pTRangeRho[nRhoPtBins+1] = {10.,11.,12.,14.,16.,18.,20.,22.,25.,30.,35.,40.,45.,50.,55.,60.,65.,70.};
-  Double_t pTRangeRho[nRhoPtBins+1] = {10.,12.,14.,16.,18.,20.,22.,25.,30.,35.,40.,45.,50.,55.,60.,65.,70.};
+  // Double_t pTRangeRho[nRhoPtBins+1] = {10.,12.,14.,16.,18.,20.,22.,25.,30.,35.,40.,45.,50.,55.,60.,65.,70.};
+  Double_t pTRangeRho[nRhoPtBins+1] = {12.,14.,16.,18.,20.,22.,24.,26.,28.,30.,35.,40.,50.,70.}; // 2012
 
   if(pT>pTRangeRho[nRhoPtBins]){eff=0;return eff;}
 
@@ -261,6 +270,9 @@ double EvaluateRhoFactor( double& costh, double& phi, int nEff, TFile* fInRhoFac
     if(nEff>310 && nEff<321) sprintf(EffType,"rho_eff_MCtruth_HX_pT%d_rap%d",pTbin,rapBin);
     if(nEff>320 && nEff<331) sprintf(EffType,"rho_eff_MCtruth_PHX_pT%d_rap%d",pTbin,rapBin);
 
+    std::cout << pT << " " << rap << " " << EffType << std::endl;
+
+    // COULDDO: check if the retrieval actually works
     TH1* hEff=(TH1*) fInRhoFactor->Get(EffType);
     Int_t binX = hEff->GetXaxis()->FindBin(costh);
     Int_t binY = hEff->GetYaxis()->FindBin(phi);
