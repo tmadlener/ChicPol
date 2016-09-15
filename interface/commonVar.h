@@ -29,11 +29,11 @@ namespace onia{
   const double nSigBkgHigh = 3.5;
 
   //Measure polarization as function of which particle-kinemarics
-  bool KinParticleChi = true;
-  const char *KinParticleChar = "^{#chi}";
+  // const bool KinParticleChi = true;
+  // const char *KinParticleChar = "^{#chi}";
   bool KinParticleChiButJpsiRap = false;
-  //bool KinParticleChi = false;
-  //const char *KinParticleChar = "^{#psi}";
+  const bool KinParticleChi = false;
+  const char *KinParticleChar = "^{#psi}";
 
   //chi mass ranges
   const double chimassMin = 3.325;
@@ -70,39 +70,53 @@ namespace onia{
   const double nSigLifetimePR = 3.0;
   const double nSigLifetimeNP = 3.0;
 
-
-  // Binning
-  //const int kNbRapForPTBins = 2;
-  //double rapForPTRange[kNbRapForPTBins+1] = {0., 1.2, 1.5};
-  //double rapRange[2*kNbRapForPTBins+1] = {-1.5, -1.2, 0., 1.2, 1.5};
-  const int kNbRapForPTBins = 1;
-  double rapForPTRange[kNbRapForPTBins+1] = {0., 1.2};
-  double rapRange[2*kNbRapForPTBins+1] = {-1.2, 0., 1.2};
-
 #ifndef USE_CHIC_BINNING
 #warning "USE_CHIC_BINNING is not defined. Setting it to 1"
 #define USE_CHIC_BINNING 1
 #endif
+
+#if USE_CHIC_BINNING == 3
+  // for J/Psi use two rap bins
+  const int kNbRapForPTBins = 2;
+  double rapForPTRange[kNbRapForPTBins+1] = {0., 0.6, 1.2};
+  double rapRange[2*kNbRapForPTBins+1] = {-1.2, -0.6, 0., 0.6, 1.2};
+#else
+  const int kNbRapForPTBins = 1;
+  double rapForPTRange[kNbRapForPTBins+1] = {0., 1.2};
+  double rapRange[2*kNbRapForPTBins+1] = {-1.2, 0., 1.2};
+#endif
+
   //chic
 #if USE_CHIC_BINNING == 1
   const int kNbPTMaxBins = 5;
+  const int kNbPTBins[kNbRapForPTBins+1] = {kNbPTMaxBins, kNbPTMaxBins};//, kNbPTMaxBins};//all y, y1
 #endif
 #if USE_CHIC_BINNING == 2
   const int kNbPTMaxBins = 4; // chic2 binning
+  const int kNbPTBins[kNbRapForPTBins+1] = {kNbPTMaxBins, kNbPTMaxBins};//, kNbPTMaxBins};//all y, y1
 #endif
-  const int kNbPTBins[kNbRapForPTBins+1] = {kNbPTMaxBins, kNbPTMaxBins};//all y, y1
+#if USE_CHIC_BINNING == 3
+  const int kNbPTMaxBins = 12;
+  const int kNbPTBins[kNbRapForPTBins+1] = {kNbPTMaxBins, kNbPTMaxBins, kNbPTMaxBins};//all y, y1
+#endif
   double pTRange[kNbRapForPTBins+1][kNbPTMaxBins+1] = {
 #if USE_CHIC_BINNING == 1
     // chic1 binning (standard)
     {10., 15., 20., 25., 30., 50.},//all rapidities
-    {10., 15., 20., 25., 30., 50.}};//forward rapidity
+    {10., 15., 20., 25., 30., 50.},
+    /*{10., 15., 20., 25., 30., 50.}*/};//forward rapidity
 #endif
 #if USE_CHIC_BINNING == 2
-    // chic2 binning (last two pt bins merged)
+  // chic2 binning (last two pt bins merged)
     {10., 15., 20., 25., 50.}, // all rapidities
     {10., 15., 20., 25., 50.}}; // forward rapidity
 #endif
-  //chic1
+#if USE_CHIC_BINNING == 3
+    {10.0, 12.0, 14.0, 16.0, 18.0, 20.0, 22.0, 25.0, 30.0, 35.0, 40.0, 50.0, 70.0}, // all rapidities
+    {10.0, 12.0, 14.0, 16.0, 18.0, 20.0, 22.0, 25.0, 30.0, 35.0, 40.0, 50.0, 70.0}, // mid
+    {10.0, 12.0, 14.0, 16.0, 18.0, 20.0, 22.0, 25.0, 30.0, 35.0, 40.0, 50.0, 70.0}}; // forward
+#endif
+//chic1
   //{10., 14., 18., 22., 30., 50.},//all rapidities
   //{10., 14., 18., 22., 30., 50.}};
   //chic2
@@ -151,8 +165,6 @@ namespace onia{
   const int kNbBinsPhiPol = 16;
   double phiPolMin = -180., phiPolMax = 180.;
 
-
-
   //some make up to use the same colour and marker for each pT and rapidity bin
   //in every plotting macro:
   int colour_pT[] = {1, 2, 3, 4, 6, 7, 8, 49, 38, 46, 12, 40, 50};
@@ -192,7 +204,8 @@ namespace onia{
   // Dimuon cuts
 
   double cut_vtxProb=0.01;
-  double rap = 20.; //dimuon rap
+  // double rap = 20.; //dimuon rap
+  double rap = 1.5; // testing with Chris
 
   // Gamma cuts
 
