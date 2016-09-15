@@ -80,6 +80,10 @@ int main(int argc, char** argv) {
   Char_t *TreeBinID_dataFile = "ToyMC"; //Storage Directory
   Char_t *dataType = "DATA"; // for accessing different single muon efficiencies for MC or DATA
 
+  bool shiftEffUp = false;
+  bool shiftEffDown = false;
+  double nSigmaEff = 1.0;
+    
   for( int i=0;i < argc; ++i ) {
     if(std::string(argv[i]).find("ptBinMin") != std::string::npos) {char* ptBinMinchar = argv[i]; char* ptBinMinchar2 = strtok (ptBinMinchar, "p"); ptBinMin = atof(ptBinMinchar2); cout<<"ptBinMin = "<<ptBinMin<<endl;}
     if(std::string(argv[i]).find("ptBinMax") != std::string::npos) {char* ptBinMaxchar = argv[i]; char* ptBinMaxchar2 = strtok (ptBinMaxchar, "p"); ptBinMax = atof(ptBinMaxchar2); cout<<"ptBinMax = "<<ptBinMax<<endl;}
@@ -142,6 +146,9 @@ int main(int argc, char** argv) {
       dataType="MC";
     }
     fromSplit("muAccShift", argv[i], muAccShift);
+    fromSplit("shiftEffUp", argv[i], shiftEffUp);
+    fromSplit("shiftEffDown", argv[i], shiftEffDown);
+    fromSplit("nSigmaEffShiftVar", argv[i], nSigmaEff);
   }
 
   std::cout << "Using " << dataType << " single muon efficiencies" << std::endl;
@@ -430,7 +437,7 @@ int main(int argc, char** argv) {
 
   if(gen)polGen(raplow,raphigh,ptlow,pthigh,mass_signal_peak,mass_signal_sigma,n_sigmas_signal,n_events,f_BG,lambda_theta_sig_,lambda_phi_sig_,lambda_thetaphi_sig_,lambda_theta_bkg_,lambda_phi_bkg_,lambda_thetaphi_bkg_,frameSig,frameBkg,iGen,nState,OutputDirectory);
   if(rec)polRec(raplow,raphigh,ptlow*MassCorrFactor_polrec,pthigh*MassCorrFactor_polrec,mass_signal_peak,mass_signal_sigma,n_sigmas_signal,nRecEff,nRecDileptonEff,nRecRhoFactor,FidCuts,OutputDirectory, false, effDir, MCReceff, MCDileptonReceff, iRap, iPt, useAmapApproach, nAmap, nDenominatorAmap, StatVarTotBGfraction, StatVarRho);
-  if(fit)polFit(nSample,FidCuts, nEff, nDileptonEff, nRhoFactor, OutputDirectory, realdatadir, TreeBinID, TreeBinID_dataFile, RealData, effDir, MCeff, MCDileptoneff, iRap, iPt, NewAccCalc, MPValgo, useAmapApproach, nAmap, nDenominatorAmap, StatVarTotBGfraction, StatVarTotBGmodel, StatVarRho, StatVarEff, cutDeltaREllDpt, dataType, iGen, muAccShift);
+  if(fit)polFit(nSample,FidCuts, nEff, nDileptonEff, nRhoFactor, OutputDirectory, realdatadir, TreeBinID, TreeBinID_dataFile, RealData, effDir, MCeff, MCDileptoneff, iRap, iPt, NewAccCalc, MPValgo, useAmapApproach, nAmap, nDenominatorAmap, StatVarTotBGfraction, StatVarTotBGmodel, StatVarRho, StatVarEff, cutDeltaREllDpt, dataType, iGen, muAccShift, shiftEffUp, shiftEffDown, nSigmaEff);
   if(plot)polPlot(OutputDirectory, TreeBinID, RealData, MPValgo, scalePlots, nTotalFits, nState, ptlow, pthigh, raplow, raphigh, PlotForPaper);
 
   //sprintf(dirstruct,"%s/Generation%d",rapptstruct,iGen+nSkipGen);

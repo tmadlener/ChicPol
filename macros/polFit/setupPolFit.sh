@@ -24,14 +24,14 @@ if [ -d ${storagedir}/${JobID} ]; then
     echo "'polGenRecFitPlot' is here and executable."
     EXECMADE=1
   else
-    if [ $(ls -l ${storagedir}/${JobID}/*.cc | wc -l) -eq 3 ] && [ $(ls -l ${storagedir}/${JobID}/*.h | wc -l) -eq 3 ]; then
+    if [ $(ls -l ${storagedir}/${JobID}/*.cc | wc -l) -eq 3 ] && [ $(ls -l ${storagedir}/${JobID}/*.h | wc -l) -eq 5 ]; then
          echo "'polGenRecFitPlot' is not here but the source files are present."
          FILESPRESENT=1
     fi
   fi
 fi
 
-    ## do the setup
+## do the setup
 if [ ${DIRPRESENT} -ne 1 ]; then
    mkdir -p ${storagedir}/${JobID}
 fi
@@ -51,6 +51,7 @@ if [ ${FILESPRESENT} -ne 1 ]; then
   cp ${basedir}/interface/ToyMC_chi.h ${resultDir}/ToyMC.h
   cp ${basedir}/interface/effsAndCuts_chi.h ${resultDir}/effsAndCuts.h
   cp ${basedir}/interface/clarg_parsing.h ${resultDir}/clarg_parsing.h
+  cp ${basedir}/interface/optionStructs.h ${resultDir}/optionStructs.h
 fi
 
 if [ ${EXECMADE} -ne 1 ]; then

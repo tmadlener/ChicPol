@@ -3,6 +3,7 @@
 #SBATCH -D /afs/hephy.at/user/t/tmadlener/CMSSW_5_3_11/src/ChicPol/macros/polFit/
 #SBATCH -o /afs/hephy.at/work/t/tmadlener/logfiles/slurm_arrays/runDataFits_%A_%a.out
 
+# set -x
 echo "-------------------- "$(date)" --------------------"
 ## takes pt and rap bin as inputs!!!
 ptBin=${1}
@@ -44,24 +45,28 @@ nEff=100003  # tmadlener, 24.06.2016: 100003 uses hybrid efficiencies for seagul
 # WARNING: MAKE SURE TO CHANGE THE PREPROCESSOR FLAG USE_TF1_EFFICIENCIES in polFit.C accordingly!
 # 100004 is MC truth (have not checked if this is the same as some other option)
 
-DataType=DATA # MC for MC closure, DATA for data, concerns single muon efficiencies only!
+DataType=MC # MC for MC closure, DATA for data, concerns single muon efficiencies only!
 UseMCeff=false
 nDileptonEff=1
 UseMCDileptoneff=true
-nRhoFactor=1
+nRhoFactor=1 # rho factors calculated by bruno in pT range from 12 - 70 GeV on 2012 J/Psi MC sample
 
 ## setup the different flags for running the polarization framework
 StatVarTotBGfraction=0 # apply statistical fluctuations on f_background
 StatVarTotBGmodel=0    # apply statistical fluctuations on Bg model
 StatVarRho=0           # apply statistical fluctuations on rho factor
-StatVarEff=0           # apply statistical fluctuations on the single muon efficiencies
+StatVarEff=0           # apply statistical fluctuations on the single muon efficiencies (vary around central value by nSigmaEffShiftVar * error)
+shiftEffUp=false       # shift efficiency curve up by nSigmaEffShiftVar * error
+shiftEffDown=false     # shift efficiency curve down by nSigmaEffShiftVar * error
+nSigmaEffShiftVar=1.0  # controls how many sigmas are used to vary / shift the efficiency if any of the options is enabled
+
 
 useAmapApproach=false
 nAmap=1
 nDenominatorAmap=1
 cutDeltaREllDpt=false
 
-useRefittedChic=true
+useRefittedChic=false
 
 ConstEvents=15000
 UseConstEv=true
@@ -86,7 +91,7 @@ execbl="polGenRecFitPlot"${jobFileID}
 
 cp polGenRecFitPlot ${execbl}
 
-./${execbl} ${iFit}ThisGen ${JobID}=JobID ${storagedir}=storagedir ${basedir}=basedir ${nGenerations}=nGenerations ${polScenSig}polScenSig ${frameSig}frameSig ${polScenBkg}polScenBkg ${frameBkg}frameBkg ${rapBin}_rapBinMin ${rapBin}rapBinMax ${ptBin}ptBinMin ${ptBin}ptBinMax ${nEff}nEff ${nDileptonEff}nDiEff ${FidCuts}FidCuts ${nSample}nSample ${ConstEvents}ConstEvents ${nSkipGen}nSkipGen UseConstEv=${UseConstEv} gen=${gen} rec=${rec} fit=${fit} plot=${plot} ${TreeID}=TreeID ${datadir}=realdatadir UseMCeff=${UseMCeff} UseMCDileptoneff=${UseMCDileptoneff} ${nRhoFactor}nRhoFactor ${MPValgo}MPValgo NewAccCalc=${NewAccCalc} useAmapApproach=${useAmapApproach} nAmap=${nAmap} nDenominatorAmap=${nDenominatorAmap} useBatch=${useBatch} StatVarTotBGfraction=${StatVarTotBGfraction} StatVarTotBGmodel=${StatVarTotBGmodel} StatVarRho=${StatVarRho} StatVarEff=${StatVarEff} ${nState}=nState dataType=${DataType} muAccShift=${muAccShift}
+./${execbl} ${iFit}ThisGen ${JobID}=JobID ${storagedir}=storagedir ${basedir}=basedir ${nGenerations}=nGenerations ${polScenSig}polScenSig ${frameSig}frameSig ${polScenBkg}polScenBkg ${frameBkg}frameBkg ${rapBin}_rapBinMin ${rapBin}rapBinMax ${ptBin}ptBinMin ${ptBin}ptBinMax ${nEff}nEff ${nDileptonEff}nDiEff ${FidCuts}FidCuts ${nSample}nSample ${ConstEvents}ConstEvents ${nSkipGen}nSkipGen UseConstEv=${UseConstEv} gen=${gen} rec=${rec} fit=${fit} plot=${plot} ${TreeID}=TreeID ${datadir}=realdatadir UseMCeff=${UseMCeff} UseMCDileptoneff=${UseMCDileptoneff} ${nRhoFactor}nRhoFactor ${MPValgo}MPValgo NewAccCalc=${NewAccCalc} useAmapApproach=${useAmapApproach} nAmap=${nAmap} nDenominatorAmap=${nDenominatorAmap} useBatch=${useBatch} StatVarTotBGfraction=${StatVarTotBGfraction} StatVarTotBGmodel=${StatVarTotBGmodel} StatVarRho=${StatVarRho} StatVarEff=${StatVarEff} ${nState}=nState dataType=${DataType} muAccShift=${muAccShift} shiftEffUp=${shiftEffUp} shiftEffDown=${shiftEffDown} nSigmaEffShiftVar=${nSigmaEffShiftVar}
 
 exitcode=$?
 
