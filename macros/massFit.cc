@@ -386,7 +386,7 @@ void massFit(const std::string &infilename, int rapBin, int ptBin, int nState, b
   double Integral;
 
   massMinThisRegion=onia::massMin; massMaxThisRegion=eff_massMaxPsiLSB;
-  JpsiMass->setRange("testregion", massMinThisRegion, massMinThisRegion);
+  JpsiMass->setRange("testregion", massMinThisRegion, massMaxThisRegion);
   real_massBG_int = ws->pdf("bkgMassShape_jpsi")->createIntegral(RooArgSet(*JpsiMass), NormSet(RooArgSet(*JpsiMass)), Range("testregion"));
   Integral = real_massBG_int->getVal();
   for(int i=1;i<1000000;i++){
@@ -396,7 +396,7 @@ void massFit(const std::string &infilename, int rapBin, int ptBin, int nState, b
   }
 
   massMinThisRegion=eff_massMinPsiRSB; massMaxThisRegion=onia::massMax;
-  JpsiMass->setRange("testregion", massMinThisRegion, massMinThisRegion);
+  JpsiMass->setRange("testregion", massMinThisRegion, massMaxThisRegion);
   real_massBG_int = ws->pdf("bkgMassShape_jpsi")->createIntegral(RooArgSet(*JpsiMass), NormSet(RooArgSet(*JpsiMass)), Range("testregion"));
   Integral = real_massBG_int->getVal();
   for(int i=1;i<1000000;i++){
@@ -406,7 +406,7 @@ void massFit(const std::string &infilename, int rapBin, int ptBin, int nState, b
   }
 
   massMinThisRegion=eff_massMinPsiSR; massMaxThisRegion=eff_massMaxPsiSR;
-  JpsiMass->setRange("testregion", massMinThisRegion, massMinThisRegion);
+  JpsiMass->setRange("testregion", massMinThisRegion, massMaxThisRegion);
   real_massBG_int = ws->pdf("bkgMassShape_jpsi")->createIntegral(RooArgSet(*JpsiMass), NormSet(RooArgSet(*JpsiMass)), Range("testregion"));
   Integral = real_massBG_int->getVal();
   for(int i=1;i<1000000;i++){
