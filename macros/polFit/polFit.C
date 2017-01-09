@@ -113,7 +113,7 @@ void extractFromProposalPDF( double& lth_candidate,     double& lph_candidate,  
           lph_candidate = gRandom->Uniform(-1,1);
           ltp_candidate = gRandom->Uniform(-0.707106781186548,0.707106781186548);
           }
-    */	while ( TMath::Abs( lph_candidate ) > 0.5*( 1 + lth_candidate ) || lth_candidate*lth_candidate + 2.*ltp_candidate*ltp_candidate > 1
+    */  while ( TMath::Abs( lph_candidate ) > 0.5*( 1 + lth_candidate ) || lth_candidate*lth_candidate + 2.*ltp_candidate*ltp_candidate > 1
                 || TMath::Abs( ltp_candidate ) > 0.5*( 1 - lph_candidate )
                 || (  (1.+2.*lph_candidate)*(1.+2.*lph_candidate) + 2.*ltp_candidate*ltp_candidate > 1 && lph_candidate < -1./3. ) );
   }
@@ -202,11 +202,11 @@ void calcLambdastar( double& lthstar, double& lphstar,
   //cout<<(1-OneSigmaCL)/2.<<endl;
 
   for(int i = 1; i < nBins+1; i++){
-  //	cout<<i<<" "<<PosteriorDist->Integral(1,i)/fullInt<<endl;
+  //    cout<<i<<" "<<PosteriorDist->Integral(1,i)/fullInt<<endl;
   if(PosteriorDist->Integral(1,i)/fullInt > (1-OneSigmaCL)/2.) {MPVerrorLow=MPV-PosteriorDist->GetBinCenter(i-1); break;}
   }
   for(int i = 1; i < nBins+1; i++){
-  //	cout<<i<<" "<<PosteriorDist->Integral(nBins+1-i,nBins)/fullInt<<endl;
+  //    cout<<i<<" "<<PosteriorDist->Integral(nBins+1-i,nBins)/fullInt<<endl;
   if(PosteriorDist->Integral(nBins+1-i,nBins)/fullInt > (1-OneSigmaCL)/2.) {MPVerrorHigh=PosteriorDist->GetBinCenter(nBins-i)-MPV; break;}
   }
 
@@ -285,7 +285,7 @@ void polFit(int n_sampledPoints=1,
   if(MCeff) sprintf(EffType,"hEff_MC_central");
   else sprintf(EffType,"hEff_DATA_central");
 
-  TFile *fInEff = new TFile(EffFile);
+  TFile *fInEff = TFile::Open(EffFile);
   TH1* hEff=(TH1*) fInEff->Get(EffType);
 
   //Get DiLepton Efficiency File name
@@ -293,7 +293,7 @@ void polFit(int n_sampledPoints=1,
   EvaluateEffFileName(nDileptonEff,EffFileName,false);
   sprintf(EffFile,"%s/%s",effDir,EffFileName);
 
-  TFile *fInDileptonEff = new TFile(EffFile);
+  TFile *fInDileptonEff = TFile::Open(EffFile);
   TH1* hDileptonEff=(TH1*) fInDileptonEff->Get(EffType);
 
   // get rho factor file
@@ -348,7 +348,7 @@ void polFit(int n_sampledPoints=1,
         if(eff<0) eff=0;
         if(hEvalEff1D->GetYaxis()->GetBinCenter(pTBin+1)>pTMaxCenter) eff=EtaConst;
         hEvalEff1D->SetBinContent(etaBin+1,pTBin+1,eff); effBuffer=eff;
-        //			  eff = graph2D->Interpolate(hEvalEff1D->GetYaxis()->GetBinCenter(pTBin+1),hEvalEff1D->GetXaxis()->GetBinCenter(etaBin+1));
+        //                        eff = graph2D->Interpolate(hEvalEff1D->GetYaxis()->GetBinCenter(pTBin+1),hEvalEff1D->GetXaxis()->GetBinCenter(etaBin+1));
         if(eff<AlmostZero && currentEtaBin==1) eff=effBuffer;
         if(eff<AlmostZero && hEvalEff1D->GetYaxis()->GetBinCenter(pTBin+1)>pTMaxCenter*0.5) eff=effBuffer;
         if(eff<0) eff=0;
@@ -470,8 +470,15 @@ void polFit(int n_sampledPoints=1,
       }
       graphName << ieta;
 
-      std::cout << graphName.str() << std::endl;
+      // std::cout << graphName.str() << std::endl;
       func[ieta] = dynamic_cast<EffFuncType*>(fInEff->Get(graphName.str().c_str()));
+    }
+  } else if (nEff == 101 || nEff == 1001 || nEff == 10001 || nEff == 1077 || nEff == 1050 || nEff == 1060) {
+    for (int ieta = 0; ieta < bins; ++ieta) {
+      std::stringstream graphName;
+      graphName << "gEff_" << DataType << "_PT_AETA" << ieta;
+      func[ieta] = dynamic_cast<EffFuncType*>(fInEff->Get(graphName.str().c_str()));
+      std::cout << graphName << ": " << func[ieta] << std::endl;
     }
   }
 
@@ -496,7 +503,7 @@ void polFit(int n_sampledPoints=1,
   EvaluateEffFileName(nDenominatorAmap,EffFileName,true);
   sprintf(EffFile,"%s/%s",effDir,EffFileName);
 
-  TFile *fInEff_nDenominatorAmap = new TFile(EffFile);
+  TFile *fInEff_nDenominatorAmap = TFile::Open(EffFile);
 
   if (useAmapApproach) {
     if( nDenominatorAmap==1101 ){
@@ -550,7 +557,7 @@ void polFit(int n_sampledPoints=1,
   char filename [500];
   sprintf(filename,"%s/data.root",dirstruct);
   if(RealData) sprintf(filename,"%s/data_%s.root",realdatadir,TreeBinID_dataFile);
-  TFile* dataFile = new TFile(filename);
+  TFile* dataFile = TFile::Open(filename);
 
   cout << "file: " << filename << endl;
   cout<<TreeBinID_dataFile<<endl;
@@ -936,10 +943,10 @@ void polFit(int n_sampledPoints=1,
     if(accept && (!cutDeltaREllDpt || (cutDeltaREllDpt && deltaREllDpt > DeltaREllDptValue) )) isEventAccepted = true;
 
     //if(deltaREllDpt<DeltaREllDptValue)
-    // 	cout<<"1: deltaREllDpt: "<<deltaREllDpt<<endl;
+    //  cout<<"1: deltaREllDpt: "<<deltaREllDpt<<endl;
     //if(accept && !isEventAccepted){
-    //	cout<<"accept: "<<accept<<endl;
-    //	cout<<"isEventAccepted: "<<isEventAccepted<<endl;
+    //  cout<<"accept: "<<accept<<endl;
+    //  cout<<"isEventAccepted: "<<isEventAccepted<<endl;
     //}
 
 
@@ -995,7 +1002,7 @@ void polFit(int n_sampledPoints=1,
       double AmapDenominator= DenominatorAmapEfficiency( lepP_pT, lepP_eta, nDenominatorAmap, fInEff_nDenominatorAmap, hEvalEff_nDenominatorAmap, true, TEff_nDenominatorAmap) * DenominatorAmapEfficiency( lepN_pT, lepN_eta, nDenominatorAmap, fInEff_nDenominatorAmap, hEvalEff_nDenominatorAmap, true, TEff_nDenominatorAmap);
       epsilon = epsilon*AmapValue/AmapDenominator;
 
-      /*		cout<<"muonP pT = "<<lepP_pT<<" muonP eta = "<<lepP_eta<<endl;
+      /*                cout<<"muonP pT = "<<lepP_pT<<" muonP eta = "<<lepP_eta<<endl;
                         cout<<"muonN pT = "<<lepN_pT<<" muonN eta = "<<lepN_eta<<endl;
                         cout<<"costh    = "<<costh_Amap<<" phi = "<<phi_Amap<<endl;
                         cout<<"Ups pT = "<<pT<<" Ups rap = "<<rap<<endl;
@@ -1073,7 +1080,6 @@ void polFit(int n_sampledPoints=1,
   // loop over dilepton events in the ntuple
 
   for ( int i_event = 1; i_event <= n_events; i_event++ ) {
-
     if (i_event%n_step == 0) {cout << n_step_*20 <<" % "<<endl; n_step_++;}
 
     data->GetEvent( i_event-1 );
@@ -1091,6 +1097,15 @@ void polFit(int n_sampledPoints=1,
     double rap  = dilepton.Rapidity();
     double mass = dilepton.M();
 
+    // tmadlener, 27.09.2016:
+    // for ONE event in the 2012 jpsi data set, the rapidity is slightly above 1.2 (printing it will print 1.2 without iomanip)
+    // this leads to a breaking of the bin determination in the rho factor evaluation.
+    // simply setting this to 1.2 here!
+    if (TMath::Abs(rap) > 1.2) {
+      std::cerr << "Abs. Rapidity larger than 1.2 by " << TMath::Abs(rap) - 1.2 << ". Corrected to 1.2" << std::endl;
+      if (rap > 0) rap = 1.2;
+      else rap = -1.2;
+    }
     // calculation of decay angles in three polarization frames
 
     // reference directions to calculate angles:
@@ -1256,10 +1271,10 @@ void polFit(int n_sampledPoints=1,
     if(accept && (!cutDeltaREllDpt || (cutDeltaREllDpt && deltaREllDpt > DeltaREllDptValue) )) isEventAccepted = true;
 
     //if(deltaREllDpt<DeltaREllDptValue)
-    // 	cout<<"2: deltaREllDpt: "<<deltaREllDpt<<endl;
+    //  cout<<"2: deltaREllDpt: "<<deltaREllDpt<<endl;
     //if(accept && !isEventAccepted){
-    //	cout<<"accept: "<<accept<<endl;
-    //	cout<<"isEventAccepted: "<<isEventAccepted<<endl;
+    //  cout<<"accept: "<<accept<<endl;
+    //  cout<<"isEventAccepted: "<<isEventAccepted<<endl;
     //}
 
     if ( epsilon > min_dileptonEff && isEventAccepted ) {
@@ -1450,6 +1465,13 @@ void polFit(int n_sampledPoints=1,
     double rap  = dilepton.Rapidity();
     double mass = dilepton.M();
 
+    // same as above. Sanity check
+    if (TMath::Abs(rap) > 1.2) {
+      std::cerr << "Abs. Rapidity larger than 1.2 by " << TMath::Abs(rap) - 1.2 << ". Corrected to 1.2" << std::endl;
+      if (rap > 0) rap = 1.2;
+      else rap = -1.2;
+    }
+
     // calculation of decay angles in three polarization frames
     // reference directions to calculate angles:
     TVector3 lab_to_dilep = -dilepton.BoostVector();
@@ -1561,7 +1583,7 @@ void polFit(int n_sampledPoints=1,
     // background likelihood
     // Ilse 2Feb2016: multiply with f_background
     double likelihood_BG  = f_background * background_costhphiPX->GetBinContent( ibin_costhPX, ibin_phiPX );
-    //* background_pTrapMass->GetBinContent( ibin_pT, ibin_rap, ibin_mass );
+      // * background_pTrapMass->GetBinContent( ibin_pT, ibin_rap, ibin_mass );
 
     // apply statistical fluctuations on likelihood_BG with poisson distribution
     if(StatVarTotBGmodel){
@@ -1588,7 +1610,7 @@ void polFit(int n_sampledPoints=1,
 
     // total likelihood
     double likelihood_SpB = total_costhphiPX->GetBinContent( ibin_costhPX, ibin_phiPX );
-    // * total_pTrapMass->GetBinContent( ibin_pT, ibin_rap, ibin_mass );
+      // * total_pTrapMass->GetBinContent( ibin_pT, ibin_rap, ibin_mass );
 
     // Ilse 2Feb2016
     if (    likelihood_BG > likelihood_SpB //removed * f_background
@@ -1639,16 +1661,16 @@ void polFit(int n_sampledPoints=1,
     if(!useAmapApproach) epsilon = epsilon*DileptonEff*RhoFactor;
 
     else if(useAmapApproach){
-      //		cout<<"useAmapApproach"<<endl;
+      //                cout<<"useAmapApproach"<<endl;
       double costh_Amap=0;
       double phi_Amap=0;
       if(nAmap>10000 && nAmap<20000) {costh_Amap=costh_CS; phi_Amap=phi_CS;}
       else if(nAmap>20000 && nAmap<30000) {costh_Amap=costh_HX; phi_Amap=phi_HX;}
       else if(nAmap>30000 && nAmap<40000) {costh_Amap=costh_PX; phi_Amap=phi_PX;}
-      //		cout<<"before EvalAmap"<<endl;
+      //                cout<<"before EvalAmap"<<endl;
       double AmapValue=EvaluateAmap( costh_Amap, phi_Amap, nAmap, fInAmap, rap, pT);
-      //		cout<<"AmapValue "<<AmapValue<<endl;
-      //		cout<<"after EvalAmap"<<endl;
+      //                cout<<"AmapValue "<<AmapValue<<endl;
+      //                cout<<"after EvalAmap"<<endl;
       double AmapDenominator= DenominatorAmapEfficiency( lepP_pT, lepP_eta, nDenominatorAmap, fInEff_nDenominatorAmap, hEvalEff_nDenominatorAmap, true, TEff_nDenominatorAmap) * DenominatorAmapEfficiency( lepN_pT, lepN_eta, nDenominatorAmap, fInEff_nDenominatorAmap, hEvalEff_nDenominatorAmap, true, TEff_nDenominatorAmap);
       epsilon = epsilon*AmapValue/AmapDenominator;
     }
@@ -1675,10 +1697,10 @@ void polFit(int n_sampledPoints=1,
     if(accept && (!cutDeltaREllDpt || (cutDeltaREllDpt && deltaREllDpt > DeltaREllDptValue) )) isEventAccepted = true;
 
     //if(deltaREllDpt<DeltaREllDptValue)
-    // 	cout<<"3: deltaREllDpt: "<<deltaREllDpt<<endl;
+    //  cout<<"3: deltaREllDpt: "<<deltaREllDpt<<endl;
     //if(accept && !isEventAccepted){
-    //	cout<<"accept: "<<accept<<endl;
-    //	cout<<"isEventAccepted: "<<isEventAccepted<<endl;
+    //  cout<<"accept: "<<accept<<endl;
+    //  cout<<"isEventAccepted: "<<isEventAccepted<<endl;
     //}
 
     //    double additionalPtCut=0;
@@ -2049,10 +2071,10 @@ void polFit(int n_sampledPoints=1,
     if(accept && (!cutDeltaREllDpt || (cutDeltaREllDpt && deltaREllDpt > DeltaREllDptValue) )) isEventAccepted = true;
 
     //if(deltaREllDpt<DeltaREllDptValue)
-    // 	cout<<"4: deltaREllDpt: "<<deltaREllDpt<<endl;
+    //  cout<<"4: deltaREllDpt: "<<deltaREllDpt<<endl;
     //if(accept && !isEventAccepted){
-    //	cout<<"accept: "<<accept<<endl;
-    //	cout<<"isEventAccepted: "<<isEventAccepted<<endl;
+    //  cout<<"accept: "<<accept<<endl;
+    //  cout<<"isEventAccepted: "<<isEventAccepted<<endl;
     //}
 
     if(!isEventAccepted) continue; // no need to do the following calculations if they are not used anyway
