@@ -92,6 +92,51 @@ void FindMPV(TH1* PosteriorDist , double& MPV , double& MPVerrorLow, double& MPV
 double DenominatorAmapEfficiency( double& pT, double& eta, int nDenominatorAmap, TFile *fInEff_nDenominatorAmap, TH2D* hEvalEff_nDenominatorAmap, bool MCeff, TEfficiency* TEff_nDenominatorAmap);
 double EvaluateAmap( double& costh_Amap, double& phi_Amap, int nAmap, TFile* fInAmap, double rap, double pT);
 
+// tmadlener, 09.01.2017: definition of clone & reset function. TODO: move to appropriate header
+template<typename HistT>
+HistT* cloneAndReset(HistT* h, const std::string& name = "")
+{
+  HistT* g = static_cast<HistT*>(h->Clone());
+  if (!name.empty()) g->SetName(name.c_str());
+  g->Reset();
+
+  return g;
+}
+
+// tmadlener, 09.01.2017: definition of calcAngles function to calculate cosTheta and Phi
+// in a given reference frame defined by the passed axis (in the dilepton reference frame)
+// this avoids some of the code duplication (or at least trys to mitigate it)
+// TODO: move to appropriate header, return type instead of ref args?
+void calcAngles(const TVector3& xAxis, const TVector3& yAxis, const TVector3& zAxis,
+                const TLorentzVector& lepton_DILEP,
+                double& cosTheta, double &phi, double& phiTh)
+{
+  TRotation rotation;
+  rotation.SetToIdentity(); // should already be done by c'tor
+  rotation.RotateAxes(xAxis, yAxis, zAxis);
+  rotation.Invert(); // transform variables from the "xyz" to the new frame
+  TVector3 lepton_DILEP_rotated = lepton_DILEP.Vect().Transform(rotation);
+
+  cosTheta = lepton_DILEP_rotated.CosTheta();
+  phi = lepton_DILEP_rotated.Phi() * 180.0 / gPI_;
+  if (cosTheta < 0.0) phiTh = phi - 135.0;
+  if (cosTheta > 0) phiTh = phi - 45.0;
+  if (phiTh < -180.0) phiTh = 360.0 + phiTh;
+}
+
+
+// tmadlener, 09.01.2017: defined here for less code duplication and better readibility
+// TODO: move to appropriate headerx
+bool checkPositivityConstraints(const double lth, const double lph, const double ltp)
+{
+  const double onePl2Lph = 1.0 + 2 * lph;
+  return (TMath::Abs(lph) <= 0.5 * (1 + lth) &&
+          lth*lth + 2 * ltp*ltp <= 1.0 &&
+          TMath::Abs(ltp) <= 0.5 * (1 - lph) &&
+          (onePl2Lph*onePl2Lph + 2 * ltp*ltp <= 1 || lph >= -1.0 / 3.0));
+
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Function randomly sampling the lambda values of the "next iteration"
 // given the current values, according to a Gaussian "proposal pdf"
@@ -113,9 +158,8 @@ void extractFromProposalPDF( double& lth_candidate,     double& lph_candidate,  
           lph_candidate = gRandom->Uniform(-1,1);
           ltp_candidate = gRandom->Uniform(-0.707106781186548,0.707106781186548);
           }
-    */  while ( TMath::Abs( lph_candidate ) > 0.5*( 1 + lth_candidate ) || lth_candidate*lth_candidate + 2.*ltp_candidate*ltp_candidate > 1
-                || TMath::Abs( ltp_candidate ) > 0.5*( 1 - lph_candidate )
-                || (  (1.+2.*lph_candidate)*(1.+2.*lph_candidate) + 2.*ltp_candidate*ltp_candidate > 1 && lph_candidate < -1./3. ) );
+    */
+    while (!checkPositivityConstraints(lth_candidate, lph_candidate, ltp_candidate));
   }
   else {
     lth_candidate = gRandom->Gaus ( lth, proposalWidth_lth ); // Gaussian proposal pdf with possibly smaller sigmas
@@ -860,44 +904,19 @@ void polFit(int n_sampledPoints=1,
 
 
     // CS frame angles:
-
     TVector3 newZaxis = beam1_beam2_bisect;
     TVector3 newYaxis = Yaxis;
     TVector3 newXaxis = newYaxis.Cross( newZaxis );
-
-    TRotation rotation2;
-    rotation2.SetToIdentity();
-    rotation2.RotateAxes( newXaxis, newYaxis, newZaxis );
-    rotation2.Invert();  // transforms coordinates from the "xyz" frame to the new frame
-    TVector3 lepton_DILEP_rotated = lepton_DILEP.Vect();
-    lepton_DILEP_rotated.Transform(rotation2);
-
-    double costh_CS = lepton_DILEP_rotated.CosTheta();
-    double phi_CS   = lepton_DILEP_rotated.Phi() * 180. / gPI_;
-    double phith_CS;
-    if ( costh_CS < 0. ) phith_CS = phi_CS - 135.;
-    if ( costh_CS > 0. ) phith_CS = phi_CS - 45.;
-    if ( phith_CS < -180. ) phith_CS = 360. + phith_CS;
-
+    double costh_CS, phi_CS, phith_CS;
+    calcAngles(newXaxis, newYaxis, newZaxis, lepton_DILEP, costh_CS, phi_CS, phith_CS);
 
     // HELICITY frame angles:
 
     newZaxis = dilep_direction;
     newYaxis = Yaxis;
     newXaxis = newYaxis.Cross( newZaxis );
-
-    rotation2.SetToIdentity();
-    rotation2.RotateAxes( newXaxis, newYaxis, newZaxis );
-    rotation2.Invert();
-    lepton_DILEP_rotated = lepton_DILEP.Vect();
-    lepton_DILEP_rotated.Transform(rotation2);
-
-    double costh_HX = lepton_DILEP_rotated.CosTheta();
-    double phi_HX   = lepton_DILEP_rotated.Phi() * 180. / gPI_;
-    double phith_HX;
-    if ( costh_HX < 0. ) phith_HX = phi_HX - 135.;
-    if ( costh_HX > 0. ) phith_HX = phi_HX - 45.;
-    if ( phith_HX < -180. ) phith_HX = 360. + phith_HX;
+    double costh_HX, phi_HX, phith_HX;
+    calcAngles(newXaxis, newYaxis, newZaxis, lepton_DILEP, costh_HX, phi_HX, phith_HX);
 
     //PhiHX test
     //if(PhiHX_test) { if(phi_HX>80. || phi_HX<91.) continue; }
@@ -907,19 +926,8 @@ void polFit(int n_sampledPoints=1,
     newZaxis = perpendicular_to_beam;
     newYaxis = Yaxis;
     newXaxis = newYaxis.Cross( newZaxis );
-
-    rotation2.SetToIdentity();
-    rotation2.RotateAxes( newXaxis, newYaxis, newZaxis );
-    rotation2.Invert();
-    lepton_DILEP_rotated = lepton_DILEP.Vect();
-    lepton_DILEP_rotated.Transform(rotation2);
-
-    double costh_PX = lepton_DILEP_rotated.CosTheta();
-    double phi_PX   = lepton_DILEP_rotated.Phi() * 180. / gPI_;
-    double phith_PX;
-    if ( costh_PX < 0. ) phith_PX = phi_PX - 135.;
-    if ( costh_PX > 0. ) phith_PX = phi_PX - 45.;
-    if ( phith_PX < -180. ) phith_PX = 360. + phith_PX;
+    double costh_PX, phi_PX, phith_PX;
+    calcAngles(newXaxis, newYaxis, newZaxis, lepton_DILEP, costh_PX, phi_PX, phith_PX);
 
     //    cout<<"costh_CS = "<<costh_CS<<", phi_CS = "<<phi_CS<<endl;
     //    cout<<"costh_HX = "<<costh_HX<<", phi_HX = "<<phi_HX<<endl;
@@ -1034,36 +1042,13 @@ void polFit(int n_sampledPoints=1,
   // fill histograms with the kinematics of all events (signal+background)
   // for the subsequent background subtraction
 
-  TH2D* total_costhphiPX  = (TH2D*)background_costhphiPX->Clone();
-  total_costhphiPX->SetName("total_costhphiPX");
-  total_costhphiPX->Reset();
-  // background_costhphiPX->Reset(); // test ilse
-
-  TH1D* total_costhPX  = (TH1D*)background_costhPX->Clone();
-  total_costhPX->SetName("total_costhPX");
-  total_costhPX->Reset();
-
-  TH1D* total_phiPX    = (TH1D*)background_phiPX->Clone();
-  total_phiPX->SetName("total_phiPX");
-  total_phiPX->Reset();
-
-  TH3D* total_pTrapMass = (TH3D*)background_pTrapMass->Clone();
-  total_pTrapMass->SetName("total_pTrapMass");
-  total_pTrapMass->Reset();
-  // background_pTrapMass->Reset(); // test ilse
-
-  TH1D* total_pT       = (TH1D*)background_pT->Clone();
-  total_pT->SetName("total_pT");
-  total_pT->Reset();
-
-  TH1D* total_rap      = (TH1D*)background_rap->Clone();
-  total_rap->SetName("total_rap");
-  total_rap->Reset();
-
-  TH1D* total_mass     = (TH1D*)background_mass->Clone();
-  total_mass->SetName("total_mass");
-  total_mass->Reset();
-
+  TH2D* total_costhphiPX  = cloneAndReset(background_costhphiPX, "total_costhphiPX");
+  TH1D* total_costhPX  = cloneAndReset(background_costhPX, "total_costhPX");
+  TH1D* total_phiPX    = cloneAndReset(background_phiPX, "total_phiPX");
+  TH3D* total_pTrapMass = cloneAndReset(background_pTrapMass, "total_pTrapMass");
+  TH1D* total_pT       = cloneAndReset(background_pT, "total_pT");
+  TH1D* total_rap      = cloneAndReset(background_rap, "total_rap");
+  TH1D* total_mass     = cloneAndReset(background_mass, "total_mass");
 
   int n_events = int( data->GetEntries() );
 
@@ -1145,40 +1130,16 @@ void polFit(int n_sampledPoints=1,
     TVector3 newZaxis = beam1_beam2_bisect;
     TVector3 newYaxis = Yaxis;
     TVector3 newXaxis = newYaxis.Cross( newZaxis );
-
-    TRotation rotation;
-    rotation.SetToIdentity();
-    rotation.RotateAxes( newXaxis, newYaxis, newZaxis );
-    rotation.Invert();  // transforms coordinates from the "xyz" frame to the new frame
-    TVector3 lepton_DILEP_rotated = lepton_DILEP.Vect();
-    lepton_DILEP_rotated.Transform(rotation);
-
-    double costh_CS = lepton_DILEP_rotated.CosTheta();
-    double phi_CS   = lepton_DILEP_rotated.Phi() * 180. / gPI_;
-    double phith_CS;
-    if ( costh_CS < 0. ) phith_CS = phi_CS - 135.;
-    if ( costh_CS > 0. ) phith_CS = phi_CS - 45.;
-    if ( phith_CS < -180. ) phith_CS = 360. + phith_CS;
-
+    double costh_CS, phi_CS, phith_CS;
+    calcAngles(newXaxis, newYaxis, newZaxis, lepton_DILEP, costh_CS, phi_CS, phith_CS);
 
     // HELICITY frame angles:
 
     newZaxis = dilep_direction;
     newYaxis = Yaxis;
     newXaxis = newYaxis.Cross( newZaxis );
-
-    rotation.SetToIdentity();
-    rotation.RotateAxes( newXaxis, newYaxis, newZaxis );
-    rotation.Invert();
-    lepton_DILEP_rotated = lepton_DILEP.Vect();
-    lepton_DILEP_rotated.Transform(rotation);
-
-    double costh_HX = lepton_DILEP_rotated.CosTheta();
-    double phi_HX   = lepton_DILEP_rotated.Phi() * 180. / gPI_;
-    double phith_HX;
-    if ( costh_HX < 0. ) phith_HX = phi_HX - 135.;
-    if ( costh_HX > 0. ) phith_HX = phi_HX - 45.;
-    if ( phith_HX < -180. ) phith_HX = 360. + phith_HX;
+    double costh_HX, phi_HX, phith_HX;
+    calcAngles(newXaxis, newYaxis, newZaxis, lepton_DILEP, costh_HX, phi_HX, phith_HX);
 
     //PhiHX test
     //if(PhiHX_test) { if(phi_HX>80. || phi_HX<91.) continue; }
@@ -1188,19 +1149,8 @@ void polFit(int n_sampledPoints=1,
     newZaxis = perpendicular_to_beam;
     newYaxis = Yaxis;
     newXaxis = newYaxis.Cross( newZaxis );
-
-    rotation.SetToIdentity();
-    rotation.RotateAxes( newXaxis, newYaxis, newZaxis );
-    rotation.Invert();
-    lepton_DILEP_rotated = lepton_DILEP.Vect();
-    lepton_DILEP_rotated.Transform(rotation);
-
-    double costh_PX = lepton_DILEP_rotated.CosTheta();
-    double phi_PX   = lepton_DILEP_rotated.Phi() * 180. / gPI_;
-    double phith_PX;
-    if ( costh_PX < 0. ) phith_PX = phi_PX - 135.;
-    if ( costh_PX > 0. ) phith_PX = phi_PX - 45.;
-    if ( phith_PX < -180. ) phith_PX = 360. + phith_PX;
+    double costh_PX, phi_PX, phith_PX;
+    calcAngles(newXaxis, newYaxis, newZaxis, lepton_DILEP, costh_PX, phi_PX, phith_PX);
 
     // efficiency:
 
@@ -1419,25 +1369,11 @@ void polFit(int n_sampledPoints=1,
   // indicating that the background distributions are well reproduced
   // (and subtracted) by the likelihood-ratio method
 
-  TH1D* background_costhPX_test  = (TH1D*)background_costhPX->Clone();
-  background_costhPX_test->SetName("background_costhPX_test");
-  background_costhPX_test->Reset();
-
-  TH1D* background_phiPX_test    = (TH1D*)background_phiPX->Clone();
-  background_phiPX_test->SetName("background_phiPX_test");
-  background_phiPX_test->Reset();
-
-  TH1D* background_pT_test  = (TH1D*)background_pT->Clone();
-  background_pT_test->SetName("background_pT_test");
-  background_pT_test->Reset();
-
-  TH1D* background_rap_test  = (TH1D*)background_rap->Clone();
-  background_rap_test->SetName("background_rap_test");
-  background_rap_test->Reset();
-
-  TH1D* background_mass_test  = (TH1D*)background_mass->Clone();
-  background_mass_test->SetName("background_mass_test");
-  background_mass_test->Reset();
+  TH1D* background_costhPX_test  = cloneAndReset(background_costhPX, "background_costhPX_test");
+  TH1D* background_phiPX_test    = cloneAndReset(background_phiPX, "background_phiPX_test");
+  TH1D* background_pT_test  = cloneAndReset(background_pT, "background_pT_test");
+  TH1D* background_rap_test  = cloneAndReset(background_rap, "background_rap_test");
+  TH1D* background_mass_test  = cloneAndReset(background_mass, "background_mass_test");
 
   TH1D*  SubtractedBG_test   = new TH1D( "SubtractedBG_test",       "", 100, 0.7, 1.3 );
 
@@ -1507,38 +1443,16 @@ void polFit(int n_sampledPoints=1,
     TVector3 newZaxis = beam1_beam2_bisect;
     TVector3 newYaxis = Yaxis;
     TVector3 newXaxis = newYaxis.Cross( newZaxis );
-
-    TRotation rotation;
-    rotation.SetToIdentity();
-    rotation.RotateAxes( newXaxis, newYaxis, newZaxis );
-    rotation.Invert();  // transforms coordinates from the "xyz" frame to the new frame
-    TVector3 lepton_DILEP_rotated = lepton_DILEP.Vect();
-    lepton_DILEP_rotated.Transform(rotation);
-
-    costh_CS = lepton_DILEP_rotated.CosTheta();
-    phi_CS   = lepton_DILEP_rotated.Phi() * 180. / gPI_;
-    if ( costh_CS < 0. ) phith_CS = phi_CS - 135.;
-    if ( costh_CS > 0. ) phith_CS = phi_CS - 45.;
-    if ( phith_CS < -180. ) phith_CS = 360. + phith_CS;
-
+    double costh_CS, phi_CS, phith_CS;
+    calcAngles(newXaxis, newYaxis, newZaxis, lepton_DILEP, costh_CS, phi_CS, phith_CS);
 
     // HELICITY frame angles:
 
     newZaxis = dilep_direction;
     newYaxis = Yaxis;
     newXaxis = newYaxis.Cross( newZaxis );
-
-    rotation.SetToIdentity();
-    rotation.RotateAxes( newXaxis, newYaxis, newZaxis );
-    rotation.Invert();
-    lepton_DILEP_rotated = lepton_DILEP.Vect();
-    lepton_DILEP_rotated.Transform(rotation);
-
-    costh_HX = lepton_DILEP_rotated.CosTheta();
-    phi_HX   = lepton_DILEP_rotated.Phi() * 180. / gPI_;
-    if ( costh_HX < 0. ) phith_HX = phi_HX - 135.;
-    if ( costh_HX > 0. ) phith_HX = phi_HX - 45.;
-    if ( phith_HX < -180. ) phith_HX = 360. + phith_HX;
+    double costh_HX, phi_HX, phith_HX;
+    calcAngles(newXaxis, newYaxis, newZaxis, lepton_DILEP, costh_HX, phi_HX, phith_HX);
 
     //PhiHX test
     //if(PhiHX_test) { if(phi_HX>80. || phi_HX<91.) continue; }
@@ -1548,24 +1462,11 @@ void polFit(int n_sampledPoints=1,
     newZaxis = perpendicular_to_beam;
     newYaxis = Yaxis;
     newXaxis = newYaxis.Cross( newZaxis );
-
-    rotation.SetToIdentity();
-    rotation.RotateAxes( newXaxis, newYaxis, newZaxis );
-    rotation.Invert();
-    lepton_DILEP_rotated = lepton_DILEP.Vect();
-    lepton_DILEP_rotated.Transform(rotation);
-
-    costh_PX = lepton_DILEP_rotated.CosTheta();
-    phi_PX   = lepton_DILEP_rotated.Phi() * 180. / gPI_;
-    if ( costh_PX < 0. ) phith_PX = phi_PX - 135.;
-    if ( costh_PX > 0. ) phith_PX = phi_PX - 45.;
-    if ( phith_PX < -180. ) phith_PX = 360. + phith_PX;
-
+    double costh_PX, phi_PX, phith_PX;
+    calcAngles(newXaxis, newYaxis, newZaxis, lepton_DILEP, costh_PX, phi_PX, phith_PX);
 
     // invariant polarization angle
-
-    cosalpha = sqrt( 1. - pow(costh_PX, 2.) ) * sin( lepton_DILEP_rotated.Phi() );
-
+    cosalpha = sqrt( 1.0 - costh_PX*costh_PX) * sin(phi_PX * gPI_ / 180.0);
 
 
     // background subtraction as a function of costh and phi: reject events having distributions
@@ -1972,43 +1873,16 @@ void polFit(int n_sampledPoints=1,
     TVector3 newZaxis = beam1_beam2_bisect;
     TVector3 newYaxis = Yaxis;
     TVector3 newXaxis = newYaxis.Cross( newZaxis );
-
-    rotation.SetToIdentity();
-    rotation.RotateAxes( newXaxis, newYaxis, newZaxis );
-    rotation.Invert();  // transforms coordinates from the "xyz" frame to the new frame
-
-    TVector3 lepton_DILEP_rotated = lepton_DILEP_xyz.Vect();
-
-    lepton_DILEP_rotated.Transform(rotation);
-
-    double costh_CS = lepton_DILEP_rotated.CosTheta();
-    double phi_CS = lepton_DILEP_rotated.Phi() * 180. / gPI_;
-    double phith_CS;
-    if ( costh_CS < 0. ) phith_CS = phi_CS - 135.;
-    if ( costh_CS > 0. ) phith_CS = phi_CS - 45.;
-    if ( phith_CS < -180. ) phith_CS = 360. + phith_CS;
-
+    double costh_CS, phi_CS, phith_CS;
+    calcAngles(newXaxis, newYaxis, newZaxis, lepton_DILEP_xyz, costh_CS, phi_CS, phith_CS);
 
     // HELICITY frame
     // cout << "HX" << endl;
     newZaxis = dilep_direction;
     newYaxis = Yaxis;
     newXaxis = newYaxis.Cross( newZaxis );
-
-    rotation.SetToIdentity();
-    rotation.RotateAxes( newXaxis, newYaxis, newZaxis );
-    rotation.Invert();
-
-    lepton_DILEP_rotated = lepton_DILEP_xyz.Vect();
-
-    lepton_DILEP_rotated.Transform(rotation);
-
-    double costh_HX = lepton_DILEP_rotated.CosTheta();
-    double phi_HX = lepton_DILEP_rotated.Phi() * 180. / gPI_;
-    double phith_HX;
-    if ( costh_HX < 0. ) phith_HX = phi_HX - 135.;
-    if ( costh_HX > 0. ) phith_HX = phi_HX - 45.;
-    if ( phith_HX < -180. ) phith_HX = 360. + phith_HX;
+    double costh_HX, phi_HX, phith_HX;
+    calcAngles(newXaxis, newYaxis, newZaxis, lepton_DILEP_xyz, costh_HX, phi_HX, phith_HX);
 
     //PhiHX test
     //if(PhiHX_test) { if(phi_HX>80. || phi_HX<91.) continue; }
@@ -2018,25 +1892,11 @@ void polFit(int n_sampledPoints=1,
     newZaxis = perpendicular_to_beam;
     newYaxis = Yaxis;
     newXaxis = newYaxis.Cross( newZaxis );
-
-    rotation.SetToIdentity();
-    rotation.RotateAxes( newXaxis, newYaxis, newZaxis );
-    rotation.Invert();
-
-    lepton_DILEP_rotated = lepton_DILEP_xyz.Vect();
-
-    lepton_DILEP_rotated.Transform(rotation);
-
-    double costh_PX = lepton_DILEP_rotated.CosTheta();
-    double phi_PX = lepton_DILEP_rotated.Phi() * 180. / gPI_;
-    double phith_PX;
-    if ( costh_PX < 0. ) phith_PX = phi_PX - 135.;
-    if ( costh_PX > 0. ) phith_PX = phi_PX - 45.;
-    if ( phith_PX < -180. ) phith_PX = 360. + phith_PX;
+    double costh_PX, phi_PX, phith_PX;
+    calcAngles(newXaxis, newYaxis, newZaxis, lepton_DILEP_xyz, costh_PX, phi_PX, phith_PX);
 
     // invariant polarization angle
-
-    double cosalpha = sqrt( 1. - pow(costh_PX, 2.) ) * sin( lepton_DILEP_rotated.Phi() );
+    double cosalpha = sqrt( 1. - costh_PX*costh_PX ) * sin( phi_PX * gPI_  / 180.0 );
 
     // lepton 4-vectors in the LAB frame:
     TVector3 dilep_to_lab = dilepton.BoostVector();
@@ -2475,9 +2335,7 @@ void polFit(int n_sampledPoints=1,
       loglikelihood_CS = loglikelihood_CS_candidate;
       if ( i_sampledPoint > n_burnIn ) {  // reject first n_burnIn extractions in the chain
 
-        if ( TMath::Abs( lph_CS ) > 0.5*( 1 + lth_CS ) || lth_CS*lth_CS + 2.*ltp_CS*ltp_CS > 1
-             || TMath::Abs( ltp_CS ) > 0.5*( 1 - lph_CS )
-             || (  (1.+2.*lph_CS)*(1.+2.*lph_CS) + 2.*ltp_CS*ltp_CS > 1 && lph_CS < -1./3. ) )
+        if (!checkPositivityConstraints(lth_CS, lph_CS, ltp_CS))
           positivity_CS = 0; // apply positivity constraint in a flag-variable of the ntuple
 
         calcLambdastar( lthstar_CS, lphstar_CS, lth_CS, lph_CS, ltp_CS );
@@ -2506,9 +2364,7 @@ void polFit(int n_sampledPoints=1,
       loglikelihood_HX = loglikelihood_HX_candidate;
       if ( i_sampledPoint > n_burnIn ) {
 
-        if ( TMath::Abs( lph_HX ) > 0.5*( 1 + lth_HX ) || lth_HX*lth_HX + 2.*ltp_HX*ltp_HX > 1
-             || TMath::Abs( ltp_HX ) > 0.5*( 1 - lph_HX )
-             || (  (1.+2.*lph_HX)*(1.+2.*lph_HX) + 2.*ltp_HX*ltp_HX > 1 && lph_HX < -1./3. ) )
+        if (!checkPositivityConstraints(lth_HX, lph_HX, ltp_HX))
           positivity_HX = 0;
 
         calcLambdastar( lthstar_HX, lphstar_HX, lth_HX, lph_HX, ltp_HX );
@@ -2533,9 +2389,7 @@ void polFit(int n_sampledPoints=1,
       loglikelihood_PX = loglikelihood_PX_candidate;
       if ( i_sampledPoint > n_burnIn ) {
 
-        if ( TMath::Abs( lph_PX ) > 0.5*( 1 + lth_PX ) || lth_PX*lth_PX + 2.*ltp_PX*ltp_PX > 1
-             || TMath::Abs( ltp_PX ) > 0.5*( 1 - lph_PX )
-             || (  (1.+2.*lph_PX)*(1.+2.*lph_PX) + 2.*ltp_PX*ltp_PX > 1 && lph_PX < -1./3. ) )
+        if (!checkPositivityConstraints(lth_PX, lph_PX, ltp_PX))
           positivity_PX = 0;
 
         calcLambdastar( lthstar_PX, lphstar_PX, lth_PX, lph_PX, ltp_PX );
